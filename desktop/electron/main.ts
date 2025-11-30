@@ -1,5 +1,5 @@
 import { app, BrowserWindow } from "electron";
-import { Boom } from '@hapi/boom'
+import { Boom } from "@hapi/boom";
 import { fileURLToPath } from "url";
 import path from "path";
 import {
@@ -75,6 +75,9 @@ app.on("activate", () => {
     createWindow();
   }
 });
+function sendStatus({ status, data }: { status: string; data?: any }) {
+  win?.webContents.send("wa-status", { status, data });
+}
 async function startSock() {
   const sessionPath = path.join(app.getPath("userData"), "auth-info");
   console.log("Session Path:", sessionPath);
@@ -95,11 +98,13 @@ async function startSock() {
   sock.ev.on("connection.update", async (update) => {
     const { connection, lastDisconnect, qr } = update;
     if (qr) {
-      win?.webContents.send("qr", qr);
+      sendStatus({ status: "qr", data: qr });
+    }
+    if (connection === "connecting") {
+      sendStatus({ status: "connecting" });
     }
     if (connection === "open") {
-      console.log("Conectado!");
-
+      sendStatus({ status: "connected" });
       await sock.sendPresenceUpdate("available");
 
       const numero = "5518991276817@s.whatsapp.net";
@@ -107,18 +112,25 @@ async function startSock() {
       await sock.sendMessage(numero, {
         text: "Sessão iniciada com sucesso! 🤖📲",
       });
-
     }
-     if(connection === 'close') {
-            const shouldReconnect = (lastDisconnect?.error as Boom)?.output?.statusCode !== DisconnectReason.loggedOut
-            console.log('connection closed due to ', lastDisconnect?.error, ', reconnecting ', shouldReconnect)
-            // reconnect if not logged out
-            if(shouldReconnect) {
-                startSock()
-            }
-        } else if(connection === 'open') {
-            console.log('opened connection')
-        }
+    if (connection === "close") {
+      sendStatus("disconnected", lastDisconnect?.error);
+      const shouldReconnect =
+        (lastDisconnect?.error as Boom)?.output?.statusCode !==
+        DisconnectReason.loggedOut;
+      console.log(
+        "connection closed due to ",
+        lastDisconnect?.error,
+        ", reconnecting ",
+        shouldReconnect
+      );
+      // reconnect if not logged out
+      if (shouldReconnect) {
+        // startSock();
+      }
+    } else if (connection === "open") {
+      console.log("opened connection");
+    }
   });
 }
 

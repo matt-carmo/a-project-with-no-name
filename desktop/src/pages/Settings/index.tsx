@@ -1,20 +1,21 @@
-import { useEffect, useState } from "react";
+
+import { useWhatsAppStore } from "@/store/useWhatsAppStore";
+
 import QRCode from "react-qr-code";
 export default function SettingsPage() {
-  const [qrCode, setQRCode] = useState<string | null>(null);
-  useEffect(() => {
-    // window.api.startQR();
-    window.whatsapp.onQR((qr) => {
-      setQRCode(qr);
-    });
-  }, []);
-  return (
+
+const {qr, status} = useWhatsAppStore();
+
+
+  if(status == "connected") return <div>Você já está conectado</div>
+  return (  
     <div className="p-2 bg-white">
-      <div>
+      <div className="max-w-sm">
+        {}
         <QRCode
           size={256}
           style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-          value={qrCode ?? ""}
+          value={qr || ""}
           viewBox={`0 0 200 200`}
         />
       </div>

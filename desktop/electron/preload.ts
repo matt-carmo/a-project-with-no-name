@@ -39,7 +39,10 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
 // contextBridge.exposeInMainWorld("api", WINDOW_API);
 contextBridge.exposeInMainWorld("whatsapp", {
   onQR: (callback) => ipcRenderer.on("qr", (_, data) => callback(data)),
-  onConnected: (callback) => ipcRenderer.on("connected", (_, data) => callback(data)),
+  onStatus: (callback) =>
+    ipcRenderer.on("wa-status", (_, data) => callback(data)),
 });
+
+// --------- Expose some API to the Renderer process ---------
 
 // contextBridge.exposeInMainWorld('whats', WINDOW_API)
