@@ -1,4 +1,12 @@
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react"
+import {
+  Calendar,
+  CircleAlertIcon,
+  Home,
+  Inbox,
+  Search,
+  Settings,
+  WifiOff,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -9,8 +17,11 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import { Link } from "react-router"
+  useSidebar,
+} from "@/components/ui/sidebar";
+import { Link } from "react-router";
+import { useOnlineStatus } from "@/hooks/use-online-status";
+import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 
 // Menu items.
 const items = [
@@ -39,20 +50,23 @@ const items = [
     url: "/settings",
     icon: Settings,
   },
-]
+];
 
 export function AppSidebar() {
+  const { open } = useSidebar();
+  const { isReachable } = useOnlineStatus();
+
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible='icon'>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Application</SidebarGroupLabel>
-          <SidebarGroupContent>
+          <SidebarGroupContent className='relative'>
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton >
-                    <Link to={item.url} className="flex items-center gap-2">
+                  <SidebarMenuButton>
+                    <Link to={item.url} className='flex items-center gap-2'>
                       <item.icon />
                       <span>{item.title}</span>
                     </Link>
@@ -62,7 +76,33 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        {!isReachable && (
+          <div className='w-full px-2 mb-1 absolute bottom-0'>
+            <Alert
+              className={`p-2.5 flex flex-col gap-2 ${!open && "h-40"}`}
+              variant='error'
+            >
+              <CircleAlertIcon />
+              {open && (
+                <>
+                  <AlertTitle>Você está offline</AlertTitle>
+                  <AlertDescription>
+                    <p>Seu dispositivo não está conectado à internet.</p>
+                  </AlertDescription>
+                </>
+              )}
+              {!open && (
+                <>
+                  <AlertTitle className='rotate-90 text-nowrap absolute left-1/2 -translate-x-1/2 top-1/2'>
+                    {" "}
+                    Você está offline
+                  </AlertTitle>
+                </>
+              )}
+            </Alert>
+          </div>
+        )}
       </SidebarContent>
     </Sidebar>
-  )
+  );
 }

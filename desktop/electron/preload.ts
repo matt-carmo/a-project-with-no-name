@@ -37,6 +37,10 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
 //    startQR: () => ipcRenderer.invoke('start-qr')
 // };
 // contextBridge.exposeInMainWorld("api", WINDOW_API);
+
+contextBridge.exposeInMainWorld("api", {
+    checkConnection: () => ipcRenderer.invoke("check-connection"),
+})
 contextBridge.exposeInMainWorld("whatsapp", {
   onQR: (callback) => ipcRenderer.on("qr", (_, data) => callback(data)),
   onStatus: (callback) =>
