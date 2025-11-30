@@ -12,15 +12,21 @@
   "dependencies": {
     "@base-ui-components/react": "^1.0.0-beta.7",
     "@tailwindcss/vite": "^4.1.17",
+    "@whiskeysockets/baileys": "^7.0.0-rc.9",
+    "baileys": "^7.0.0-rc.9",
+    "bufferutil": "^4.0.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.555.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-qr-code": "^2.0.18",
     "react-router": "^7.9.6",
     "react-router-dom": "^7.9.6",
     "tailwind-merge": "^3.4.0",
-    "tailwindcss": "^4.1.17"
+    "tailwindcss": "^4.1.17",
+    "utf-8-validate": "^6.0.5",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

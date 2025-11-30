@@ -3,7 +3,10 @@ const electron = require("electron");
 electron.contextBridge.exposeInMainWorld("ipcRenderer", {
   on(...args) {
     const [channel, listener] = args;
-    return electron.ipcRenderer.on(channel, (event, ...args2) => listener(event, ...args2));
+    return electron.ipcRenderer.on(
+      channel,
+      (event, ...args2) => listener(event, ...args2)
+    );
   },
   off(...args) {
     const [channel, ...omit] = args;
@@ -19,4 +22,8 @@ electron.contextBridge.exposeInMainWorld("ipcRenderer", {
   }
   // You can expose other APTs you need here.
   // ...
+});
+electron.contextBridge.exposeInMainWorld("api", {
+  onQR: (callback) => electron.ipcRenderer.on("qr", (_, data) => callback(data)),
+  onConnected: (callback) => electron.ipcRenderer.on("connected", (_, data) => callback(data))
 });
