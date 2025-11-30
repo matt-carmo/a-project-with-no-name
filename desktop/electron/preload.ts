@@ -25,19 +25,19 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
   // ...
 });
 
-const WINDOW_API = {
-  greeting: (name: string) =>
-    `Hello, ${name}! This message is from Preload script.`,
-  greet: () => "Hello from Preload Script!",
-  onQR: (callback: (data: string) => void) => {
-    ipcRenderer.on("qr", (_, data) => {
-      callback(data);
-    });
-  },
-   startQR: () => ipcRenderer.invoke('start-qr')
-};
+// const WINDOW_API = {
+//   greeting: (name: string) =>
+//     `Hello, ${name}! This message is from Preload script.`,
+//   greet: () => "Hello from Preload Script!",
+//   onQR: (callback: (data: string) => void) => {
+//     ipcRenderer.on("qr", (_, data) => {
+//       callback(data);
+//     });
+//   },
+//    startQR: () => ipcRenderer.invoke('start-qr')
+// };
 // contextBridge.exposeInMainWorld("api", WINDOW_API);
-contextBridge.exposeInMainWorld("api", {
+contextBridge.exposeInMainWorld("whatsapp", {
   onQR: (callback) => ipcRenderer.on("qr", (_, data) => callback(data)),
   onConnected: (callback) => ipcRenderer.on("connected", (_, data) => callback(data)),
 });
