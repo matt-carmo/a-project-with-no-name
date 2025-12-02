@@ -1,13 +1,11 @@
 import {
-  Calendar,
   CircleAlertIcon,
   Home,
-  Inbox,
-  Search,
   Settings,
-  WifiOff,
 } from "lucide-react";
-
+import {
+  BiFoodMenu 
+} from "react-icons/bi";
 import {
   Sidebar,
   SidebarContent,
@@ -28,27 +26,27 @@ const items = [
   {
     title: "Home",
     url: "/",
-    icon: Home,
+    icon: <Home/>,
   },
   {
-    title: "Inbox",
-    url: "#",
-    icon: Inbox,
+    title: "Cardápio",
+    url: "/menu",
+    icon: <BiFoodMenu className="text-2xl" />
   },
-  {
-    title: "Calendar",
-    url: "#",
-    icon: Calendar,
-  },
-  {
-    title: "Search",
-    url: "#",
-    icon: Search,
-  },
+  // {
+  //   title: "Calendar",
+  //   url: "#",
+  //   icon: Calendar,
+  // },
+  // {
+  //   title: "Search",
+  //   url: "#",
+  //   icon: Search,
+  // },
   {
     title: "Settings",
     url: "/settings",
-    icon: Settings,
+    icon: <Settings/>,
   },
 ];
 
@@ -67,7 +65,7 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton>
                     <Link to={item.url} className='flex items-center gap-2'>
-                      <item.icon />
+                      {item.icon}
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>

@@ -1,0 +1,201 @@
+// schema.prisma
+
+datasource db {
+    provider = "postgresql"
+    // url      = env("DATABASE_URL"),
+}
+
+generator client {
+    provider        = "prisma-client-js"
+    previewFeatures = ["clientExtensions", "driverAdapters"]
+}
+
+//
+// ------------------------------
+// USERS
+// ------------------------------
+//
+
+model User {
+    id        String      @id @default(cuid())
+    name      String
+    email     String      @unique
+    password  String
+    stores    StoreUser[]
+    createdAt DateTime    @default(now())
+    updatedAt DateTime    @updatedAt
+}
+
+//
+// ------------------------------
+// STORES
+// ------------------------------
+//
+
+model Store {
+    id          String         @id @default(cuid())
+    name        String
+    slug        String         @unique
+    phoneNumber String?
+    categories  Category[]
+    products    Product[]
+    orders      Order[]
+    settings    StoreSettings?
+    users       StoreUser[] // muitos admins
+    createdAt   DateTime       @default(now())
+    updatedAt   DateTime       @updatedAt
+}
+
+model StoreSettings {
+    id              String  @id @default(cuid())
+    storeId         String  @unique
+    store           Store   @relation(fields: [storeId], references: [id])
+    isOpen          Boolean @default(true)
+    minOrderValue   Float?
+    deliveryFee     Float?
+    pickupEnabled   Boolean @default(true)
+    deliveryEnabled Boolean @default(true)
+    openHours       String?
+}
+
+model StoreUser {
+    id      String    @id @default(cuid())
+    storeId String
+    userId  String
+    role    StoreRole @default(ADMIN)
+    store Store @relation(fields: [storeId], references: [id])
+    user  User  @relation(fields: [userId], references: [id])
+    @@unique([storeId, userId])
+}
+
+enum StoreRole {
+    OWNER
+    ADMIN
+    STAFF
+}
+
+//
+// ------------------------------
+// PRODUCTS
+// ------------------------------
+//
+
+model Category {
+    id       String    @id @default(cuid())
+    storeId  String
+    store    Store     @relation(fields: [storeId], references: [id])
+    name     String
+    order    Int       @default(0)
+    products Product[]
+}
+
+model Product {
+    id      String @id @default(cuid())
+    storeId String
+    store   Store  @relation(fields: [storeId], references: [id])
+
+    categoryId  String?
+    category    Category? @relation(fields: [categoryId], references: [id])
+    photoUrl    String?
+    name        String
+    description String?
+    price       Float
+    image       String?
+    isAvailable Boolean   @default(true)
+    createdAt   DateTime  @default(now())
+
+    productComplementGroups ProductComplementGroup[]
+}
+
+//
+// ------------------------------
+// COMPLEMENTS (Adicionais)
+// ------------------------------
+//
+
+model ComplementGroup {
+    id          String  @id @default(cuid())
+    name        String
+    description String?
+    isRequired  Boolean @default(false)
+    minSelected Int     @default(0)
+    maxSelected Int?
+
+    complements Complement[]
+    products    ProductComplementGroup[]
+}
+
+model Complement {
+    id      String          @id @default(cuid())
+    groupId String
+    group   ComplementGroup @relation(fields: [groupId], references: [id])
+
+    name     String
+    price    Float   @default(0)
+    isActive Boolean @default(true)
+
+    orderItemComplements OrderItemComplement[]
+}
+
+model ProductComplementGroup {
+    id        String @id @default(cuid())
+    productId String
+    groupId   String
+
+    product Product         @relation(fields: [productId], references: [id])
+    group   ComplementGroup @relation(fields: [groupId], references: [id])
+
+    @@unique([productId, groupId])
+}
+
+//
+// ------------------------------
+// ORDERS
+// ------------------------------
+//
+
+model Order {
+    id            String      @id @default(cuid())
+    storeId       String
+    store         Store       @relation(fields: [storeId], references: [id])
+    customerName  String?
+    customerPhone String?
+    status        OrderStatus @default(PENDING)
+    items         OrderItem[]
+    total         Float
+    notes         String?
+    createdAt     DateTime    @default(now())
+}
+
+model OrderItem {
+    id      String @id @default(cuid())
+    orderId String
+    order   Order  @relation(fields: [orderId], references: [id])
+
+    productId String
+    name      String
+    quantity  Int
+    price     Float
+
+    orderItemComplements OrderItemComplement[]
+}
+
+model OrderItemComplement {
+    id          String    @id @default(cuid())
+    orderItemId String
+    orderItem   OrderItem @relation(fields: [orderItemId], references: [id])
+
+    complementId String
+    complement   Complement @relation(fields: [complementId], references: [id])
+
+    price Float
+}
+
+enum OrderStatus {
+    PENDING
+    CONFIRMED
+    IN_PREPARATION
+    READY
+    COMPLETED
+    CANCELLED
+}

@@ -7,7 +7,9 @@ import { Boom } from "@hapi/boom";
 let sock: ReturnType<typeof makeWASocket>;
 
 export async function startSock() {
+//   const sessionPath = path.join(app.getPath("userData"), "auth-info");
   const sessionPath = path.join(app.getPath("userData"), "auth-info");
+
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
 
@@ -22,7 +24,7 @@ export async function startSock() {
   sock.ev.on("creds.update", saveCreds);
 
   sock.ev.on("connection.update", async (update) => {
-    const { connection, lastDisconnect, qr } = update;
+    const { connection, lastDisconnect, qr, } = update;
 
     if (qr) sendStatus({ status: "qr", data: qr });
     if (connection === "connecting") sendStatus({ status: "connecting" });

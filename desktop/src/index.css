@@ -98,3 +98,38 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.38 0.189 293.745);
 }
+.animate-skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: 4px;
+
+  background-color: var(--color-muted, #e5e7eb);
+  background-image: linear-gradient(
+    120deg,
+    transparent 40%,
+    rgba(255, 255, 255, 0.15),
+    transparent 60%
+  );
+
+  background-size: 200% 100%;
+  animation: skeleton 1.5s ease-in-out infinite;
+}
+@media (prefers-color-scheme: dark) {
+  .animate-skeleton {
+    background-color: #2a2a2a;
+    background-image: linear-gradient(
+      120deg,
+      transparent 40%,
+      rgba(255, 255, 255, 0.04),
+      transparent 60%
+    );
+  }
+}
+@keyframes skeleton {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}

@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "CommonJS",
+        "moduleResolution": "Node",
+        "lib": [
+            "ES2024",
+            "ESNext.AsyncIterable",
+            "ESNext.Array",
+            "ESNext.Collection"
+        ],
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "allowSyntheticDefaultImports": true,
+        "outDir": "./dist"
+    },
+    "include": [
+        "src"
+    ]
+}
