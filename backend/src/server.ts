@@ -10,6 +10,9 @@ import {
   validatorCompiler,
 } from "fastify-type-provider-zod";
 import { storeRoutes } from "./routes/store.route";
+import { storeUserRoutes } from "./routes/store-user.route";
+import { storeMenuRoute } from "./routes/store-menu.route";
+import { CategoryRoutes } from "./routes/category.route";
 export const server = fastify();
 export function buildServer() {
   server.register(prismaPlugin);
@@ -56,6 +59,11 @@ export function buildServer() {
 
   server.register(healthCheckRoute);
   server.register(authRoute);
-  server.register(storeRoutes)
+  server.register(storeRoutes);
+  server.register(storeUserRoutes);
+  server.register(storeMenuRoute)
+  
+  server.register(CategoryRoutes)
+  
   return server;
 }

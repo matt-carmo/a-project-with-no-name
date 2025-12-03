@@ -42,8 +42,8 @@ export class AuthController {
           errors: [],
         });
       }
-      const { token } = result;
-      reply.send({ token });
+      const { user, token } = result;
+      reply.send({ user, token });
     } catch (error) {
       console.log(error);
     }

@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router";
+import { useAuthStore } from "@/store/auth-store";
 
 type AuthForm = {
   email: string;
@@ -29,7 +30,7 @@ export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const { 
+  const {
     register,
     handleSubmit,
     watch,
@@ -42,8 +43,17 @@ export default function AuthPage() {
   const onSubmit = async (data: AuthForm) => {
     const res = await axios.post(`http://localhost:8080/auth/${mode}`, data);
     if (res.status === 200) {
-      localStorage.setItem("token", res.data.token);
-      navigate("/");
+      const data = res.data;
+
+      // salvar no zustand
+      useAuthStore.getState().setAuth({
+        user: data.user,
+        token: data.token,
+      });
+      if(data.user.stores.length === 1) {
+        useAuthStore.getState().setSelectedStore(data.user.stores[0]);
+        navigate(`/store/${data.user.stores[0].id}`);
+      }
     }
     reset();
   };
@@ -54,6 +64,7 @@ export default function AuthPage() {
     <div className='min-h-screen flex items-center justify-center bg-background p-6'>
       <Card className='w-full max-w-md border-primary-foreground/20'>
         <CardHeader>
+          {window.location.href}
           <div className='flex items-center justify-between'>
             <div>
               <CardTitle className='text-lg'>
@@ -80,7 +91,6 @@ export default function AuthPage() {
         <CardContent>
           {/* <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'> */}
           <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
-
             {mode === "signup" && (
               <div>
                 <Label className='mb-2 block text-sm'>Nome</Label>

@@ -46,6 +46,9 @@ contextBridge.exposeInMainWorld("whatsapp", {
   onStatus: (callback) =>
     ipcRenderer.on("wa-status", (_, data) => callback(data)),
 });
+contextBridge.exposeInMainWorld("env", {
+  BASE_URL: process.env.BASE_URL || "http://localhost:8080",
+});
 
 // --------- Expose some API to the Renderer process ---------
 

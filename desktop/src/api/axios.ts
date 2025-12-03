@@ -1,14 +1,14 @@
+import { useAuthStore } from "@/store/auth-store";
 import axios from "axios";
 
+
+const { token } = useAuthStore.getState();
 export const api = axios.create({
-  baseURL: process.env.BASE_URL,
+  baseURL: window.env.BASE_URL,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
-    Authorization:
-      typeof window !== "undefined"
-        ? `Bearer ${localStorage.getItem("token")}`
-        : "",
+    Authorization: token ? `Bearer ${token}` : "",
   },
 });
 
@@ -18,7 +18,8 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       if (typeof window !== "undefined") {
         localStorage.removeItem("token");
-        window.location.href = "/login";
+        window.location.hash = "#/auth";
+        return Promise.reject(error);
       }
     }
 

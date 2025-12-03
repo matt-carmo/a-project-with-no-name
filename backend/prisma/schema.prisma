@@ -63,8 +63,9 @@ model StoreUser {
     storeId String
     userId  String
     role    StoreRole @default(ADMIN)
-    store Store @relation(fields: [storeId], references: [id])
-    user  User  @relation(fields: [userId], references: [id])
+    store   Store     @relation(fields: [storeId], references: [id])
+    user    User      @relation(fields: [userId], references: [id])
+
     @@unique([storeId, userId])
 }
 
@@ -87,6 +88,8 @@ model Category {
     name     String
     order    Int       @default(0)
     products Product[]
+    deletedAt DateTime?
+
 }
 
 model Product {
@@ -102,9 +105,11 @@ model Product {
     price       Float
     image       String?
     isAvailable Boolean   @default(true)
+    stock       Int       @default(0)
     createdAt   DateTime  @default(now())
-
+    deletedAt   DateTime?
     productComplementGroups ProductComplementGroup[]
+
 }
 
 //
@@ -133,6 +138,7 @@ model Complement {
     name     String
     price    Float   @default(0)
     isActive Boolean @default(true)
+    stock    Int     @default(0)
 
     orderItemComplements OrderItemComplement[]
 }

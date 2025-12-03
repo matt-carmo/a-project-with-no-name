@@ -1,11 +1,5 @@
-import {
-  CircleAlertIcon,
-  Home,
-  Settings,
-} from "lucide-react";
-import {
-  BiFoodMenu 
-} from "react-icons/bi";
+import { CircleAlertIcon, Home, Settings } from "lucide-react";
+import { BiFoodMenu } from "react-icons/bi";
 import {
   Sidebar,
   SidebarContent,
@@ -20,45 +14,43 @@ import {
 import { Link } from "react-router";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
+import { Card } from "./ui/card";
+import { useAuthStore } from "@/store/auth-store";
+import { Badge } from "./ui/badge";
 
-// Menu items.
-const items = [
-  {
-    title: "Home",
-    url: "/",
-    icon: <Home/>,
-  },
-  {
-    title: "Cardápio",
-    url: "/menu",
-    icon: <BiFoodMenu className="text-2xl" />
-  },
-  // {
-  //   title: "Calendar",
-  //   url: "#",
-  //   icon: Calendar,
-  // },
-  // {
-  //   title: "Search",
-  //   url: "#",
-  //   icon: Search,
-  // },
-  {
-    title: "Settings",
-    url: "/settings",
-    icon: <Settings/>,
-  },
-];
 
 export function AppSidebar() {
+  const { selectedStore } = useAuthStore();
+
+  const base = `/store/${selectedStore?.store.id}`;
   const { open } = useSidebar();
   const { isReachable } = useOnlineStatus();
+  const { user } = useAuthStore();
+
+  const items = [
+  { title: "Home", url: base, icon: <Home /> },
+  {
+    title: "Cardápio",
+    url: `${base}/menu`,
+    icon: <BiFoodMenu className='text-2xl' />,
+  },
+  { title: "Settings", url: `${base}/settings`, icon: <Settings /> },
+];
+  const { store, role } = user?.stores?.[0] ?? {};
 
   return (
     <Sidebar collapsible='icon'>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Application</SidebarGroupLabel>
+          <SidebarGroupLabel className='mt-2 mb-4'>
+            <Card className='p-1 gap-2 rounded-md border-accent'>
+              <p className='font-semibold'>{store?.name}</p>
+              <div className='flex items-center gap-2'>
+                <p>{user?.name}</p>
+                <Badge variant='destructive'>{role}</Badge>
+              </div>
+            </Card>
+          </SidebarGroupLabel>
           <SidebarGroupContent className='relative'>
             <SidebarMenu>
               {items.map((item) => (

@@ -30,6 +30,7 @@
     "tailwindcss": "^4.1.17",
     "utf-8-validate": "^6.0.5",
     "ws": "^8.18.3",
+    "zod": "^4.1.13",
     "zustand": "^5.0.9"
   },
   "devDependencies": {

@@ -13,6 +13,7 @@ import { AnchoredToastProvider, ToastProvider } from "@/components/ui/toast";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { Wifi, WifiOff } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAuthStore } from "@/store/auth-store";
 
 export default function Layout() {
   const { status, setStatus } = useWhatsAppStore();
@@ -26,7 +27,7 @@ export default function Layout() {
       }
     });
   }, []);
-
+ const { token } = useAuthStore.getState();
   return (
     <>
       <SidebarProvider>
@@ -36,7 +37,7 @@ export default function Layout() {
             <main className='grid grid-rows-[auto_1fr_auto] flex-1 h-screen  overflow-hidden'>
               <div>
                 <SidebarTrigger />
-                <header>HEADER</header>
+                <header>HEADER {token}</header>
               </div>
               <ScrollArea>
                 <div className='container p-5'>

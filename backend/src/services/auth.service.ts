@@ -30,18 +30,29 @@ export class AuthService {
     return newUser;
   }
 
-  async login(email: string, password: string) {
-    const user = await this.repository.findUnique(email);
-    if (!user) {
-      return {error: 'Login inválido'}; // User not found
-    }
-    const isPasswordValid = await argon2.verify(user.password, password);
-    if (!isPasswordValid) {
-       return { error: "Login inválido" };
-    }
-    const token = this.server.jwt.sign({ userId: user.id, email: user.email });
-    return { token };
+async login(email: string, password: string) {
+  const user = await this.repository.findUnique(email);
+
+  if (!user) {
+    return { error: "Login inválido" };
   }
+
+  const isPasswordValid = await argon2.verify(user.password, password);
+  if (!isPasswordValid) {
+    return { error: "Login inválido" };
+  }
+
+  const token = this.server.jwt.sign({
+    userId: user.id,
+    email: user.email,
+  });
+
+  // Remover a senha antes de expor
+  const { password: _, ...safeUser } = user;
+
+  return { user: safeUser, token };
+}
+
 
   static async refreshToken(token: string) {
     // refresh token logic
