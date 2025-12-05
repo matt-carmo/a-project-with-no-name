@@ -13,8 +13,17 @@ declare module "fastify" {
   }
   interface FastifyRequest {
     jwtVerify: JwtVerify;
+     file: () => Promise<{
+      file: Readable;
+      fieldname: string;
+      filename: string;
+      encoding: string;
+      mimetype: string;
+      fields: { [key: string]: string };
+    }>
   }
   interface FastifyInstance {
     jwt: FastifyJWT;
   }
+
 }

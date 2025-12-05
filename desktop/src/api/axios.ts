@@ -1,10 +1,15 @@
+
 import { useAuthStore } from "@/store/auth-store";
 import axios from "axios";
 
 
 const { token } = useAuthStore.getState();
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const BASE_URL = (window as any).env.BASE_URL;
+
 export const api = axios.create({
-  baseURL: window.env.BASE_URL,
+  baseURL: BASE_URL,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",

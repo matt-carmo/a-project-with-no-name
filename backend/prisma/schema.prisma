@@ -44,6 +44,8 @@ model Store {
     users       StoreUser[] // muitos admins
     createdAt   DateTime       @default(now())
     updatedAt   DateTime       @updatedAt
+
+    complementGroups ComplementGroup[]
 }
 
 model StoreSettings {
@@ -125,7 +127,10 @@ model ComplementGroup {
     isRequired  Boolean @default(false)
     minSelected Int     @default(0)
     maxSelected Int?
+    isAvailable Boolean @default(true)
 
+    storeId String
+    store   Store @relation(fields: [storeId], references: [id])
     complements Complement[]
     products    ProductComplementGroup[]
 }
@@ -134,11 +139,11 @@ model Complement {
     id      String          @id @default(cuid())
     groupId String
     group   ComplementGroup @relation(fields: [groupId], references: [id])
-
     name     String
     price    Float   @default(0)
     isActive Boolean @default(true)
     stock    Int     @default(0)
+    photoUrl String?
 
     orderItemComplements OrderItemComplement[]
 }

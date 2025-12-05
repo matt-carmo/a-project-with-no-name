@@ -5,7 +5,7 @@ import { sendStatus } from "./status";
 import { Boom } from "@hapi/boom";
 
 let sock: ReturnType<typeof makeWASocket>;
-
+let reconnecting = false;
 export async function startSock() {
 //   const sessionPath = path.join(app.getPath("userData"), "auth-info");
   const sessionPath = path.join(app.getPath("userData"), "auth-info");
@@ -29,7 +29,9 @@ export async function startSock() {
     if (qr) sendStatus({ status: "qr", data: qr });
     if (connection === "connecting") sendStatus({ status: "connecting" });
     if (connection === "open") {
+     
       sendStatus({ status: "connected" });
+      reconnecting = true;
       await sock.sendPresenceUpdate("available");
     }
     if (connection === "close") {
@@ -42,13 +44,13 @@ export async function startSock() {
   return sock;
 }
 
-let reconnecting = false;
+
 async function reconnectSock() {
   if (reconnecting) return;
   reconnecting = true;
   setTimeout(async () => {
     sendStatus({ status: "connecting" });
     await startSock();
-    reconnecting = false;
+
   }, 5000);
 }

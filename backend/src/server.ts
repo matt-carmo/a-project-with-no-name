@@ -13,6 +13,8 @@ import { storeRoutes } from "./routes/store.route";
 import { storeUserRoutes } from "./routes/store-user.route";
 import { storeMenuRoute } from "./routes/store-menu.route";
 import { CategoryRoutes } from "./routes/category.route";
+import { ComplementsRoutes } from "./routes/complements.route";
+import { ProductRoutes } from "./routes/product.route";
 export const server = fastify();
 export function buildServer() {
   server.register(prismaPlugin);
@@ -21,13 +23,13 @@ export function buildServer() {
   server.register(cors, {
     origin: true,
     allowedHeaders: ["Content-Type", "Authorization"],
-    methods: ["GET", "PUT", "POST", "DELETE", "OPTIONS"],
+    methods: ["GET", "PUT", "POST", "DELETE", "OPTIONS", "PATCH"],
   });
 
   server.register(require("@fastify/jwt"), {
     secret: "supersecret",
   });
-
+  server.register(require('@fastify/multipart'))
   server.addHook("onRequest", async (request, reply) => {
     try {
       if (request.url !== "/auth/signup" && request.url !== "/auth/login") {
@@ -62,8 +64,9 @@ export function buildServer() {
   server.register(storeRoutes);
   server.register(storeUserRoutes);
   server.register(storeMenuRoute)
-  
+  server.register(ComplementsRoutes);
   server.register(CategoryRoutes)
+  server.register(ProductRoutes);
   
   return server;
 }

@@ -42,13 +42,15 @@ contextBridge.exposeInMainWorld("api", {
     checkConnection: () => ipcRenderer.invoke("check-connection"),
 })
 contextBridge.exposeInMainWorld("whatsapp", {
-  onQR: (callback) => ipcRenderer.on("qr", (_, data) => callback(data)),
-  onStatus: (callback) =>
+  onQR: (callback: (data: string) => void) => ipcRenderer.on("qr", (_, data) => callback(data)),
+  onStatus: (callback: (data: string) => void) =>
     ipcRenderer.on("wa-status", (_, data) => callback(data)),
+  startSock: () => ipcRenderer.invoke("start-sock"),
 });
 contextBridge.exposeInMainWorld("env", {
   BASE_URL: process.env.BASE_URL || "http://localhost:8080",
 });
+
 
 // --------- Expose some API to the Renderer process ---------
 

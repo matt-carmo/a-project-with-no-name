@@ -38,6 +38,12 @@ export default function AuthPage() {
     reset,
   } = useForm<AuthForm>({
     mode: "onTouched",
+    defaultValues:{
+      email: "matheus2018i@gmail.com",
+      password: "12345678",
+      confirmPassword: "",
+      name: "",
+    }
   });
 
   const onSubmit = async (data: AuthForm) => {

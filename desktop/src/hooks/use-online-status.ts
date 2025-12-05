@@ -11,7 +11,8 @@ export function useOnlineStatus(interval = 5000) {
 
     const checkConnection = async () => {
       try {
-        const ok = await window.api.checkConnection();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const ok = await (window as any).api.checkConnection();
         setIsReachable(ok);
       } catch {
         setIsReachable(false);

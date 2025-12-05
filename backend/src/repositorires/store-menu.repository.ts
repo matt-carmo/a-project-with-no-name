@@ -5,7 +5,7 @@ export class StoreMenuRepository {
 
     findByStoreId(storeId: string) {
         return this.prisma.category.findMany({
-            where: { storeId },
+            where: { storeId, deletedAt: null },
             include: {
                 products: {
                     include:{

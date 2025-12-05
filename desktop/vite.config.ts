@@ -15,7 +15,11 @@ export default defineConfig({
         entry: 'electron/main.ts',
         vite:{
             build:{
+                
                 rollupOptions:{
+                    output:{
+                        format:'cjs'
+                    },
                     external:[  "bufferutil",
                 "utf-8-validate"]
                 }

@@ -7,9 +7,12 @@ export class CategoryRepository {
     constructor(prisma: PrismaClient) {
         this.prisma = prisma;
     }
-    async createCategory(data: Category): Promise<Category> {
+    async createCategory(data: Pick<Category, "name" | 'storeId'>): Promise<Category> {
         return this.prisma.category.create({
-            data,
+            data:{
+                name: data.name,
+                storeId: data.storeId
+            },
         });
     }
     async updateCategory(id: string, data: Partial<Category>): Promise<Category> {

@@ -31,6 +31,7 @@ function SheetBackdrop({ className, ...props }: SheetPrimitive.Backdrop.Props) {
 }
 
 function SheetViewport({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   className,
   side,
   inset = false,

@@ -3,7 +3,9 @@ import path from "path";
 import { createMainWindow } from "./windows/mainWindow";
 import { startSock } from "./whatsapp/socket";
 import { checkConnection } from "./network/connection";
-
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const RENDERER_DIST = path.join(__dirname, "../dist");
 const PRELOAD_PATH = path.join(__dirname, "preload.mjs");
 const DEV_URL = process.env["VITE_DEV_SERVER_URL"];
@@ -17,7 +19,9 @@ app.whenReady().then(() => {
 ipcMain.handle("check-connection", async () => {
   return await checkConnection();
 });
-
+ipcMain.handle("start-sock", async () => {
+  return await startSock();
+});
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
 });

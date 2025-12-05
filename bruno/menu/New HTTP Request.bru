@@ -4,6 +4,16 @@ meta {
   seq: 1
 }
 
-get {
-  url: 
+post {
+  url: http://localhost:8080/stores/cmios6mik0000i0bckbvltqzh/products
+  body: multipartForm
+  auth: none
+}
+
+headers {
+  Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWlvczZtaWswMDAwaTBiY2tidmx0cXpoIiwiZW1haWwiOiJtYXRoZXVzMjAxOGlAZ21haWwuY29tIiwiaWF0IjoxNzY0Nzg5MjE1fQ.CwwglVbnjjeyYHCbDTjeSbqP8oCl20JRFyIhJFaeIBU
+}
+
+body:multipart-form {
+  image: @file(/home/bececat-matt/Pictures/Screenshot canned Response 2025-04-07 21-35-12.png)
 }

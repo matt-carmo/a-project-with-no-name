@@ -25,21 +25,21 @@ async function main() {
     console.log('🌱 Seeding database...')
 
     // Clear existing data (optional)
-    await prisma.user.deleteMany()
+    // await prisma.user.deleteMany()
 
-  const user = await prisma.user.create({
-    data: {
-      name: "Admin",
-      email: "admin@example.com",
-      password: "$2b$10$hashAquiExemplo123", // coloque um hash real!
-    },
-  });
+//   const user = await prisma.user.create({
+//     data: {
+//       name: "Admin",
+//       email: "admin@example.com",
+//       password: "$2b$10$hashAquiExemplo123", // coloque um hash real!
+//     },
+//   });
 
   //
-  // -----------------------------------
-  // 2) Criar loja
-  // -----------------------------------
-  //
+//   -----------------------------------
+//   2) Criar loja
+//   -----------------------------------
+  
 
 //   const store = await prisma.store.create({
 //     data: {
@@ -65,44 +65,44 @@ async function main() {
 //   // -----------------------------------
 //   //
 
-  await prisma.storeUser.create({
-    data: {
-      storeId: 'cminut5x700010fbcvhdh85c9',
-      userId: user.id,
-      role: 'ADMIN',
-    },
-  });
+//   await prisma.storeUser.create({
+//     data: {
+//       userId: 'cmir04ls10000nobc2i88qt8t',
+//         storeId: store.id,
+//       role: 'ADMIN',
+//     },
+//   });
 
-  //
-  // -----------------------------------
-  // 4) Criar categorias
-  // -----------------------------------
-  //
+//   //
+//   // -----------------------------------
+//   // 4) Criar categorias
+//   // -----------------------------------
+//   //
 
-  const categories = await prisma.category.createMany({
-    data: [
-      { name: "Burgers", storeId: 'cminut5x700010fbcvhdh85c9', order: 1 },
-      { name: "Bebidas", storeId: 'cminut5x700010fbcvhdh85c9', order: 2 },
-    ],
-  });
+//   const categories = await prisma.category.createMany({
+//     data: [
+//       { name: "Burgers", storeId: store.id, order: 1 },
+//       { name: "Bebidas", storeId: store.id, order: 2 },
+//     ],
+//   });
 
-  //
-  // -----------------------------------
-  // 5) Criar produtos
-  // -----------------------------------
-  //
+//   //
+//   // -----------------------------------
+//   // 5) Criar produtos
+//   // -----------------------------------
+//   //
 
   const burgerCategory = await prisma.category.findFirst({
-    where: { name: "Burgers", storeId: 'cminut5x700010fbcvhdh85c9' },
+    where: { name: "Burgers", storeId: 'cmir07opv0000vdbcgyq81u0q' },
   });
 
   const drinksCategory = await prisma.category.findFirst({
-    where: { name: "Bebidas", storeId: 'cminut5x700010fbcvhdh85c9' },
+    where: { name: "Bebidas", storeId: 'cmir07opv0000vdbcgyq81u0q' },
   });
 
   const xsalada = await prisma.product.create({
     data: {
-      storeId: 'cminut5x700010fbcvhdh85c9',
+      storeId: 'cmir07opv0000vdbcgyq81u0q',
       categoryId: burgerCategory!.id,
       name: "X-Salada",
       description: "Hambúrguer artesanal com salada",
@@ -113,7 +113,7 @@ async function main() {
 
   const coca = await prisma.product.create({
     data: {
-      storeId: 'cminut5x700010fbcvhdh85c9',
+      storeId: 'cmir07opv0000vdbcgyq81u0q',
       categoryId: drinksCategory!.id,
       name: "Coca-Cola Lata",
       description: "350ml",
@@ -121,14 +121,15 @@ async function main() {
     },
   });
 
-  //
-  // -----------------------------------
-  // 6) Criar grupos de complementos
-  // -----------------------------------
-  //
+//   //
+//   // -----------------------------------
+//   // 6) Criar grupos de complementos
+//   // -----------------------------------
+//   //
 
   const groupProteinas = await prisma.complementGroup.create({
     data: {
+      storeId: 'cmir07opv0000vdbcgyq81u0q',
       name: "Escolha a proteína",
       description: "Escolha 1 opção",
       isRequired: true,
@@ -139,6 +140,7 @@ async function main() {
 
   const groupAdicionais = await prisma.complementGroup.create({
     data: {
+        storeId: 'cmir07opv0000vdbcgyq81u0q',
       name: "Adicionais",
       description: "Aumente seu lanche",
       isRequired: false,
@@ -155,7 +157,7 @@ async function main() {
 
   const complementosProtein = await prisma.complement.createMany({
     data: [
-      { name: "Carne bovina", price: 0, groupId: groupProteinas.id },
+      { name: "Carne bovina", price: 0, groupId: groupProteinas.id, },
       { name: "Frango grelhado", price: 0, groupId: groupProteinas.id },
       { name: "Carne dupla", price: 5, groupId: groupProteinas.id },
     ],
@@ -226,8 +228,10 @@ async function main() {
   }
 }
 
-// main()
-//   .catch((e) => {
-//     console.error('Seed script error:', e)
-//     process.exit(1)
-//   })
+main().then(() => {
+    console.log('Seed script finished.')
+})
+  .catch((e) => {
+    console.error('Seed script error:', e)
+    process.exit(1)
+  })

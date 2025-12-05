@@ -9,3 +9,4 @@ export const categorySchema = z.object({
 export const updateCategorySchema = categorySchema.partial();
 
 export type Category = z.infer<typeof categorySchema>;
+export type CreateCategoryInput =   Partial<Pick<Category, "name">>;

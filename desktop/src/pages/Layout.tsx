@@ -20,14 +20,15 @@ export default function Layout() {
   const { isReachable } = useOnlineStatus();
 
   useEffect(() => {
-    // window.api.startQR();
+    window.whatsapp.startSock();
+
     window.whatsapp.onStatus((data) => {
       if (data.status) {
         setStatus(data.status, data.data);
       }
     });
   }, []);
- const { token } = useAuthStore.getState();
+  const { token } = useAuthStore.getState();
   return (
     <>
       <SidebarProvider>

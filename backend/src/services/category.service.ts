@@ -5,7 +5,7 @@ import { Category } from "../schemas/category.schema";
 export class CategoryService {
     constructor(private repository: CategoryRepository) {}
 
-    async createCategory(data: Category) {
+    async createCategory(data: Pick<Category, "name" | 'storeId'>) {
         return this.repository.createCategory(data);
     }
 

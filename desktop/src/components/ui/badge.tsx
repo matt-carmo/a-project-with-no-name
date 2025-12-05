@@ -31,6 +31,8 @@ const badgeVariants = cva(
           "bg-secondary text-secondary-foreground [button,a&]:hover:bg-secondary/90",
         success: "bg-success/8 text-success-foreground dark:bg-success/16",
         warning: "bg-warning/8 text-warning-foreground dark:bg-warning/16",
+        required: "border-yellow-500/50 bg-foreground/10 dark:bg-foreground/10",
+        optional: "bg-foreground/10 dark:bg-foreground/10",
       },
     },
   },

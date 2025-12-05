@@ -1,4 +1,4 @@
-import { mainWindow } from "electron/windows/mainWindow";
+import { mainWindow } from "../windows/mainWindow";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function sendStatus({ status, data }: { status: string; data?: any }) {

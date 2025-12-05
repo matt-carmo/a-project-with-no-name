@@ -7,6 +7,7 @@ declare global {
       greet: () => string;
     };
     whatsapp: {
+      startSock(): unknown;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       data: any;
       onStatus: (callback: (data: { status: "idle" | "connecting" | "qr" | "connected" | "disconnected"; data?: any }) => void) => void;

@@ -309,7 +309,8 @@ function ComboboxChips({ className, ...props }: ComboboxPrimitive.Chips.Props) {
         className,
       )}
       data-slot="combobox-chips"
-      ref={chipsRef}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ref={chipsRef as any}
       {...props}
     />
   );

@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify";
 import { Category } from "../schemas/category.schema";
 import { CategoryService } from "../services/category.service";
 
+import { categorySchema } from "../schemas/category.schema";
 
 export class CategoryController {
     
@@ -11,7 +12,7 @@ export class CategoryController {
     async createCategory(
         req: FastifyRequest<{
             Params: { storeId: string };
-            Body: Category;
+            Body: Pick<Category, "name" | 'storeId'>;
         }>,
         reply: FastifyReply
     ) {
@@ -23,22 +24,20 @@ export class CategoryController {
     }
     async updateCategory(
         req: FastifyRequest<{
-            Params: { categoryId: string };
+            Params: { id: string };
             Body: Partial<Category>;
         }>,
         reply: FastifyReply
     ) {
-        const { categoryId } = req.params;
+        const { id: categoryId } = req.params;
         const category = await this.service.updateCategory(categoryId, req.body);
         return reply.status(200).send(category);
     }
     async deleteCategory(
-        req: FastifyRequest<{
-            Params: { categoryId: string };
-        }>,
+        req: FastifyRequest<{ Params: { id: string } }>,
         reply: FastifyReply
     ) {
-        const { categoryId } = req.params;
+        const { id: categoryId } = req.params;
         await this.service.deleteCategory(categoryId);
         return reply.status(204).send();
     }
