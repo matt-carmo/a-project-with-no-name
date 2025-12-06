@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ComplementGroup } from "@/interfaces/menu.interface";
-
 import {
   NumberField,
   NumberFieldDecrement,
@@ -17,49 +16,44 @@ import {
   SelectValue,
 } from "./ui/select";
 
-import { Controller, Control } from "react-hook-form";
+import { Controller, Control, UseFormSetValue } from "react-hook-form";
 
 export default function ComplementAction({
   props,
   control,
-  groupIndex,
+  nameBase = "complements",
   setValue,
 }: {
-  props: ComplementGroup;
+  props?: ComplementGroup;
   control: Control<any>;
-  groupIndex: number;
-  setValue: (name: string, value: any) => void;
+  nameBase: string; // 👉 agora você passa isso
+  setValue: UseFormSetValue<any>;
 }) {
   return (
-    <div className="border-border gap-3 mt-2">
+    <div className="border-border gap-3">
       {/* Ensure ID exists */}
       <Controller
         control={control}
-        name={`groups.${groupIndex}.id`}
-        defaultValue={props.id}
+        name={`${nameBase}.id`}
+        defaultValue={props?.id ?? ""}
         render={() => <input type="hidden" />}
       />
 
       <div className="flex gap-2">
-
-        {/* ============================
-            IS REQUIRED
-        ============================ */}
+        {/* IS REQUIRED */}
         <Controller
           control={control}
-          name={`groups.${groupIndex}.isRequired`}
-          defaultValue={props.minSelected > 0}
+          name={`${nameBase}.isRequired`}
+          defaultValue={(props?.minSelected ?? 0) > 0}
           render={({ field }) => (
             <Select
               value={field.value ? "Obrigatorio" : "Opcional"}
               onValueChange={(v) => {
                 const isRequired = v === "Obrigatorio";
+
                 field.onChange(isRequired);
 
-                setValue(
-                  `groups.${groupIndex}.minSelected`,
-                  isRequired ? 1 : 0
-                );
+                setValue(`${nameBase}.minSelected`, isRequired ? 1 : 0);
               }}
             >
               <SelectTrigger size="sm">
@@ -74,12 +68,10 @@ export default function ComplementAction({
           )}
         />
 
-        {/* ============================
-            MIN SELECTED — TOTALMENTE CONTROLADO
-        ============================ */}
+        {/* MIN SELECTED */}
         <Controller
           control={control}
-          name={`groups.${groupIndex}.minSelected`}
+          name={`${nameBase}.minSelected`}
           defaultValue={props.minSelected ?? 0}
           render={({ field }) => (
             <NumberField
@@ -90,10 +82,7 @@ export default function ComplementAction({
 
                 field.onChange(v);
 
-                setValue(
-                  `groups.${groupIndex}.isRequired`,
-                  v > 0
-                );
+                setValue(`${nameBase}.isRequired`, v > 0);
               }}
             >
               <NumberFieldGroup>
@@ -105,12 +94,10 @@ export default function ComplementAction({
           )}
         />
 
-        {/* ============================
-            MAX SELECTED
-        ============================ */}
+        {/* MAX SELECTED */}
         <Controller
           control={control}
-          name={`groups.${groupIndex}.maxSelected`}
+          name={`${nameBase}.maxSelected`}
           defaultValue={props.maxSelected ?? 0}
           render={({ field }) => (
             <NumberField

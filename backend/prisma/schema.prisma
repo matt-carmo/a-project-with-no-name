@@ -107,7 +107,7 @@ model Product {
     price       Float
     image       String?
     isAvailable Boolean   @default(true)
-    stock       Int       @default(0)
+    stock       Int?      
     createdAt   DateTime  @default(now())
     deletedAt   DateTime?
     productComplementGroups ProductComplementGroup[]
@@ -140,9 +140,9 @@ model Complement {
     groupId String
     group   ComplementGroup @relation(fields: [groupId], references: [id])
     name     String
-    price    Float   @default(0)
-    isActive Boolean @default(true)
-    stock    Int     @default(0)
+    price    Float    @default(0)
+    isActive Boolean  @default(true)
+    stock    Int?     
     photoUrl String?
 
     orderItemComplements OrderItemComplement[]

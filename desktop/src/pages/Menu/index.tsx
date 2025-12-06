@@ -7,7 +7,7 @@ import {
   CardDescription,
   CardPanel,
 } from "@/components/ui/card";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Field } from "@/components/ui/field";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,7 +18,7 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { categorySchema, CreateCategoryInput } from "@/schemas/category.schema";
+import { categorySchema } from "@/schemas/category.schema";
 import { useAuthStore } from "@/store/auth-store";
 
 import { Plus, Trash } from "lucide-react";
@@ -41,6 +41,8 @@ import { Badge } from "@/components/ui/badge";
 import { EditableProductRow } from "@/components/editable-product-row";
 
 import { SheetCreateProduct } from "@/components/sheet-create-product";
+import { SheetCreateComplement } from "@/components/sheet-create-complement";
+
 
 export default function MenuPage() {
   const { selectedStore } = useAuthStore();
@@ -70,7 +72,7 @@ export default function MenuPage() {
     getMenu();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedStore]);
-  async function handleAddCategory(data: CreateCategoryInput) {
+  async function handleAddCategory(data: { name: string }) {
     try {
       const response = await api.post(`${selectedStore?.store.id}/categories`, {
         name: data.name,
@@ -95,6 +97,8 @@ export default function MenuPage() {
   }
   return (
     <div className='space-y-4'>
+                <SheetCreateComplement/>
+
       <h1 className='text-4xl font-semibold'>Cardápio</h1>
       <p>Gerencie e customize o cardápio do seu restaurante</p>
 
@@ -173,7 +177,7 @@ export default function MenuPage() {
               >
                 <div key={item.id} className='grid grid-cols-[auto_1fr] gap-3'>
                   <img
-                    src={item.image || "https://i.imgur.com/rUsYzzJ.png"}
+                    src={item.photoUrl || "https://i.imgur.com/rUsYzzJ.png"}
                     alt={item.name}
                     className='aspect-5/4 w-16 object-cover rounded-md'
                   />
@@ -182,11 +186,11 @@ export default function MenuPage() {
                     <div className='flex-1 min-w-0'>
                       <p className='font-semibold'>{item.name}</p>
                       <p className='text-sm text-muted-foreground'>
-                        {item.description}
+                        {item.description || "Sem descricao"}
                       </p>
                     </div>
                     <EditableProductRow
-                      stock={item.stock}
+                      stock={item.stock }
                       isAvailable={item.isAvailable}
                       price={item.price}
                     />
@@ -240,7 +244,7 @@ export default function MenuPage() {
                                       {complement.name}
                                     </div>
                                     <EditableProductRow
-                                      stock={complement.stock}
+                                      
                                       isAvailable={complement.isActive}
                                       price={complement.price}
                                     />

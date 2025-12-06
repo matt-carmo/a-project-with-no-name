@@ -13,7 +13,7 @@ import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
 import { Field, FieldLabel } from "./ui/field";
 import Input from "./ui/input";
-import { ShoppingBag } from "lucide-react";
+
 import { Card, CardContent, CardDescription, CardTitle } from "./ui/card";
 import api from "@/api/axios";
 import { Category } from "@/schemas/category.schema";
@@ -24,6 +24,12 @@ import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import ComplementAction from "./complement-action";
+import { toastManager } from "./ui/toast";
+import { Spinner } from "./ui/spinner";
+import { productSchema } from "@/schemas/product.shema";
+import Stock from "./stock";
+import { useSheetComplementStore } from "@/store/use-sheet-complement-store";
+
 
 export interface ComplementGroup {
   id: string;
@@ -61,29 +67,19 @@ const complementIndexMap: Record<ComplementState, number> = {
   "new-complement": 2,
 };
 
-export const productSchema = z.object({
-  name: z.string().min(1, "Nome é obrigatório"),
-  description: z.string().optional(),
-  price: z.number().min(0.01, "Preço inválido"),
-  image: z.any().optional(),
 
-  groups: z.array(
-    z.object({
-      id: z.string(),
-      minSelected: z.number().min(0, "minSelected inválido"),
-      maxSelected: z.number().min(1, "maxSelected inválido"),
-    })
-  ),
-});
+const productSchemaWithoutStoreId = productSchema.omit({ storeId: true });
+export type ProductInput = z.infer<typeof productSchemaWithoutStoreId>;
 
-export type ProductInput = z.infer<typeof productSchema>;
+
+
 
 export function SheetCreateProduct({ category }: { category: Category }) {
   const [step, setStep] = useState(1);
   const [complement, setComplement] = useState<ComplementState>(
     ComplementState.NONE
   );
-
+  const { setOpen: openCreateComplement} = useSheetComplementStore();
   const [stepsNumber, setStepsNumber] = useState(3);
 
   const [complements, setComplements] = useState<ComplementGroup[]>([]);
@@ -109,8 +105,74 @@ export function SheetCreateProduct({ category }: { category: Category }) {
     }
     setComplement(_complement);
   };
+  const {
+    register,
+    control,
+    handleSubmit,
+    setValue,
+    reset,
+    setError,
+    getValues,
 
+    formState: { errors, isSubmitting },
+  } = useForm<ProductInput>({
+    resolver: zodResolver(productSchemaWithoutStoreId ),
+    defaultValues: {
+      name: "",
+      description: "",
+      price: 0,
+      categoryId: "",
+      photoUrl: "",
+      stock: undefined,
+      isAvailable: true,
+      productComplementGroups: complements.map((g) => ({
+        groupId: g.id,
+        minSelected: g.minSelected,
+        maxSelected: g.maxSelected,
+      })),
+    },
+  });
   const handleNextStep = () => {
+    const step1Data = {
+      name: getValues("name"),
+      description: getValues("description"),
+      price: getValues("price"),
+      image: getValues("image"),
+      productComplementGroups: getValues("productComplementGroups"),
+    };
+    if (step === 1) {
+      const step1Schema = productSchema.pick({
+        name: true,
+        description: true,
+        image: true,
+        price: true,
+      });
+      const result = step1Schema.safeParse(step1Data);
+
+      if (!result.success) {
+
+        result.error.issues.forEach((issue) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          return setError(issue.path[0] as any, {
+            message: issue.message,
+          });
+        });
+        return; 
+      }
+    }
+    if(step === 2) {
+      if(complement === 'new-complement') {
+        openCreateComplement(true)
+        
+      }
+    }
+    if (step === 3 && selectedsComplements.length === 0) {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      setError("productComplementGroups", {
+        message: "Selecione pelo menos um complemento",
+      });
+      return;
+    }
     setStep(step + 1);
   };
   const handlePreviousStep = () => {
@@ -118,7 +180,18 @@ export function SheetCreateProduct({ category }: { category: Category }) {
       setStep(step - 1);
     }
   };
-
+  useEffect(() => {
+    if (selectedsComplements.length === 0) {
+      setError("productComplementGroups", {
+        message: "Selecione pelo menos um complemento",
+      });
+    } else {
+      setError("productComplementGroups", {
+        message: "",
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedsComplements]);
   const getComplements = async function () {
     const res = await api.get(`${category.storeId}/complements`);
     setComplements(res.data as ComplementGroup[]);
@@ -131,29 +204,6 @@ export function SheetCreateProduct({ category }: { category: Category }) {
   useEffect(() => {
     setStepsNumber(complementIndexMap[complement] + 2);
   }, [complement]);
-  const {
-    register,
-    control,
-    handleSubmit,
-    setValue,
-    // getValues,
-    watch,
-    reset,
-    formState: { errors },
-  } = useForm<ProductInput>({
-    resolver: zodResolver(productSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      price: 0,
-      image: undefined,
-      groups: complements.map((g) => ({
-        id: g.id,
-        minSelected: g.minSelected,
-        maxSelected: g.maxSelected,
-      })),
-    },
-  });
 
   const onSubmit = async (data: ProductInput) => {
     const formData = new FormData();
@@ -161,21 +211,53 @@ export function SheetCreateProduct({ category }: { category: Category }) {
     formData.append("name", data.name);
     formData.append("description", data.description || "");
     formData.append("price", String(data.price));
-
+    formData.append("categoryId", category.id);
+    formData.append("isAvailable", String(data.isAvailable));
+    formData.append("stock", String(data.stock));
     // imagem
+    
     if (data.image && data.image[0]) {
       formData.append("image", data.image[0]);
     }
 
-    formData.append("groups", JSON.stringify(data.groups));
+    if (data.productComplementGroups) {
+      formData.append(
+        "productComplementGroups",
+        JSON.stringify(
+          data.productComplementGroups.map((g) => ({
+            groupId: g.id,
+            minSelected: g.minSelected,
+            maxSelected: g.maxSelected,
+          }))
+        )
+      );
+    }
+    
 
-    const res = await api.post(`${category.storeId}/products`, {
-      method: "POST",
-      body: formData,
-    });
+    const res = await api.post(
+      `stores/${category.storeId}/products`,
+      formData,
 
-    const json = await res.json();
-    console.log(json);
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+    console.log(res);
+    if (res.status === 201) {
+      toastManager.add({
+        title: "Produto criado com sucesso",
+        type: "success",
+      });
+      setOpen(false);
+    }else {
+      toastManager.add({
+        title: "Erro ao criar produto",
+        type: "error",
+        description: res?.data?.message || "Erro no servidor... Contate o suporte",
+      });
+    }
   };
 
   useEffect(() => {
@@ -183,12 +265,26 @@ export function SheetCreateProduct({ category }: { category: Category }) {
   }, [errors]);
   const ButtonAction = () => {
     if (step === stepsNumber) {
-      return <Button type='submit'>Salvar</Button>;
+      return (
+        <Button onClick={() => console.log(getValues())} disabled={isSubmitting} type='submit'>
+          {isSubmitting ? <Spinner /> : "Criar"}
+        </Button>
+      );
     }
-    return <Button onClick={handleNextStep}>Proximo</Button>;
+    return <Button onClick={handleNextStep}>Próximo</Button>;
   };
+
+  const [open, setOpen] = useState(false);
+
   return (
-    <Sheet onOpenChange={() => reset()}>
+    <Sheet
+      open={open}
+      onOpenChange={() => {
+        reset();
+        setOpen(!open);
+        setStep(1);
+      }}
+    >
       <SheetTrigger>
         <Button>Adicionar produto</Button>
       </SheetTrigger>
@@ -271,9 +367,15 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                 {/* ESTOQUE */}
                 <Field>
                   <FieldLabel>Estoque</FieldLabel>
-                  <Button variant='outline'>
-                    <ShoppingBag /> Ativar estoque
-                  </Button>
+                  <Controller
+                    control={control}                  
+                    name='stock'
+                    render={({ field }) => (                      
+                      <Stock stock={field.value ?? null} onStockChange={field.onChange} />
+                    )}
+                    >
+
+                    </Controller>
                 </Field>
               </div>
               <div className={`${step === 2 ? "flex-1/3" : "hidden"}`}>
@@ -316,6 +418,11 @@ export function SheetCreateProduct({ category }: { category: Category }) {
               </div>
               <div className={`${step === 3 ? "flex-1/3" : "hidden"}`}>
                 <h2 className='text-2xl'>Complementos</h2>
+                {errors.productComplementGroups && (
+                  <span className='text-destructive text-sm'>
+                    {errors.productComplementGroups.message}
+                  </span>
+                )}
 
                 {complements.map((complement: ComplementGroup) => (
                   <Card
@@ -383,10 +490,12 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                         <ComplementAction
                           control={control}
                           setValue={setValue}
-                          watch={watch}
-                          groupIndex={index}
+                          // watch={watch}
+                          nameBase={`productComplementGroups.${index}`}
+               
                           key={complement.id}
-                          props={complement}
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          props={complement as any}
                         />
                       </CardContent>
                     </Card>

@@ -1,0 +1,51 @@
+
+export async function uploadImage({ imageBuffer }: { imageBuffer: Buffer }) {
+    const form = new FormData();
+    form.append("image", imageBuffer.toString("base64"));
+
+    const res = await fetch(
+        "https://api.imgbb.com/1/upload?key=03005b514667c4284b7616242ce6754b",
+        {
+            method: "POST",
+            body: form,
+        }
+    );
+
+    const json = await res.json();
+
+    if (!res.ok) {
+        return { success: false, error: json };
+    }
+
+    return { success: true, data: json };
+}
+export class ImageService {
+    async transformImageToBuffer(imageUrl: string) {
+
+    }
+    async fetchImageAsBuffer(imageUrl: string): Promise<Buffer> {
+        const response = await fetch(imageUrl);
+        const arrayBuffer = await response.arrayBuffer();
+        return Buffer.from(arrayBuffer);
+    }
+    async uploadImage({ imageBuffer }: { imageBuffer: Buffer }) {
+        const form = new FormData();
+        form.append("image", imageBuffer.toString("base64"));
+
+        const res = await fetch(
+            "https://api.imgbb.com/1/upload?key=03005b514667c4284b7616242ce6754b",
+            {
+                method: "POST",
+                body: form,
+            }
+        );
+
+        const json = await res.json();
+
+        if (!res.ok) {
+            return { success: false, error: json };
+        }
+
+        return { success: true, data: json };
+    }
+}

@@ -36,7 +36,7 @@ export const createComplementGroupSchema = z.object({
   maxSelected: z.number().int().positive().optional().nullable(),
   isAvailable: z.boolean().optional().default(true),
 
-  storeId: z.string().cuid(),
+  storeId: z.cuid(),
   // Se quiser aceitar relações já criadas no payload, descomente / substitua:
   // complements: z.array(complementCreateSchema).optional(),
   // products: z.array(productComplementGroupCreateSchema).optional(),

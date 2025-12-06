@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Complement" ALTER COLUMN "stock" DROP NOT NULL,
+ALTER COLUMN "stock" DROP DEFAULT;

@@ -6,7 +6,9 @@ export const categorySchema = z.object({
     storeId: z.cuid(),
 });
 
-export const updateCategorySchema = categorySchema.partial();
-
+const updateCategorySchema = categorySchema.partial();
+const createCategorySchema = categorySchema.pick({ name: true, storeId: true });
+export type { updateCategorySchema, createCategorySchema } ;
 export type Category = z.infer<typeof categorySchema>;
-export type CreateCategoryInput =   Partial<Pick<Category, "name">>;
+export type UpdateCategory = z.infer<typeof updateCategorySchema>;
+export type CreateCategory = z.infer<typeof createCategorySchema>;
