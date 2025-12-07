@@ -7,7 +7,6 @@ import {
   SheetPanel,
   SheetPopup,
   SheetTitle,
-  SheetTrigger,
 } from "./ui/sheet";
 
 import { Controller, useForm } from "react-hook-form";
@@ -21,18 +20,22 @@ import { z } from "zod";
 import BRLInput from "./BRLCurrencyInput";
 import ComplementAction from "./complement-action";
 import { Card, CardContent } from "./ui/card";
+import { convertBRL } from "@/utils/convertBRL";
+import api from "@/api/axios";
+import { useParams } from "react-router";
+import { Complement } from "@/interfaces/menu.interface";
 
 // ------------------------------
 // 1. SCHEMAS POR ETAPA
 // ------------------------------
 
-const groupSchema = z.object({
-  group: z.object({
-    name: z.string().min(1, "Nome é obrigatório"),
-    minSelected: z.number().min(1),
-    maxSelected: z.number().min(1),
-  }),
-});
+// const groupSchema = z.object({
+//   group: z.object({
+//     name: z.string().min(1, "Nome é obrigatório"),
+//     minSelected: z.number().min(0),
+//     maxSelected: z.number().min(1),
+//   }),
+// });
 
 const complementSchema = z.object({
   complements: z.object({
@@ -40,27 +43,25 @@ const complementSchema = z.object({
     description: z.string().optional(),
     image: z.any().optional(),
   }),
-  productPrice: z.number().min(0.01),
+  productPrice: z.number().min(0),
 });
 
 // ------------------------------
 
-type Complement = {
-  name: string;
-  description?: string;
-  price: number;
-  image?: string | null;
-};
+
 
 // ------------------------------
 
-
-export function SheetCreateComplement() {
+export function SheetCreateComplement({
+  onCreateComplement,
+}: {
+  onCreateComplement(complement: Complement): void;
+}) {
   const { open, setOpen } = useSheetComplementStore();
   const [step, setStep] = useState(1);
-
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [complements, setComplements] = useState<Complement[]>([]);
+
+  const { id: storeId } = useParams();
 
   const { register, control, getValues, setValue, reset } = useForm({
     defaultValues: {
@@ -73,6 +74,7 @@ export function SheetCreateComplement() {
         name: "",
         description: "",
         image: undefined,
+        imagePreview: "",
       },
       productPrice: 0,
     },
@@ -85,25 +87,49 @@ export function SheetCreateComplement() {
     if (!file) return;
 
     const url = URL.createObjectURL(file);
-    setPreviewImage(url);
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setValue("complements.image", file as any);
+    setValue("complements.imagePreview", url);
   };
 
- const onCaptureGroup = () => {
-    const result = groupSchema.safeParse(getValues());
+  const onCaptureGroup = async () => {
+    if (step === 1) return setStep(2);
 
-    const result2 = complementSchema.safeParse(getValues());
+    const group = getValues("group");
+    const comps = complements;
 
-  
-    if (!result.success) {
-      console.log("Erros Step 1:", result.error.flatten());
-      return;
+    const formData = new FormData();
+
+    // Mandamos o grupo inteiro como JSON
+    formData.append(
+      "group",
+      JSON.stringify({
+        ...group,
+        complements: comps.map((c) => ({
+          name: c.name,
+          description: c.description ?? "",
+          price: c.price,
+        })),
+      })
+    );
+
+    // Depois enviamos os arquivos separadamente
+    comps.forEach((c) => {
+      if (c.image) {
+        formData.append("images", c.image); // um campo só
+      }
+    });
+
+    const res = await api.post(`${storeId}/groups-complements`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    if (res.status === 201) {
+      onCreateComplement(res.data);
+      setOpen(false);
     }
-
-    setStep(2);
   };
-
 
   const onSubmitComplement = () => {
     const result = complementSchema.safeParse(getValues());
@@ -118,20 +144,19 @@ export function SheetCreateComplement() {
     const newComplement: Complement = {
       name: values.complements.name,
       description: values.complements.description,
-      price: values.productPrice,
-      image: previewImage,
+      price: values.productPrice / 100,
+      
+      image: values.complements.image,
+      imagePreview: values.complements.imagePreview,
     };
 
     setComplements((prev) => [...prev, newComplement]);
 
     reset({
       ...values,
-      complements: { name: "", description: "", image: undefined , },
+      complements: { name: "", description: "", image: undefined },
       productPrice: 0,
-
     });
-
-    setPreviewImage(null);
   };
 
   const removeComplement = (index: number) => {
@@ -143,7 +168,21 @@ export function SheetCreateComplement() {
   // -----------------------------------
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <>
+
+    <Sheet
+      open={open}
+      onOpenChange={() => {
+        setOpen(!open);
+        setComplements([]);
+        reset({
+          complements: { name: "", description: "", image: undefined },
+          group: { name: "", minSelected: 0, maxSelected: 0 },
+          productPrice: 0,
+        });
+        setStep(1);
+      }}
+    >
       {/* <SheetTrigger>Open</SheetTrigger> */}
 
       <SheetPopup className='max-w-2xl'>
@@ -172,7 +211,7 @@ export function SheetCreateComplement() {
                     minSelected: 1,
                     complements: [],
                     description: "",
-                    id: "",
+
                     isAvailable: true,
                     isRequired: false,
                     name: "",
@@ -203,10 +242,11 @@ export function SheetCreateComplement() {
                 <Controller
                   control={control}
                   name='productPrice'
+                  defaultValue={0}
                   render={({ field }) => (
                     <BRLInput
-                      value={field.value}
-                      onChange={(v) => field.onChange(v / 100)}
+                      value={field.value ?? 0}
+                      onChange={(v) => field.onChange(v)}
                     />
                   )}
                 />
@@ -221,30 +261,48 @@ export function SheetCreateComplement() {
                 />
               </Field>
 
-              <Button type='button' onClick={onSubmitComplement}>
-                <Plus size={18} /> Adicionar complemento
+              <Button
+                className='w-full py-2 font-semibold text-lg'
+                type='button'
+                onClick={onSubmitComplement}
+              >
+                <div>
+                  {" "}
+                  <Plus />
+                </div>{" "}
+                Adicionar complemento
               </Button>
 
               <div className='mt-4 space-y-4'>
                 {complements.map((c, i) => (
-                  <Card key={i} className='flex gap-4 p-2 border-0 bg-secondary'>
+                  <Card
+                    key={i}
+                    className='flex gap-4 p-2 border-0 bg-secondary'
+                  >
                     <CardContent className='flex gap-4 p-2'>
                       {c.image && (
-                        <div className='rounded-xl overflow-hidden'>
+                        <div className='rounded-xl h-16 aspect-square border-border'>
                           <img
-                            src={c.image}
-                            className='w-16 h-16 rounded-md object-fi overflow-hidden'
+                            src={c.imagePreview}
+                            className=' h-auto mx-auto max-h-full rounded-md object-cover '
                           />
                         </div>
                       )}
                       <div className='flex flex-col gap-0'>
                         <span className='font-semibold'>{c.name}</span>
                         <span className='text-sm'>{c.description}</span>
-                        <span className='text-sm'>R$ {c.price.toFixed(2)}</span>
+                        <span className='text-sm'>
+                          {convertBRL(c.price / 100)}
+                        </span>
                       </div>
                       <div className='ml-auto flex items-center aspect-square'>
-                      <Button onClick={() => removeComplement(i)} className="aspect-square rounded-full" variant='destructive'><Trash /></Button>
-
+                        <Button
+                          onClick={() => removeComplement(i)}
+                          className='aspect-square rounded-full'
+                          variant='destructive'
+                        >
+                          <Trash />
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -260,10 +318,17 @@ export function SheetCreateComplement() {
           </SheetClose>
 
           {step === 1 && <Button onClick={onCaptureGroup}>Avançar</Button>}
-          {step === 2 && <Button onClick={onCaptureGroup}>Salvar</Button>}
-
+          {step === 2 && (
+            <Button
+              disabled={complements.length === 0}
+              onClick={onCaptureGroup}
+            >
+              Criar grupo
+            </Button>
+          )}
         </SheetFooter>
       </SheetPopup>
     </Sheet>
+    </>
   );
 }

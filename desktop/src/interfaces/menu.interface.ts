@@ -21,10 +21,11 @@ export interface Product {
     createdAt: Date;
     deletedAt?: Date | null;
     productComplementGroups: ProductComplementGroup[];
+    
 }
 
 export interface ProductComplementGroup {
-    // id: string;
+    id: string;
     productId: string;
     groupId: string;
     // complements: Complement[];
@@ -33,7 +34,7 @@ export interface ProductComplementGroup {
 }
 
 export interface ComplementGroup {
-    id: string;
+    id?: string;
 
     name: string;
     description: string;
@@ -47,12 +48,15 @@ export interface ComplementGroup {
 
 
 export interface Complement {
-    // id: string;
-    groupId: string;
+    id?: string;
+    groupId?: string;
     name: string;
+    photoUrl?: string;
+    imagePreview?: string;
+    image: undefined;
+    description?: string;
     price: number;
-    photoUrl: string | null;
-    isActive: boolean;
+    isActive?: boolean;
     stock?: number | null;
 }
 

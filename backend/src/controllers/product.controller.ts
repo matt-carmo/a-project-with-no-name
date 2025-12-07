@@ -6,54 +6,63 @@ import { ProductService } from "../services/product.service";
 
 export class ProductController {
     constructor(private productService: ProductService) { }
-    async createProductWithComplementsGroups(req: FastifyRequest<{ Params: { storeId: string }; Multipart: Multipart }>, res: FastifyReply) {
-        try {
-            const parts = req.parts();
-            const form: Record<string, any> = {};
+async createProductWithComplementsGroups(
+  req: FastifyRequest<{ Params: { storeId: string } }>,
+  reply: FastifyReply
+) {
+  try {
+    const body = req.body as Record<string, any>;
 
-            let imageBuffer: Buffer | null = null;
-            for await (const part of parts) {
-                if (part.type === "field") {
-                    form[part.fieldname] = part.value;
-                } else if (part.file) {
-                    const fileBuffer = await part.toBuffer();
-                    imageBuffer = fileBuffer;
-                }
-            }
+    const form: Record<string, any> = {};
+    let imageBuffer: Buffer | null = null;
+   
+    for (const key in body) {
+      const field = body[key];
 
-           
+ 
+      if (field?.type === "field") {
+        form[key] = field.value;
+        continue;
+      }
 
-            let uploadImageResult: any 
-            if (imageBuffer) {
-                uploadImageResult = await uploadImage({ imageBuffer });
-            } else {
-                uploadImageResult = { success: false };
-            }
-            const data = {
-                name: form.name,
-                description: form.description,
-                price: parseFloat(form.price),
-                photoUrl: uploadImageResult.success ? uploadImageResult.data.data.url : "",
-                isAvailable: form.isAvailable === "true",
-                stock: Number(form.stock) ?? null,
-                storeId: req.params.storeId,
-                categoryId: form.categoryId || null,
-                productComplementGroups: form.productComplementGroups ? JSON.parse(form.productComplementGroups) : null,
-
-            }
-
-            if (data.productComplementGroups.length === 0) {
-
-                const createdProduct = await this.productService.createProduct(data);
-                return res.status(201).send(createdProduct);
-            }
-            const createdProductWithComplements = await this.productService.createProductWithComplementsGroups(data);
-
-            return res.status(201).send(createdProductWithComplements);
-
-        } catch (error) {
-            console.error("Erro ao criar produto:", error);
-            return res.status(500).send({ error: "Erro ao criar produto" });
-        }
+      if (field?.type === "file" && field.file) {
+        imageBuffer = await field.toBuffer();
+      }
     }
+
+    let uploadImageResult: any;
+    if (imageBuffer) {
+      uploadImageResult = await uploadImage({ imageBuffer });
+    } else {
+      uploadImageResult = { success: false };
+    }
+
+    const data = {
+      name: form.name,
+      description: form.description,
+      price: Number(form.price),
+      photoUrl: uploadImageResult.success ? uploadImageResult.data.data.url : "",
+      isAvailable: form.isAvailable === "true",
+      stock: form.stock ? Number(form.stock) : null,
+      storeId: req.params.storeId,
+      categoryId: form.categoryId || null,
+      productComplementGroups: form.productComplementGroups
+        ? JSON.parse(form.productComplementGroups)
+        : [],
+    };
+
+    if (!data.productComplementGroups.length) {
+      const created = await this.productService.createProduct(data);
+      return reply.status(201).send(created);
+    }
+
+    const createdAdvanced = await this.productService.createProductWithComplementsGroups(data);
+
+    return reply.status(201).send(createdAdvanced);
+
+  } catch (error) {
+    console.error("Erro ao criar produto:", error);
+    return reply.status(500).send({ error: "Erro ao criar produto" });
+  }
+}
 }

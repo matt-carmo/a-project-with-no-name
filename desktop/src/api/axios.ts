@@ -3,7 +3,6 @@ import { useAuthStore } from "@/store/auth-store";
 import axios from "axios";
 
 
-const { token } = useAuthStore.getState();
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const BASE_URL = (window as any).env.BASE_URL;
@@ -13,9 +12,23 @@ export const api = axios.create({
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
-    Authorization: token ? `Bearer ${token}` : "",
   },
 });
+api.interceptors.request.use(
+  (config) => {
+    const { token } = useAuthStore.getState();
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      delete config.headers.Authorization;
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 
 api.interceptors.response.use(
   (response) => response,

@@ -12,7 +12,6 @@ import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import {
   Popover,
-  PopoverClose,
   PopoverDescription,
   PopoverPopup,
   PopoverTitle,
@@ -41,13 +40,12 @@ import { Badge } from "@/components/ui/badge";
 import { EditableProductRow } from "@/components/editable-product-row";
 
 import { SheetCreateProduct } from "@/components/sheet-create-product";
-import { SheetCreateComplement } from "@/components/sheet-create-complement";
-
+import { onRefetch } from "@/lib/utils";
 
 export default function MenuPage() {
   const { selectedStore } = useAuthStore();
   const [data, setData] = useState<Category[]>([]);
-
+  const [open, setOpen] = useState(false);
   const {
     register,
     handleSubmit,
@@ -68,8 +66,16 @@ export default function MenuPage() {
 
   useEffect(() => {
     if (!selectedStore?.store?.id) return;
-
     getMenu();
+    const unsubscribe = onRefetch(() => {
+      getMenu();
+    });
+    return () => {
+      unsubscribe();
+      if (typeof unsubscribe === "function") {
+        void unsubscribe();
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedStore]);
   async function handleAddCategory(data: { name: string }) {
@@ -80,6 +86,7 @@ export default function MenuPage() {
       console.log(errors);
       if (response.status === 201) {
         getMenu();
+        setOpen(false);
       }
     } catch (error) {
       console.error("Erro ao adicionar categoria:", error);
@@ -97,12 +104,12 @@ export default function MenuPage() {
   }
   return (
     <div className='space-y-4'>
-                <SheetCreateComplement/>
+      
 
       <h1 className='text-4xl font-semibold'>Cardápio</h1>
       <p>Gerencie e customize o cardápio do seu restaurante</p>
 
-      <Popover>
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger>
           <Button variant='outline'>
             <Plus />
@@ -122,11 +129,10 @@ export default function MenuPage() {
               <span className='text-red-500'>{errors?.name?.message}</span>
               {/* <span>{JSON.stringify(errors || {})}</span> */}
             </Field>
-            <PopoverClose>
-              <Button disabled={isSubmitting} type='submit'>
-                Salvar
-              </Button>
-            </PopoverClose>
+
+            <Button disabled={isSubmitting} type='submit'>
+              Salvar
+            </Button>
           </Form>
         </PopoverPopup>
       </Popover>
@@ -176,6 +182,7 @@ export default function MenuPage() {
                 }`}
               >
                 <div key={item.id} className='grid grid-cols-[auto_1fr] gap-3'>
+                 
                   <img
                     src={item.photoUrl || "https://i.imgur.com/rUsYzzJ.png"}
                     alt={item.name}
@@ -190,7 +197,7 @@ export default function MenuPage() {
                       </p>
                     </div>
                     <EditableProductRow
-                      stock={item.stock }
+                      stock={item.stock}
                       isAvailable={item.isAvailable}
                       price={item.price}
                     />
@@ -235,17 +242,17 @@ export default function MenuPage() {
                                     key={complement.id}
                                     className='flex justify-between'
                                   >
+                                    
                                     <div className='flex gap-2 items-center'>
                                       <img
-                                        src={"https://i.imgur.com/rUsYzzJ.png"}
+                                        src={complement.photoUrl}
                                         alt={""}
                                         className='w-8 h-8 object-cover rounded-md'
                                       />
                                       {complement.name}
                                     </div>
                                     <EditableProductRow
-                                      
-                                      isAvailable={complement.isActive}
+                                      isAvailable={complement.isActive as boolean}
                                       price={complement.price}
                                     />
                                   </li>

@@ -16,6 +16,7 @@ import { CategoryRoutes } from "./routes/category.route";
 import { ComplementsRoutes } from "./routes/complements.route";
 import { ProductRoutes } from "./routes/product.route";
 import fastifyMultipart from "@fastify/multipart";
+import { GroupsComplementsRoutes } from "./routes/groups-complements.route";
 export const server = fastify();
 export function buildServer() {
     server.register(prismaPlugin);
@@ -32,10 +33,11 @@ export function buildServer() {
     });
     server.register(fastifyMultipart, {
         limits: {
-            fileSize: 50 * 1024 * 1024, // 50MB (aumente se necessário)
-            files: 1,
-            fields: 20,
-        }
+            fileSize: 50 * 1024 * 1024,
+            files: 50,                  
+            fields: 500,                
+        },
+        attachFieldsToBody: true,
     });
     server.addHook("onRequest", async (request, reply) => {
         try {
@@ -74,6 +76,7 @@ export function buildServer() {
     server.register(ComplementsRoutes);
     server.register(CategoryRoutes)
     server.register(ProductRoutes);
+    server.register(GroupsComplementsRoutes)
 
     return server;
 }

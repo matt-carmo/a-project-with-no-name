@@ -128,7 +128,7 @@ model ComplementGroup {
     minSelected Int     @default(0)
     maxSelected Int?
     isAvailable Boolean @default(true)
-
+    
     storeId String
     store   Store @relation(fields: [storeId], references: [id])
     complements Complement[]
@@ -140,6 +140,7 @@ model Complement {
     groupId String
     group   ComplementGroup @relation(fields: [groupId], references: [id])
     name     String
+    description String?
     price    Float    @default(0)
     isActive Boolean  @default(true)
     stock    Int?     

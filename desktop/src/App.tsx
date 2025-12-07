@@ -5,8 +5,8 @@ import SettingsPage from "./pages/Settings";
 import MenuPage from "./pages/Menu";
 import AuthPage from "./pages/Auth";
 import { useAuthStore } from "./store/auth-store";
-import { useEffect } from "react";
 
+import './globals.css'
 function App() {
   document.body.classList.add("dark");
   
@@ -19,12 +19,8 @@ function App() {
 
 function AppRoutes() {
 
-  const { token, selectedStore, logout } = useAuthStore();
+  const { token, selectedStore } = useAuthStore();
     
-  useEffect(() => {
-    logout() 
-    console.log(selectedStore?.store.id)
-  }, [])
   
   return (
  <Routes>

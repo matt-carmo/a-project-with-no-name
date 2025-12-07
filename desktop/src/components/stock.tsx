@@ -11,25 +11,31 @@ export default function Stock({
   onStockChange?: (value: number) => void;
 }) {
   const [_stock, _setStock] = useState<number | null>(stock);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const number = Number(e.target.value);
+    if(number >= 0) {
+      _setStock(number);
+    }
+  }
   return (
-    <div className='max-w-35 flex items-center'>
+    <div className='max-w-35 flex items-center gap-2'>
       {_stock === null ? (
         <Button onClick={() => _setStock(0)} variant='outline'>
           <ShoppingBag /> Ativar estoque
         </Button>
       ) : (
         <>
-          <Button className={`${!_stock && "rounded-r-none border border-white !before:inset-0" }`} onClick={() => _setStock(null)} variant='ghost'>
+          <Button size='icon' onClick={() => _setStock(null)} variant='outline'>
             <X />
           </Button>
           <Input
-            type="number"
+     
             value={_stock}
             onChange={(e) => {
               onStockChange?.(Number(e.target.value))
-              _setStock(Number(e.target.value))
+              handleChange(e)
             }}
-            className={`font-medium w-20 ${!_stock && "rounded-l-none border-l-" }`}
+            className={`font-medium w-20`}
           />
         </>
       )}

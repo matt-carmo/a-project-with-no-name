@@ -72,7 +72,7 @@ export default function ComplementAction({
         <Controller
           control={control}
           name={`${nameBase}.minSelected`}
-          defaultValue={props.minSelected ?? 0}
+          defaultValue={props?.minSelected ?? 0}
           render={({ field }) => (
             <NumberField
               min={0}
@@ -98,7 +98,7 @@ export default function ComplementAction({
         <Controller
           control={control}
           name={`${nameBase}.maxSelected`}
-          defaultValue={props.maxSelected ?? 0}
+          defaultValue={props?.maxSelected ?? 0}
           render={({ field }) => (
             <NumberField
               min={0}
