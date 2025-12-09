@@ -20,7 +20,7 @@ import {
 import { categorySchema } from "@/schemas/category.schema";
 import { useAuthStore } from "@/store/auth-store";
 
-import { Plus, Trash } from "lucide-react";
+import { CameraOff, Plus, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -104,8 +104,6 @@ export default function MenuPage() {
   }
   return (
     <div className='space-y-4'>
-      
-
       <h1 className='text-4xl font-semibold'>Cardápio</h1>
       <p>Gerencie e customize o cardápio do seu restaurante</p>
 
@@ -182,12 +180,18 @@ export default function MenuPage() {
                 }`}
               >
                 <div key={item.id} className='grid grid-cols-[auto_1fr] gap-3'>
-                 
-                  <img
-                    src={item.photoUrl || "https://i.imgur.com/rUsYzzJ.png"}
-                    alt={item.name}
-                    className='aspect-5/4 w-16 object-cover rounded-md'
-                  />
+                  {!item.photoUrl && (
+                    <div className='w-16 aspect-5/4'>
+                      <CameraOff className='w-full h-full object-cover' />
+                    </div>
+                  )}
+                  {item.photoUrl && (
+                    <img
+                      src={item.photoUrl}
+                      alt={item.name}
+                      className='aspect-5/4 w-16 object-cover rounded-md'
+                    />
+                  )}
 
                   <div className='flex gap-2 items-center'>
                     <div className='flex-1 min-w-0'>
@@ -197,7 +201,10 @@ export default function MenuPage() {
                       </p>
                     </div>
                     <EditableProductRow
+                      storeId={selectedStore?.store.id as string}
                       stock={item.stock}
+                      type='product'
+                      productId={item.id}
                       isAvailable={item.isAvailable}
                       price={item.price}
                     />
@@ -218,7 +225,7 @@ export default function MenuPage() {
                             <p>{complementGroup.group.isAvailable}</p>
                             <ul>
                               <li>
-                                {complementGroup.group.isRequired ? (
+                                {complementGroup.group.minSelected > 0 ? (
                                   <Badge
                                     className='rounded-full px-2 py-0.5'
                                     variant='required'
@@ -242,7 +249,6 @@ export default function MenuPage() {
                                     key={complement.id}
                                     className='flex justify-between'
                                   >
-                                    
                                     <div className='flex gap-2 items-center'>
                                       <img
                                         src={complement.photoUrl}
@@ -252,7 +258,14 @@ export default function MenuPage() {
                                       {complement.name}
                                     </div>
                                     <EditableProductRow
-                                      isAvailable={complement.isActive as boolean}
+                                      storeId={selectedStore?.store.id as string}
+                                      type='complement'
+                                      complementId={complement.id}
+                                      productId={item.id}
+                                  
+                                      isAvailable={
+                                        complement.isActive as boolean
+                                      }
                                       price={complement.price}
                                     />
                                   </li>

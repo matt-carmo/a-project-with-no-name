@@ -132,7 +132,7 @@ async function main() {
       storeId: 'cmir07opv0000vdbcgyq81u0q',
       name: "Escolha a proteína",
       description: "Escolha 1 opção",
-      isRequired: true,
+
       minSelected: 1,
       maxSelected: 1,
     },
@@ -143,7 +143,7 @@ async function main() {
         storeId: 'cmir07opv0000vdbcgyq81u0q',
       name: "Adicionais",
       description: "Aumente seu lanche",
-      isRequired: false,
+ 
       minSelected: 0,
       maxSelected: 5,
     },

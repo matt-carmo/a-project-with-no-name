@@ -7,7 +7,6 @@ export const complementGroupSchema = z.object({
   id: z.cuid(),
   name: z.string().min(1, "Nome da categoria é obrigatório").max(100, "Nome muito longo"),
   description: z.string().max(1000).optional().nullable(),
-  isRequired: z.boolean().default(false),
   minSelected: z.number().int().nonnegative().default(0),
   maxSelected: z.number().int().positive().optional().nullable(),
   isAvailable: z.boolean().default(true),
@@ -15,40 +14,27 @@ export const complementGroupSchema = z.object({
 
 //   complements: z.array(z.any()).optional(),
 //   products: z.array(z.any()).optional(),    
-}).superRefine((obj, ctx) => {
-  if (obj.maxSelected != null) {
-    if (obj.maxSelected < obj.minSelected) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "maxSelected deve ser maior ou igual a minSelected",
-        path: ["maxSelected"],
-      });
-    }
-  }
-});
+})
 
 
 export const createComplementGroupSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório").max(100, "Nome muito longo"),
   description: z.string().max(1000).optional().nullable(),
-  isRequired: z.boolean().optional().default(false),
   minSelected: z.number().int().nonnegative().optional().default(0),
   maxSelected: z.number().int().positive().optional().nullable(),
   isAvailable: z.boolean().optional().default(true),
 
-  storeId: z.string().cuid(),
-  // Se quiser aceitar relações já criadas no payload, descomente / substitua:
-  // complements: z.array(complementCreateSchema).optional(),
-  // products: z.array(productComplementGroupCreateSchema).optional(),
-}).superRefine((obj, ctx) => {
-  if (obj.maxSelected != null && obj.maxSelected < obj.minSelected) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "maxSelected deve ser maior ou igual a minSelected",
-      path: ["maxSelected"],
-    });
-  }
-});
+  storeId: z.cuid(),
+  complements: z.array(
+    z.object({
+      name: z.string().min(1, "Nome do complemento é obrigatório").max(100, "Nome muito longo"),
+      description: z.string().max(1000).optional().nullable(),
+      price: z.number().nonnegative(),
+      photoUrl: z.url().optional().nullable(),
+    })
+  ).optional(),
+
+})
 
 /**
  * Schema para atualização parcial.

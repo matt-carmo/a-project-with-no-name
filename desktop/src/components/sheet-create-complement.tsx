@@ -24,6 +24,7 @@ import { convertBRL } from "@/utils/convertBRL";
 import api from "@/api/axios";
 import { useParams } from "react-router";
 import { Complement } from "@/interfaces/menu.interface";
+import ModalImage from "./modal-image";
 
 // ------------------------------
 // 1. SCHEMAS POR ETAPA
@@ -48,8 +49,6 @@ const complementSchema = z.object({
 
 // ------------------------------
 
-
-
 // ------------------------------
 
 export function SheetCreateComplement({
@@ -63,34 +62,53 @@ export function SheetCreateComplement({
 
   const { id: storeId } = useParams();
 
-  const { register, control, getValues, setValue, reset } = useForm({
-    defaultValues: {
-      group: {
-        name: "",
-        minSelected: 1,
-        maxSelected: 1,
+  type FormValues = {
+    group: {
+      name: string;
+      minSelected: number;
+      maxSelected: number;
+    };
+    complements: {
+      name: string;
+      description?: string;
+      image?: { url: string; id: string } | undefined;
+      imagePreview?: string | undefined;
+    };
+    productPrice: number;
+  };
+
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const { register, control, getValues, setValue, reset } = useForm<FormValues>(
+    {
+      defaultValues: {
+        group: {
+          name: "",
+          minSelected: 1,
+          maxSelected: 1,
+        },
+        complements: {
+          name: "",
+          description: "",
+          image: undefined,
+          imagePreview: undefined,
+        },
+        productPrice: 0,
       },
-      complements: {
-        name: "",
-        description: "",
-        image: undefined,
-        imagePreview: "",
-      },
-      productPrice: 0,
-    },
-  });
+    }
+  );
 
   // -----------------------------------
   // PREVIEW DE IMAGEM
   // -----------------------------------
-  const handlePreviewImage = (file?: File) => {
-    if (!file) return;
-
-    const url = URL.createObjectURL(file);
-
+  const handlePreviewImage = (img: { url: string, id: string }) => {
+    const url = img.url;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    setValue("complements.image", file as any);
-    setValue("complements.imagePreview", url);
+    setValue("complements.imagePreview", url as string);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    setValue("complements.image", img as any);
+
+    setImagePreview(url);
   };
 
   const onCaptureGroup = async () => {
@@ -99,30 +117,27 @@ export function SheetCreateComplement({
     const group = getValues("group");
     const comps = complements;
 
-    const formData = new FormData();
+    const data = {
+      ...group,
+      complements: comps.map((c) => ({
+        name: c.name,
+        description: c.description,
+        price: c.price,
+        photoUrl:
+          c.image &&
+          typeof c.image === "object" &&
+          "url" in (c.image as Record<string, unknown>)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ? (c.image as Record<string, any>).url
+            : null,
+      })),
+      // image will be handled separately
+    };
 
-    // Mandamos o grupo inteiro como JSON
-    formData.append(
-      "group",
-      JSON.stringify({
-        ...group,
-        complements: comps.map((c) => ({
-          name: c.name,
-          description: c.description ?? "",
-          price: c.price,
-        })),
-      })
-    );
-
-    // Depois enviamos os arquivos separadamente
-    comps.forEach((c) => {
-      if (c.image) {
-        formData.append("images", c.image); // um campo só
-      }
-    });
-
-    const res = await api.post(`${storeId}/groups-complements`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+    const res = await api.post(`${storeId}/groups-complements`, data, {
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
 
     if (res.status === 201) {
@@ -144,9 +159,9 @@ export function SheetCreateComplement({
     const newComplement: Complement = {
       name: values.complements.name,
       description: values.complements.description,
-      price: values.productPrice / 100,
-      
-      image: values.complements.image,
+      price: values.productPrice,
+
+      image: values?.complements?.image || null,
       imagePreview: values.complements.imagePreview,
     };
 
@@ -156,7 +171,9 @@ export function SheetCreateComplement({
       ...values,
       complements: { name: "", description: "", image: undefined },
       productPrice: 0,
+      
     });
+    setImagePreview(null);
   };
 
   const removeComplement = (index: number) => {
@@ -169,166 +186,175 @@ export function SheetCreateComplement({
 
   return (
     <>
+      <Sheet
+        open={open}
+        onOpenChange={() => {
+          setOpen(!open);
+          setComplements([]);
+          reset({
+            complements: { name: "", description: "", image: undefined },
+            group: { name: "", minSelected: 0, maxSelected: 0 },
+            productPrice: 0,
+          });
+          setStep(1);
+        }}
+      >
+        {/* <SheetTrigger>Open</SheetTrigger> */}
 
-    <Sheet
-      open={open}
-      onOpenChange={() => {
-        setOpen(!open);
-        setComplements([]);
-        reset({
-          complements: { name: "", description: "", image: undefined },
-          group: { name: "", minSelected: 0, maxSelected: 0 },
-          productPrice: 0,
-        });
-        setStep(1);
-      }}
-    >
-      {/* <SheetTrigger>Open</SheetTrigger> */}
+        <SheetPopup className='max-w-2xl'>
+          <SheetHeader>
+            <SheetTitle>Cadastrar complemento — Step {step}</SheetTitle>
+          </SheetHeader>
 
-      <SheetPopup className='max-w-2xl'>
-        <SheetHeader>
-          <SheetTitle>Cadastrar complemento — Step {step}</SheetTitle>
-        </SheetHeader>
+          <SheetPanel>
+            {/* STEP 1 ----------------------- */}
+            {step === 1 && (
+              <div className='space-y-4'>
+                <Field>
+                  <Label>Nome do grupo*</Label>
+                  <Input
+                    placeholder='Ex: Bebidas'
+                    {...register("group.name")}
+                  />
+                </Field>
 
-        <SheetPanel>
-          {/* STEP 1 ----------------------- */}
-          {step === 1 && (
-            <div className='space-y-4'>
-              <Field>
-                <Label>Nome do grupo*</Label>
-                <Input placeholder='Ex: Bebidas' {...register("group.name")} />
-              </Field>
+                <Field>
+                  <Label>Configurações</Label>
 
-              <Field>
-                <Label>Configurações</Label>
+                  <ComplementAction
+                    setValue={setValue}
+                    control={control}
+                    nameBase='group'
+                    props={{
+                      maxSelected: 1,
+                      minSelected: 1,
+                      complements: [],
+                      description: "",
 
-                <ComplementAction
-                  setValue={setValue}
-                  control={control}
-                  nameBase='group'
-                  props={{
-                    maxSelected: 1,
-                    minSelected: 1,
-                    complements: [],
-                    description: "",
-
-                    isAvailable: true,
-                    isRequired: false,
-                    name: "",
-                  }}
-                />
-              </Field>
-            </div>
-          )}
-
-          {/* STEP 2 ----------------------- */}
-          {step === 2 && (
-            <div className='space-y-4'>
-              <Field>
-                <Label>Nome*</Label>
-                <Input
-                  placeholder='Ex: Coca-Cola'
-                  {...register("complements.name")}
-                />
-              </Field>
-
-              <Field>
-                <Label>Descrição</Label>
-                <Input {...register("complements.description")} />
-              </Field>
-
-              <Field>
-                <Label>Preço*</Label>
-                <Controller
-                  control={control}
-                  name='productPrice'
-                  defaultValue={0}
-                  render={({ field }) => (
-                    <BRLInput
-                      value={field.value ?? 0}
-                      onChange={(v) => field.onChange(v)}
-                    />
-                  )}
-                />
-              </Field>
-
-              <Field>
-                <Label>Imagem</Label>
-                <Input
-                  type='file'
-                  accept='image/*'
-                  onChange={(e) => handlePreviewImage(e.target.files?.[0])}
-                />
-              </Field>
-
-              <Button
-                className='w-full py-2 font-semibold text-lg'
-                type='button'
-                onClick={onSubmitComplement}
-              >
-                <div>
-                  {" "}
-                  <Plus />
-                </div>{" "}
-                Adicionar complemento
-              </Button>
-
-              <div className='mt-4 space-y-4'>
-                {complements.map((c, i) => (
-                  <Card
-                    key={i}
-                    className='flex gap-4 p-2 border-0 bg-secondary'
-                  >
-                    <CardContent className='flex gap-4 p-2'>
-                      {c.image && (
-                        <div className='rounded-xl h-16 aspect-square border-border'>
-                          <img
-                            src={c.imagePreview}
-                            className=' h-auto mx-auto max-h-full rounded-md object-cover '
-                          />
-                        </div>
-                      )}
-                      <div className='flex flex-col gap-0'>
-                        <span className='font-semibold'>{c.name}</span>
-                        <span className='text-sm'>{c.description}</span>
-                        <span className='text-sm'>
-                          {convertBRL(c.price / 100)}
-                        </span>
-                      </div>
-                      <div className='ml-auto flex items-center aspect-square'>
-                        <Button
-                          onClick={() => removeComplement(i)}
-                          className='aspect-square rounded-full'
-                          variant='destructive'
-                        >
-                          <Trash />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      isAvailable: true,
+                      name: "",
+                    }}
+                  />
+                </Field>
               </div>
-            </div>
-          )}
-        </SheetPanel>
+            )}
 
-        <SheetFooter>
-          <SheetClose>
-            <Button variant='secondary'>Cancelar</Button>
-          </SheetClose>
+            {/* STEP 2 ----------------------- */}
+            {step === 2 && (
+              <div className='space-y-4'>
+                <Field>
+                  <Label>Nome*</Label>
+                  <Input
+                    placeholder='Ex: Coca-Cola'
+                    {...register("complements.name")}
+                  />
+                </Field>
 
-          {step === 1 && <Button onClick={onCaptureGroup}>Avançar</Button>}
-          {step === 2 && (
-            <Button
-              disabled={complements.length === 0}
-              onClick={onCaptureGroup}
-            >
-              Criar grupo
-            </Button>
-          )}
-        </SheetFooter>
-      </SheetPopup>
-    </Sheet>
+                <Field>
+                  <Label>Descrição</Label>
+                  <Input {...register("complements.description")} />
+                </Field>
+
+                <Field>
+                  <Label>Preço*</Label>
+                  <Controller
+                    control={control}
+                    name='productPrice'
+                    defaultValue={0}
+                    render={({ field }) => (
+                      <BRLInput
+                        value={field.value ?? 0}
+                        onChange={(v) => field.onChange(v)}
+                      />
+                    )}
+                  />
+                </Field>
+
+                <Field className={'flex flex-row items-center gap-4'}>
+                  <div className='flex flex-col gap-2'>
+                    <Label>Imagem</Label>
+
+                    <Controller
+                      control={control}
+                      name='complements.image'
+                      render={() => (
+                        <ModalImage onImageSelect={handlePreviewImage} />
+                      )}
+                    />
+                  </div>
+                  <img
+                    src={imagePreview || "https://placehold.co/600x400"}
+                    className='h-12 aspect-4/3 border-0'
+                    alt=''
+                  />
+                </Field>
+
+                <Button
+                  className='w-full py-2 font-semibold text-lg'
+                  type='button'
+                  onClick={onSubmitComplement}
+                >
+                  <div>
+                    {" "}
+                    <Plus />
+                  </div>{" "}
+                  Adicionar complemento
+                </Button>
+
+                <div className='mt-4 space-y-4'>
+                  {complements.map((c, i) => (
+                    <Card
+                      key={i}
+                      className='flex gap-4 p-2 border-0 bg-secondary'
+                    >
+                      <CardContent className='flex gap-4 p-2'>
+                        {c.image && (
+                          <div className='rounded-md h-16 aspect-4/3 overflow-hidden'>
+                            <img
+                              src={c.imagePreview}
+                              className='h-full mx-auto max-h-full rounded-md object-cover '
+                            />
+                          </div>
+                        )}
+                        <div className='flex flex-col gap-0'>
+                          <span className='font-semibold'>{c.name}</span>
+                          <span className='text-sm'>{c.description}</span>
+                          <span className='text-sm'>{convertBRL(c.price)}</span>
+                        </div>
+                        <div className='ml-auto flex items-center aspect-square'>
+                          <Button
+                            onClick={() => removeComplement(i)}
+                            className='aspect-square rounded-full'
+                            variant='destructive'
+                          >
+                            <Trash />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+          </SheetPanel>
+
+          <SheetFooter>
+            <SheetClose>
+              <Button variant='secondary'>Cancelar</Button>
+            </SheetClose>
+
+            {step === 1 && <Button onClick={onCaptureGroup}>Avançar</Button>}
+            {step === 2 && (
+              <Button
+                disabled={complements.length === 0}
+                onClick={onCaptureGroup}
+              >
+                Criar grupo
+              </Button>
+            )}
+          </SheetFooter>
+        </SheetPopup>
+      </Sheet>
     </>
   );
 }

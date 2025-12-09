@@ -40,7 +40,6 @@ export interface ComplementGroup {
     description: string;
     //   photoUrl: string | null;
     isAvailable: boolean;
-    isRequired: boolean;
     minSelected: number;
     maxSelected: number;
     complements: Complement[];
@@ -53,7 +52,10 @@ export interface Complement {
     name: string;
     photoUrl?: string;
     imagePreview?: string;
-    image: undefined;
+    image: {
+        url: string;
+        id: string;
+    } | null;
     description?: string;
     price: number;
     isActive?: boolean;

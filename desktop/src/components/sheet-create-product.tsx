@@ -32,6 +32,7 @@ import { emitRefetch } from "@/lib/utils";
 
 import { SheetCreateComplement } from "./sheet-create-complement";
 import { ScrollArea } from "./ui/scroll-area";
+import ModalImage from "./modal-image";
 
 export interface ComplementGroup {
   id: string;
@@ -111,6 +112,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
     reset,
     setError,
     getValues,
+    watch,
 
     formState: { errors, isSubmitting },
   } = useForm<ProductInput>({
@@ -135,7 +137,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
       name: getValues("name"),
       description: getValues("description"),
       price: getValues("price"),
-      image: getValues("image"),
+
       productComplementGroups: getValues("productComplementGroups"),
     };
     if (step === 1) {
@@ -203,40 +205,24 @@ export function SheetCreateProduct({ category }: { category: Category }) {
   }, [complement]);
 
   const onSubmit = async (data: ProductInput) => {
-    const formData = new FormData();
 
-    formData.append("name", data.name);
-    formData.append("description", data.description || "");
-    formData.append("price", String(data.price / 100));
-    formData.append("categoryId", category.id);
-    formData.append("isAvailable", String(data.isAvailable));
-    formData.append("stock", String(data.stock));
-    // imagem
-
-    if (data.image && data.image[0]) {
-      formData.append("image", data.image[0]);
-    }
-
-    if (data.productComplementGroups) {
-      formData.append(
-        "productComplementGroups",
-        JSON.stringify(
-          data.productComplementGroups.map((g) => ({
-            groupId: g.id,
-            minSelected: g.minSelected,
-            maxSelected: g.maxSelected,
-          }))
-        )
-      );
-    }
-
+    const formatedData =
+      step !== 2
+        ? {
+            ...data,
+            productComplementGroups: selectedsComplements.map((g) => ({
+              groupId: g.id,
+              minSelected: g.minSelected,
+              maxSelected: g.maxSelected,
+            })),
+          }
+        : data;
     const res = await api.post(
-      `stores/${category.storeId}/products`,
-      formData,
-
+      `stores/${category.storeId}/products/${category.id}`,
+      formatedData,
       {
         headers: {
-          "Content-Type": "multipart/form-data",
+          "Content-Type": "application/json",
         },
       }
     );
@@ -283,14 +269,11 @@ export function SheetCreateProduct({ category }: { category: Category }) {
       <SheetCreateComplement
         onCreateComplement={async (element) => {
           const complements = await getComplements();
-          const findComplement = complements.find(
-            (c) => c.id === element.id
-          )          
+          const findComplement = complements.find((c) => c.id === element.id);
           if (!findComplement) {
             return;
-          }          
+          }
           setSelectedsComplements((prev) => [...prev, findComplement]);
-        
         }}
       />
       <Sheet
@@ -305,12 +288,14 @@ export function SheetCreateProduct({ category }: { category: Category }) {
         <SheetTrigger>
           <Button>Adicionar produto</Button>
         </SheetTrigger>
-        <SheetPopup className={"w-1/2 max-w-none justify-between max-h-screen "}>
+        <SheetPopup
+          className={"w-1/2 max-w-none justify-between max-h-screen "}
+        >
           <form
             className='flex flex-col justify-between flex-1 max-h-screen'
             onSubmit={handleSubmit(onSubmit)}
           >
-            <SheetHeader className="h-full overflow-hidden">
+            <SheetHeader className='h-full overflow-hidden'>
               <SheetTitle>
                 Adicionar produto na categoria{" "}
                 <span className='font-bold'>{category.name}</span>
@@ -344,8 +329,14 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                   {/* DESCRIÇÃO */}
                   <Field>
                     <FieldLabel>Descrição do produto</FieldLabel>
-                    <Textarea {...register("description")} />
-
+                    <Controller
+                      control={control}
+                      name='description'
+                      render={({ field }) => (
+                        <Textarea onChange={field.onChange} />
+                      )}
+                    />
+                    
                     {errors.description && (
                       <span className='text-destructive text-sm'>
                         {errors.description.message}
@@ -378,7 +369,25 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                   {/* IMAGEM */}
                   <Field>
                     <FieldLabel>Imagem</FieldLabel>
-                    <Input {...register("image")} type='file' />
+
+                    <div className='max-w-48 rounded-md overflow-hidden border-primary border'>
+                      <img
+                        className='aspect-4/3 object-cover'
+                        src={watch("image")?.url}
+                      />
+                    </div>
+                    <Controller
+                      control={control}
+                      name='image'
+                      render={({ field }) => (
+                        // <Stock
+                        //   stock={field.value ?? null}
+                        //   onStockChange={field.onChange}
+                        // />
+                        <ModalImage onImageSelect={field.onChange} />
+                      )}
+                    ></Controller>
+                    {/* <Input {...register("image")} type='file' /> */}
                   </Field>
 
                   {/* ESTOQUE */}
@@ -402,8 +411,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                   <div className='grid grid-cols-2 gap-4 mt-2'>
                     <Card
                       onClick={() => {
-              
-                        handleSetComplement("new-complement")
+                        handleSetComplement("new-complement");
                       }}
                       className=''
                     >
@@ -445,47 +453,47 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                     </span>
                   )}
 
-                 <ScrollArea className="max-h-[-webkit-fill-available] absolute">
-                   {complements.map((complement: ComplementGroup) => (
-                    <Card
-                      onClick={() => handleSelectComplement(complement)}
-                      key={complement.id}
-                      className='mb-4 py-3 px-0'
-                    >
-                      <div className='flex justify-end absolute top-2 right-2'>
-                        <button className='aspect-square w-5 h-5 bg-secondary  rounded-full flex items-center justify-center'>
-                          <span
-                            className={`block w-2.5 h-2.5 ${
-                              complement.id ===
-                              selectedsComplements.find(
-                                (c) => c.id === complement.id
-                              )?.id
-                                ? "bg-white"
-                                : "bg-transparent"
-                            } rounded-full`}
-                          ></span>
-                        </button>
-                      </div>
-                      <CardContent className='px-3'>
-                        <CardTitle>{complement.name}</CardTitle>
-                        {complement.products.length > 0 && (
-                          <CardDescription>
-                            {" "}
-                            Disponível em{" "}
-                            {complement.products
-                              .map((product) => product.product.name)
-                              .join(", ")}
-                          </CardDescription>
-                        )}
-                        {complement.products.length === 0 && (
-                          <CardDescription>
-                            Nenhum produto vinculado
-                          </CardDescription>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                 </ScrollArea>
+                  <ScrollArea className='max-h-[-webkit-fill-available] absolute'>
+                    {complements.map((complement: ComplementGroup) => (
+                      <Card
+                        onClick={() => handleSelectComplement(complement)}
+                        key={complement.id}
+                        className='mb-4 py-3 px-0'
+                      >
+                        <div className='flex justify-end absolute top-2 right-2'>
+                          <button className='aspect-square w-5 h-5 bg-secondary  rounded-full flex items-center justify-center'>
+                            <span
+                              className={`block w-2.5 h-2.5 ${
+                                complement.id ===
+                                selectedsComplements.find(
+                                  (c) => c.id === complement.id
+                                )?.id
+                                  ? "bg-white"
+                                  : "bg-transparent"
+                              } rounded-full`}
+                            ></span>
+                          </button>
+                        </div>
+                        <CardContent className='px-3'>
+                          <CardTitle>{complement.name}</CardTitle>
+                          {complement.products.length > 0 && (
+                            <CardDescription>
+                              {" "}
+                              Disponível em{" "}
+                              {complement.products
+                                .map((product) => product.product.name)
+                                .join(", ")}
+                            </CardDescription>
+                          )}
+                          {complement.products.length === 0 && (
+                            <CardDescription>
+                              Nenhum produto vinculado
+                            </CardDescription>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </ScrollArea>
                 </div>
                 <div className={`${step === 4 ? "flex-1/3" : "hidden"}`}>
                   <h2 className='text-2xl'>Complementos</h2>
@@ -525,17 +533,22 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                   )}
                 </div>
                 <div className='flex-1'>
-                  <div className='border aspect-470/945 rounded-4xl max-w-xs'>
-                    <img src='https://i.imgur.com/rUsYzzJ.png' alt='' />
+                  <div className='border aspect-470/945 rounded-4xl max-w-xs overflow-hidden relative'>
+                    <span className="block w-12 h-2.5 bg-black rounded-full absolute left-1/2 translate-x-[-50%] top-2"></span>
+                    <img src={watch("image")?.url || 'https://placehold.co/600x400'} alt='' />
                     <div className='p-4'>
                       <div>
-                        <h2 className='font-semibold'>Produto Teste</h2>
-                        <p>Descrição</p>
+                        <h2 className='font-semibold'>{watch("name")}</h2>
+                        <p>{watch("description")}</p>
                       </div>
                       <ul>
-                        <li>...</li>
-                        <li>...</li>
-                        <li>...</li>
+                        {selectedsComplements.map((complement) => (
+                          <li key={complement.id}>
+                            + {complement.name} (
+                            {complement.minSelected}-
+                            {complement.maxSelected})
+                          </li>
+                        ))}
                       </ul>
                     </div>
                   </div>

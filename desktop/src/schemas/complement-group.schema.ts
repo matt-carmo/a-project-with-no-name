@@ -7,7 +7,6 @@ export const complementGroupSchema = z.object({
   id: z.cuid(),
   name: z.string().min(1, "Nome da categoria é obrigatório").max(100, "Nome muito longo"),
   description: z.string().max(1000).optional().nullable(),
-  isRequired: z.boolean().default(false),
   minSelected: z.number().int().nonnegative().default(0),
   maxSelected: z.number().int().positive().optional().nullable(),
   isAvailable: z.boolean().default(true),
@@ -31,7 +30,6 @@ export const complementGroupSchema = z.object({
 export const createComplementGroupSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório").max(100, "Nome muito longo"),
   description: z.string().max(1000).optional().nullable(),
-  isRequired: z.boolean().optional().default(false),
   minSelected: z.number().int().nonnegative().optional().default(0),
   maxSelected: z.number().int().positive().optional().nullable(),
   isAvailable: z.boolean().optional().default(true),

@@ -46,6 +46,8 @@ model Store {
     updatedAt   DateTime       @updatedAt
 
     complementGroups ComplementGroup[]
+
+    images Image[]
 }
 
 model StoreSettings {
@@ -84,14 +86,13 @@ enum StoreRole {
 //
 
 model Category {
-    id       String    @id @default(cuid())
-    storeId  String
-    store    Store     @relation(fields: [storeId], references: [id])
-    name     String
-    order    Int       @default(0)
-    products Product[]
+    id        String    @id @default(cuid())
+    storeId   String
+    store     Store     @relation(fields: [storeId], references: [id])
+    name      String
+    order     Int       @default(0)
+    products  Product[]
     deletedAt DateTime?
-
 }
 
 model Product {
@@ -99,19 +100,18 @@ model Product {
     storeId String
     store   Store  @relation(fields: [storeId], references: [id])
 
-    categoryId  String?
-    category    Category? @relation(fields: [categoryId], references: [id])
-    photoUrl    String?
-    name        String
-    description String?
-    price       Float
-    image       String?
-    isAvailable Boolean   @default(true)
-    stock       Int?      
-    createdAt   DateTime  @default(now())
-    deletedAt   DateTime?
+    categoryId              String?
+    category                Category?                @relation(fields: [categoryId], references: [id])
+    photoUrl                String?
+    name                    String
+    description             String?
+    price                   Int
+    image                   String?
+    isAvailable             Boolean                  @default(true)
+    stock                   Int?
+    createdAt               DateTime                 @default(now())
+    deletedAt               DateTime?
     productComplementGroups ProductComplementGroup[]
-
 }
 
 //
@@ -124,27 +124,26 @@ model ComplementGroup {
     id          String  @id @default(cuid())
     name        String
     description String?
-    isRequired  Boolean @default(false)
     minSelected Int     @default(0)
     maxSelected Int?
     isAvailable Boolean @default(true)
-    
-    storeId String
-    store   Store @relation(fields: [storeId], references: [id])
+
+    storeId     String
+    store       Store                    @relation(fields: [storeId], references: [id])
     complements Complement[]
     products    ProductComplementGroup[]
 }
 
 model Complement {
-    id      String          @id @default(cuid())
-    groupId String
-    group   ComplementGroup @relation(fields: [groupId], references: [id])
-    name     String
+    id          String          @id @default(cuid())
+    groupId     String
+    group       ComplementGroup @relation(fields: [groupId], references: [id])
+    name        String
     description String?
-    price    Float    @default(0)
-    isActive Boolean  @default(true)
-    stock    Int?     
-    photoUrl String?
+    price       Int             @default(0)
+    isActive    Boolean         @default(true)
+    stock       Int?
+    photoUrl    String?
 
     orderItemComplements OrderItemComplement[]
 }
@@ -160,12 +159,15 @@ model ProductComplementGroup {
     @@unique([productId, groupId])
 }
 
-//
-// ------------------------------
-// ORDERS
-// ------------------------------
-//
+model Image {
+  id        String   @id @default(cuid())
+  storeId   String
+  url       String
+  createdAt DateTime @default(now())
 
+  store     Store    @relation(fields: [storeId], references: [id])
+
+}
 model Order {
     id            String      @id @default(cuid())
     storeId       String
@@ -187,7 +189,7 @@ model OrderItem {
     productId String
     name      String
     quantity  Int
-    price     Float
+    price     Int
 
     orderItemComplements OrderItemComplement[]
 }
@@ -200,7 +202,7 @@ model OrderItemComplement {
     complementId String
     complement   Complement @relation(fields: [complementId], references: [id])
 
-    price Float
+    price Int
 }
 
 enum OrderStatus {

@@ -1,5 +1,6 @@
 export function convertBRL(value: number): string {
-  return value.toLocaleString("pt-BR", {
+  
+  return (value / 100).toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
   });

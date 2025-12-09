@@ -1,68 +1,60 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import type { Multipart } from "@fastify/multipart";
-import "@fastify/multipart";
-import { uploadImage } from "../services/image-service";
+
 import { ProductService } from "../services/product.service";
+
+import { CreateProductDTO } from "../schemas/create-product.dto";
+import z from "zod";
+import { updateProductSchema } from "../schemas/product.shema";
+
+type CreateProductParams = {
+    storeId: string;
+    categoryId: string
+};
 
 export class ProductController {
     constructor(private productService: ProductService) { }
-async createProductWithComplementsGroups(
-  req: FastifyRequest<{ Params: { storeId: string } }>,
-  reply: FastifyReply
-) {
-  try {
-    const body = req.body as Record<string, any>;
 
-    const form: Record<string, any> = {};
-    let imageBuffer: Buffer | null = null;
-   
-    for (const key in body) {
-      const field = body[key];
+    async createProduct(
+        req: FastifyRequest<{
+            Params: CreateProductParams;
+            Body: CreateProductDTO;
+        }>,
+        reply: FastifyReply
+    ) {
+        try {
+            const body = req.body
 
- 
-      if (field?.type === "field") {
-        form[key] = field.value;
-        continue;
-      }
+            const result = await this.productService.createProduct(
+                {
+                    product: body,
+                    params: req.params
+                });
+            if (result instanceof Error) {
+                console.error(result)
+                return reply.status(400).send({ error: result.message });
+            }
+            return reply.status(201).send(result);
 
-      if (field?.type === "file" && field.file) {
-        imageBuffer = await field.toBuffer();
-      }
+        } catch (error) {
+            console.error("Erro ao criar produto:", error);
+            return reply.status(500).send({ error: "Erro ao criar produto" });
+        }
     }
+    async updateProduct(
+        req: FastifyRequest<{ Params: { storeId: string; productId: string, }; Body: z.infer<typeof updateProductSchema>; }>,
+        reply: FastifyReply
+    ) {
+        try {
+            const body = req.body
+            const result = await this.productService.updateProduct({ rawData: body, productId: req.params.productId })
+            if (result instanceof Error) {
+                return reply.status(400).send({ error: result.message });
+            }
+            return reply.status(200).send(result);
 
-    let uploadImageResult: any;
-    if (imageBuffer) {
-      uploadImageResult = await uploadImage({ imageBuffer });
-    } else {
-      uploadImageResult = { success: false };
+        } catch (error) {
+            console.error("Erro ao atualizar produto:", error);
+            return reply.status(500).send({ error: "Erro ao atualizar produto" });
+        }
     }
-
-    const data = {
-      name: form.name,
-      description: form.description,
-      price: Number(form.price),
-      photoUrl: uploadImageResult.success ? uploadImageResult.data.data.url : "",
-      isAvailable: form.isAvailable === "true",
-      stock: form.stock ? Number(form.stock) : null,
-      storeId: req.params.storeId,
-      categoryId: form.categoryId || null,
-      productComplementGroups: form.productComplementGroups
-        ? JSON.parse(form.productComplementGroups)
-        : [],
-    };
-
-    if (!data.productComplementGroups.length) {
-      const created = await this.productService.createProduct(data);
-      return reply.status(201).send(created);
-    }
-
-    const createdAdvanced = await this.productService.createProductWithComplementsGroups(data);
-
-    return reply.status(201).send(createdAdvanced);
-
-  } catch (error) {
-    console.error("Erro ao criar produto:", error);
-    return reply.status(500).send({ error: "Erro ao criar produto" });
-  }
-}
 }

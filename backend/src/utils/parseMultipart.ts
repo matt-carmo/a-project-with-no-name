@@ -1,30 +1,39 @@
-function parseMultipartObject(body: any) {
-  const result: any = {};
-  
-  for (const key in body) {
-    const value = body[key];
+import { CreateProductDTO } from "../schemas/create-product.dto";
 
-    if (!key.includes("["))
-      return result[key] = value;
+// utils/parse-multipart-product.ts
+export async function parseMultipartProduct(
+  data: Record<string, any>,
+  storeId: string
+): Promise<CreateProductDTO> {
+  const form: Record<string, any> = {};
+  let imageBuffer: Buffer | null = null;
 
+  for (const key in data) {
+    const field = data[key];
 
-    const parts = key.split(/\[|\]/).filter(Boolean); 
+    if (field?.type === "field") {
+      form[key] = field.value;
+      continue;
+    }
 
-    let cur = result;
-
-    parts.forEach((p, i) => {
-      const isLast = i === parts.length - 1;
-
-      if (!isLast) {
-        if (!cur[p]) {
-          cur[p] = /^\d+$/.test(parts[i + 1]) ? [] : {};
-        }
-        cur = cur[p];
-      } else {
-        cur[p] = value;
-      }
-    });
+    if (field?.type === "file" && field.file) {
+      imageBuffer = await field.toBuffer();
+      continue;
+    }
   }
 
-  return result;
+  return {
+    name: form.name,
+    description: form.description ?? null,
+    price: form.price ? Number(form.price) : undefined,
+    isAvailable: form.isAvailable === "true",
+    stock: form.stock ? Number(form.stock) : undefined,
+    categoryId: form.categoryId || undefined,
+    storeId,
+    imageBuffer,
+
+    productComplementGroups: form.productComplementGroups
+      ? JSON.parse(form.productComplementGroups)
+      : [],
+  };
 }

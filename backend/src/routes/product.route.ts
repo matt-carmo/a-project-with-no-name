@@ -10,16 +10,25 @@ export function ProductRoutes(server: FastifyInstance) {
     const service = new ProductService(repo);
     const controller = new ProductController(service);
     server.post(
-        "/stores/:storeId/products",
+        "/stores/:storeId/products/:categoryId",
         {
             schema: {
-                params: z.object({ storeId: z.cuid() }),
-                // body: createProductSchema
+                params: z.object({ storeId: z.cuid(), categoryId: z.cuid() }),
+                body: createProductSchema
             },
-        
-
         },
-        controller.createProductWithComplementsGroups.bind(controller)
+        
+        controller.createProduct.bind(controller)
+    );
+    server.patch(
+        "/stores/:storeId/products/:productId",
+        {
+            schema: {
+                params: z.object({ storeId: z.cuid(), productId: z.cuid() }),
+                body: createProductSchema.partial()
+            },
+        },
+        controller.updateProduct.bind(controller)
     );
 
 

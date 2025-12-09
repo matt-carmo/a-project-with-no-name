@@ -1,49 +1,63 @@
 import { PrismaClient } from "@prisma/client";
-import { createProductSchema } from "../schemas/product.shema";
+import { createProductSchema, updateProductSchema } from "../schemas/product.shema";
 import z from "zod";
-import { Extend } from "zod/v4/core/util.cjs";
 import { complementGroupSchema } from "../schemas/complement-group.schema";
 
 export class ProductRepository {
     constructor(private prisma: PrismaClient) {
 
     }
-    async createProduct(data: z.infer<typeof createProductSchema> ) {
+    async createProduct({data, storeId, categoryId}: {data: z.infer<typeof createProductSchema>, storeId: string, categoryId: string}) {
 
         return this.prisma.product.create({
             data: {
                 name: data.name,
                 description: data.description,
                 price: data.price,
-                photoUrl: data.photoUrl,
+                photoUrl: data.image?.url,
                 stock: data.stock ?? null,
-                categoryId: data.categoryId,
+                categoryId,
                 isAvailable: data.isAvailable,
-                storeId: data.storeId,
+                storeId,
             }
         });
     }
-    async createProductWithComplementsGroups(data: z.infer<typeof createProductSchema & { productComplementGroups: z.infer<typeof complementGroupSchema>[] }>) {
+    async createProductWithComplementsGroups({ data, storeId, categoryId }: { data: z.infer<typeof createProductSchema>, storeId: string, categoryId: string } & { productComplementGroups: z.infer<typeof complementGroupSchema>[] } ) {
 
         return this.prisma.product.create({
             data: {
                 name: data.name,
                 description: data.description,
                 price: data.price,
-                categoryId: data.categoryId,
+                categoryId,
                 stock: data.stock ?? null,
-                photoUrl: data.photoUrl,
+                photoUrl: data.image?.url,
                 isAvailable: data.isAvailable,
-                storeId: data.storeId,
+                storeId,
                 productComplementGroups: {
                     createMany: {
-                        data: data.productComplementGroups.map((group) => ({
+                        data: (data.productComplementGroups as Array<{ groupId: string }>).map((group) => ({
                             groupId: group.groupId,
-                        
 
                         }))
                     }
-                } 
+                }
+            }
+        });
+    }
+    async updateProduct({ productId, data }: { productId: string, data: z.infer<typeof updateProductSchema> }) {
+
+
+        return this.prisma.product.update({
+            where: { id: productId, storeId: data.storeId },
+            data: {
+                name: data.name,
+                description: data.description,
+                price: data.price,
+                photoUrl: data.photoUrl,
+                stock: data.stock,
+                categoryId: data.categoryId,
+                isAvailable: data.isAvailable,
             }
         });
     }

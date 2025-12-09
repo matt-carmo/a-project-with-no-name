@@ -1,0 +1,21 @@
+/*
+  Warnings:
+
+  - You are about to alter the column `price` on the `Complement` table. The data in that column could be lost. The data in that column will be cast from `DoublePrecision` to `Integer`.
+  - You are about to alter the column `price` on the `OrderItem` table. The data in that column could be lost. The data in that column will be cast from `DoublePrecision` to `Integer`.
+  - You are about to alter the column `price` on the `OrderItemComplement` table. The data in that column could be lost. The data in that column will be cast from `DoublePrecision` to `Integer`.
+  - You are about to alter the column `price` on the `Product` table. The data in that column could be lost. The data in that column will be cast from `DoublePrecision` to `Integer`.
+
+*/
+-- AlterTable
+ALTER TABLE "Complement" ALTER COLUMN "price" SET DEFAULT 0,
+ALTER COLUMN "price" SET DATA TYPE INTEGER;
+
+-- AlterTable
+ALTER TABLE "OrderItem" ALTER COLUMN "price" SET DATA TYPE INTEGER;
+
+-- AlterTable
+ALTER TABLE "OrderItemComplement" ALTER COLUMN "price" SET DATA TYPE INTEGER;
+
+-- AlterTable
+ALTER TABLE "Product" ALTER COLUMN "price" SET DATA TYPE INTEGER;
