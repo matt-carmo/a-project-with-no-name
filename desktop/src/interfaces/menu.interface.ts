@@ -21,7 +21,7 @@ export interface Product {
     createdAt: Date;
     deletedAt?: Date | null;
     productComplementGroups: ProductComplementGroup[];
-    
+
 }
 
 export interface ProductComplementGroup {
@@ -43,6 +43,11 @@ export interface ComplementGroup {
     minSelected: number;
     maxSelected: number;
     complements: Complement[];
+    products: {
+        product: {
+            name: string;
+        };
+    }[];
 }
 
 

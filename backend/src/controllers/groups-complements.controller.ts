@@ -6,6 +6,11 @@ import { CreateComplementGroupInput } from "../schemas/complement-group.schema";
 export class GroupsComplementsController {
     constructor(private service: GroupsComplementsService) { }
 
+    async findAll(req: FastifyRequest<{ Params: { storeId: string } }>, reply: FastifyReply) {
+        const { storeId } = req.params;
+        const result = await this.service.findAll({ storeId });
+        return reply.status(200).send(result);
+    }
     async create(req: FastifyRequest<{ Body: CreateComplementGroupInput, Params: { storeId: string } }>, reply: FastifyReply) {
         
         const data = {

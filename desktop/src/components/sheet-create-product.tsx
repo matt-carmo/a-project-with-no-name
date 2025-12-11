@@ -38,7 +38,6 @@ export interface ComplementGroup {
   id: string;
   name: string;
   description: string;
-
   minSelected: number;
   maxSelected: number;
   isAvailable: boolean;
@@ -191,7 +190,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedsComplements]);
   const getComplements = async function (): Promise<ComplementGroup[]> {
-    const res = await api.get(`${category.storeId}/complements`);
+    const res = await api.get(`${category.storeId}/groups-complements`);
     setComplements(res.data as ComplementGroup[]);
     return res.data;
   };

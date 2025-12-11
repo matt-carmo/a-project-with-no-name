@@ -4,11 +4,9 @@ import { CreateStoreInput, UpdateStoreInput } from "../schemas/store.schema";
 
 export class StoreRepository {
   constructor(private prisma: PrismaClient) {}
-
   findAll() {
     return this.prisma.store.findMany();
   }
-
   findById(id: string) {
     return this.prisma.store.findUnique({
       where: { id },

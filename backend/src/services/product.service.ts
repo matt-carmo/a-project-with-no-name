@@ -18,5 +18,8 @@ export class ProductService {
 
         return this.repo.updateProduct({ data: rawData, productId });
     }
+    async deleteProduct({ productId }: { productId: string }) {
+        return this.repo.deleteProduct({ productId });
+    }
 
 }

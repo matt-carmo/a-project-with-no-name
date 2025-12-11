@@ -57,4 +57,20 @@ export class ProductController {
             return reply.status(500).send({ error: "Erro ao atualizar produto" });
         }
     }
+    async deleteProduct(
+        req: FastifyRequest<{ Params: { storeId: string; productId: string; }; }>,
+        reply: FastifyReply
+    ) {
+        try {
+            const result = await this.productService.deleteProduct({productId: req.params.productId});
+            if (result instanceof Error) {
+                return reply.status(400).send({ error: result.message });
+            }
+            return reply.status(204).send({ message: "Produto deletado com sucesso" });
+
+        } catch (error) {
+            console.error("Erro ao deletar produto:", error);
+            return reply.status(500).send({ error: "Erro ao deletar produto" });
+        }
+    }
 }

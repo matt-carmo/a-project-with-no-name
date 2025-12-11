@@ -97,6 +97,7 @@ export default function ModalImage({
 
       <DialogPopup className='max-w-lg'>
         <DialogHeader>
+          {storeId && <div>Loja: {storeId}</div>}
           <DialogTitle>Selecione ou adicione uma imagem</DialogTitle>
           <DialogDescription>
             As imagens ajudam a identificar visualmente os produtos.
@@ -115,7 +116,7 @@ export default function ModalImage({
           {/* Upload */}
           <TabsPanel value='tab-1'>
             <DialogPanel className='grid gap-4'>
-              <Empty className='border border-dashed p-8 rounded-md'>
+              <Empty className='border border-dashed p-8 rounded-md relative'>
                 {selectedImage ? (
                   <EmptyContent>
                     <img
@@ -137,10 +138,10 @@ export default function ModalImage({
                   onChange={handleImageChange}
                   name='image'
                   type='file'
-                  className='absolute inset-0 w-full h-full opacity-0 cursor-pointer'
+                  className='absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50'
                 />
               </Empty>
-              <DialogFooter>
+              <DialogFooter className="border-0 bg-transparent px-0 pt-1 pb-4">
                 <DialogClose render={<Button variant='ghost' />}>
                   Cancelar
                 </DialogClose>
@@ -152,8 +153,8 @@ export default function ModalImage({
           </TabsPanel>
 
           {/* Galeria */}
-          <TabsPanel value='tab-2' className='mt-4'>
-            <ScrollArea className='flex-1 max-h-[400px]'>
+          <TabsPanel value='tab-2' className="">
+            <ScrollArea className='flex-1 max-h-[400px] -mt-4'>
               <DialogPanel className='grid grid-cols-3 gap-4'>
                 {loadingImages && (
                   <>
@@ -166,7 +167,7 @@ export default function ModalImage({
                   </>
                 )}
                 {!loadingImages && imagesData.length < 1 && (
-                  <Empty className='border p-8 rounded-md'>
+                  <Empty className='border rounded-md'>
                     <EmptyHeader>
                       <EmptyTitle>Nenhuma imagem na galeria</EmptyTitle>
                       <EmptyDescription>
@@ -178,7 +179,7 @@ export default function ModalImage({
                 {!loadingImages &&
                   imagesData.length > 0 &&
                   imagesData.map((img, index) => (
-                    <div key={index} className='flex-1 aspect-4/3 mx-auto  '>
+                    <div key={index} className='flex-1 aspect-4/3 mx-auto '>
                       <Button
                         className='w-full h-full p-0 m-0 rounded-md overflow-hidden hover:opacity-80'
                         onClick={() => {onImageSelect(img); setOpen(false)} }

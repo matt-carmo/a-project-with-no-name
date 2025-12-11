@@ -25,6 +25,7 @@ import api from "@/api/axios";
 import { useParams } from "react-router";
 import { Complement } from "@/interfaces/menu.interface";
 import ModalImage from "./modal-image";
+import { Textarea } from "./ui/textarea";
 
 // ------------------------------
 // 1. SCHEMAS POR ETAPA
@@ -252,7 +253,7 @@ export function SheetCreateComplement({
 
                 <Field>
                   <Label>Descrição</Label>
-                  <Input {...register("complements.description")} />
+                  <Textarea {...register("complements.description")} />
                 </Field>
 
                 <Field>

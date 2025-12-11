@@ -47,17 +47,25 @@ export class ProductRepository {
     }
     async updateProduct({ productId, data }: { productId: string, data: z.infer<typeof updateProductSchema> }) {
 
-
+        console.log("Updating product:", productId, data);
         return this.prisma.product.update({
             where: { id: productId, storeId: data.storeId },
             data: {
                 name: data.name,
                 description: data.description,
                 price: data.price,
-                photoUrl: data.photoUrl,
+                photoUrl: data.image?.url,
                 stock: data.stock,
                 categoryId: data.categoryId,
                 isAvailable: data.isAvailable,
+            }
+        });
+    }
+    async deleteProduct({ productId }: { productId: string }) {
+        return this.prisma.product.update({
+            where: { id: productId },
+            data: {
+                deletedAt: new Date(),
             }
         });
     }

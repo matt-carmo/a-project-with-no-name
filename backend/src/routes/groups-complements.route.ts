@@ -12,6 +12,20 @@ export function GroupsComplementsRoutes(server: FastifyInstance) {
 
     const service = new GroupsComplementsService(repo)
     const controller = new GroupsComplementsController(service);
+
+    server.get(
+        "/:storeId/groups-complements",
+        {
+            schema: {
+                params: categorySchema.pick({ storeId: true }),
+        
+            },
+        
+
+        },
+        
+        controller.findAll.bind(controller)
+    )
     server.post(
         "/:storeId/groups-complements",
         {

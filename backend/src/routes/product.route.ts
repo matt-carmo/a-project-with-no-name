@@ -30,6 +30,15 @@ export function ProductRoutes(server: FastifyInstance) {
         },
         controller.updateProduct.bind(controller)
     );
+    server.delete(
+        "/stores/:storeId/products/:productId",
+        {
+            schema: {
+                params: z.object({ storeId: z.cuid(), productId: z.cuid() }),
+            },
+        },
+        controller.deleteProduct.bind(controller)
+    );
 
 
 }

@@ -44,6 +44,7 @@ export default function Stock({
           </Button>
 
           <form
+          className="flex"
             onSubmit={(e) => {
               e.preventDefault();
               onStockChange?.(_stock);
@@ -57,7 +58,7 @@ export default function Stock({
                 onStockChange?.(_stock)
               }}
               onChange={handleChange}
-              className='font-medium w-20'
+              className='font-medium w-20 '
             />
           </form>
         </>

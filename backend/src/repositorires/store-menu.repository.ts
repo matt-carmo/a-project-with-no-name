@@ -8,6 +8,7 @@ export class StoreMenuRepository {
             where: { storeId, deletedAt: null },
             include: {
                 products: {
+                    where: { deletedAt: null },
                     include:{
                         productComplementGroups:{
                             include:{

@@ -33,21 +33,19 @@ model User {
 //
 
 model Store {
-    id          String         @id @default(cuid())
-    name        String
-    slug        String         @unique
-    phoneNumber String?
-    categories  Category[]
-    products    Product[]
-    orders      Order[]
-    settings    StoreSettings?
-    users       StoreUser[] // muitos admins
-    createdAt   DateTime       @default(now())
-    updatedAt   DateTime       @updatedAt
-
+    id               String            @id @default(cuid())
+    name             String
+    slug             String            @unique
+    phoneNumber      String?
+    categories       Category[]
+    products         Product[]
+    orders           Order[]
+    settings         StoreSettings?
+    users            StoreUser[] // muitos admins
+    createdAt        DateTime          @default(now())
+    updatedAt        DateTime          @updatedAt
     complementGroups ComplementGroup[]
-
-    images Image[]
+    images           Image[]
 }
 
 model StoreSettings {
@@ -127,7 +125,7 @@ model ComplementGroup {
     minSelected Int     @default(0)
     maxSelected Int?
     isAvailable Boolean @default(true)
-
+    deletedAt   DateTime?
     storeId     String
     store       Store                    @relation(fields: [storeId], references: [id])
     complements Complement[]
@@ -141,7 +139,7 @@ model Complement {
     name        String
     description String?
     price       Int             @default(0)
-    isActive    Boolean         @default(true)
+    isAvailable    Boolean         @default(true)
     stock       Int?
     photoUrl    String?
 
@@ -160,14 +158,14 @@ model ProductComplementGroup {
 }
 
 model Image {
-  id        String   @id @default(cuid())
-  storeId   String
-  url       String
-  createdAt DateTime @default(now())
+    id        String   @id @default(cuid())
+    storeId   String
+    url       String
+    createdAt DateTime @default(now())
 
-  store     Store    @relation(fields: [storeId], references: [id])
-
+    store Store @relation(fields: [storeId], references: [id])
 }
+
 model Order {
     id            String      @id @default(cuid())
     storeId       String
