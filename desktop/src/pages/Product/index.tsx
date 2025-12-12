@@ -15,11 +15,12 @@ export default function ProductPage() {
   const [groupedComplements, setGroupedComplements] = useState<
     ComplementGroup[]
   >([]);
+  
 
   useEffect(() => {
     async function fetchComplements() {
       try {
-        const response = await api.get(`/${item.storeId}/groups-complements`);
+        const response = await api.get(`/${item.storeId}/groups-complements?productId=${item.id}`);
         setGroupedComplements(response.data);
       } catch (error) {
         console.error("Error fetching complements:", error);
@@ -30,6 +31,7 @@ export default function ProductPage() {
   }, [item.storeId]);
   return (
     <div className='text-3xl font-semibold  space-y-4 '>
+      {JSON.stringify(item)}
       <h1 className='text-3xl font-semibold'>{item.name}</h1>
       <Tabs defaultValue='tab-1'>
         <TabsList>

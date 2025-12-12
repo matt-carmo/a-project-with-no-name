@@ -520,7 +520,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                           <ComplementAction
                             control={control}
                             setValue={setValue}
-                            // watch={watch}
+                            watch={watch}
                             nameBase={`productComplementGroups.${index}`}
                             key={complement.id}
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any

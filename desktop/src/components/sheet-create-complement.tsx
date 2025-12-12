@@ -80,7 +80,7 @@ export function SheetCreateComplement({
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const { register, control, getValues, setValue, reset } = useForm<FormValues>(
+  const { register, control, getValues, setValue, reset, watch } = useForm<FormValues>(
     {
       defaultValues: {
         group: {
@@ -119,7 +119,11 @@ export function SheetCreateComplement({
     const comps = complements;
 
     const data = {
-      ...group,
+      minSelected: group.minSelected,
+      maxSelected: group.maxSelected,
+      name: group.name,
+      isAvailable: true,
+
       complements: comps.map((c) => ({
         name: c.name,
         description: c.description,
@@ -134,6 +138,7 @@ export function SheetCreateComplement({
       })),
       // image will be handled separately
     };
+
 
     const res = await api.post(`${storeId}/groups-complements`, data, {
       headers: {
@@ -224,6 +229,7 @@ export function SheetCreateComplement({
 
                   <ComplementAction
                     setValue={setValue}
+                    watch={watch}
                     control={control}
                     nameBase='group'
                     props={{

@@ -4,6 +4,7 @@ import GroupsComplementsService from "../services/groups-complements.service";
 import { GroupsComplementsController } from "../controllers/groups-complements.controller";
 import { GroupsComplementsRepository } from "../repositorires/groups-complements.repository";
 import { categorySchema } from "../schemas/category.schema";
+import z from "zod";
 
 
 
@@ -18,12 +19,13 @@ export function GroupsComplementsRoutes(server: FastifyInstance) {
         {
             schema: {
                 params: categorySchema.pick({ storeId: true }),
-        
-            },
-        
+                querystring: z.object({
+                    productId: z.string().optional(),
+                }),
 
+            },
         },
-        
+
         controller.findAll.bind(controller)
     )
     server.post(
@@ -31,12 +33,12 @@ export function GroupsComplementsRoutes(server: FastifyInstance) {
         {
             schema: {
                 params: categorySchema.pick({ storeId: true }),
-        
+
             },
-        
+
 
         },
-        
+
         controller.create.bind(controller)
     )
 }

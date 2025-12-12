@@ -8,8 +8,9 @@ export default class GroupsComplementsService {
 
     ) { }
 
-    async findAll({ storeId }: { storeId: string }) {
-        const result = await this.repository.findAll({ storeId });
+    async findAll({ storeId, productId }: { storeId: string, productId?: string }) {
+        
+        const result = await this.repository.findAll({ storeId, productId });
         return result;
     }
     async create({ data, storeId }: {

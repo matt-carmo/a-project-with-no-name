@@ -1,27 +1,23 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import GroupsComplementsService from "../services/groups-complements.service";
 import { CreateComplementGroupInput } from "../schemas/complement-group.schema";
+import { CreateGroupComplementInput } from "../repositorires/groups-complements.repository";
 
 
 export class GroupsComplementsController {
     constructor(private service: GroupsComplementsService) { }
 
-    async findAll(req: FastifyRequest<{ Params: { storeId: string } }>, reply: FastifyReply) {
+    async findAll(req: FastifyRequest<{ Params: { storeId: string }; Querystring: { productId: string } }>, reply: FastifyReply) {
         const { storeId } = req.params;
-        const result = await this.service.findAll({ storeId });
+        const { productId } = req.query
+
+        const result = await this.service.findAll({ storeId, productId });
         return reply.status(200).send(result);
     }
-    async create(req: FastifyRequest<{ Body: CreateComplementGroupInput, Params: { storeId: string } }>, reply: FastifyReply) {
-        
-        const data = {
-            name: req.body.name,
-            storeId: req.params.storeId,
-            minSelected: req.body.minSelected,
-            maxSelected: req.body.maxSelected,
-            complements: req.body.complements,
 
-            
-        };
+    async create(req: FastifyRequest<{ Body: CreateGroupComplementInput, Params: { storeId: string } }>, reply: FastifyReply) {
+
+        const data = req.body;
 
 
         const result = await this.service.create({ data, storeId: req.params.storeId });
