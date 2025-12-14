@@ -9,7 +9,7 @@ export default class GroupsComplementsService {
     ) { }
 
     async findAll({ storeId, productId }: { storeId: string, productId?: string }) {
-        
+
         const result = await this.repository.findAll({ storeId, productId });
         return result;
     }
@@ -21,4 +21,19 @@ export default class GroupsComplementsService {
         const result = await this.repository.create({ ...data, storeId });
         return result;
     }
+    async createWithConnectProduct({
+        data,
+        storeId,
+        productId,
+    }: {
+        data: CreateGroupComplementInput[];
+        storeId: string;
+        productId: string;
+    }) {
+
+        return this.repository.createWithConnectProduct({
+            data, storeId, productId
+        });
+    }
+
 }

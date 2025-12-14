@@ -8,18 +8,18 @@ import Input from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toastManager } from "@/components/ui/toast";
-import { zodResolver } from "@hookform/resolvers/zod";
+
 import { Controller, useForm } from "react-hook-form";
+import { useNavigate } from "react-router";
 
 export function DetailsProduct({ item }: { item: any }) {
+
+  const navigate = useNavigate();
   const {
-    register,
+
     control,
     handleSubmit,
-    setValue,
-    reset,
-    setError,
-    getValues,
+
     watch,
 
     formState: { errors, isSubmitting },
@@ -58,6 +58,7 @@ export function DetailsProduct({ item }: { item: any }) {
           timeout: 1500,
           description: `As informações do produto foram atualizadas com sucesso.`,
         });
+        navigate(-1);
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {

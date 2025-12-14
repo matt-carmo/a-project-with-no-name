@@ -14,11 +14,7 @@ export class GroupsComplementsRepository {
             where: {
                 storeId,
                 deletedAt: null,
-                products: {
-                    some: {
-                        productId: id
-                    }
-                }
+                products: { ...id ? { some: { productId: id } } : undefined }
             },
             include: {
                 complements: true,
@@ -43,6 +39,7 @@ export class GroupsComplementsRepository {
                 store: {
                     connect: { id: storeId },
                 },
+
                 complements: {
                     createMany: {
                         data: complements,
@@ -51,4 +48,29 @@ export class GroupsComplementsRepository {
             },
         });
     }
+    async createWithConnectProduct({data, storeId, productId,}: {data: CreateGroupComplementInput[]; storeId: string; productId: string;}) {
+
+
+        
+       return await this.prisma.$transaction(async (tx) => {
+            return Promise.all(
+                data.map((group) =>
+                    tx.complementGroup.create({
+                        data: {
+                            name: group.name,
+                            store: { connect: { id: storeId } },
+                            products: {
+                                create: {
+                                    product: { connect: { id: productId } },
+                                },
+                            },
+                        },
+                    })
+                )
+            );
+        });
+
+    }
+
+
 }

@@ -21,23 +21,10 @@ import BRLInput from "./BRLCurrencyInput";
 import ComplementAction from "./complement-action";
 import { Card, CardContent } from "./ui/card";
 import { convertBRL } from "@/utils/convertBRL";
-import api from "@/api/axios";
-import { useParams } from "react-router";
 import { Complement } from "@/interfaces/menu.interface";
 import ModalImage from "./modal-image";
 import { Textarea } from "./ui/textarea";
-
-// ------------------------------
-// 1. SCHEMAS POR ETAPA
-// ------------------------------
-
-// const groupSchema = z.object({
-//   group: z.object({
-//     name: z.string().min(1, "Nome é obrigatório"),
-//     minSelected: z.number().min(0),
-//     maxSelected: z.number().min(1),
-//   }),
-// });
+import { useComplementStore } from "@/store/complement-store";
 
 const complementSchema = z.object({
   complements: z.object({
@@ -48,20 +35,17 @@ const complementSchema = z.object({
   productPrice: z.number().min(0),
 });
 
-// ------------------------------
-
-// ------------------------------
-
 export function SheetCreateComplement({
-  onCreateComplement,
+  onSubmitGroup,
 }: {
-  onCreateComplement(complement: Complement): void;
+  onSubmitGroup?: (data: any) => void;
 }) {
   const { open, setOpen } = useSheetComplementStore();
   const [step, setStep] = useState(1);
-  const [complements, setComplements] = useState<Complement[]>([]);
+  const { setComplements, selectedComplements, setSelectedComplements } =
+    useComplementStore();
 
-  const { id: storeId } = useParams();
+  const [itemsComplements, setItemsComplements] = useState<Complement[]>([]);
 
   type FormValues = {
     group: {
@@ -80,8 +64,8 @@ export function SheetCreateComplement({
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const { register, control, getValues, setValue, reset, watch } = useForm<FormValues>(
-    {
+  const { register, control, getValues, setValue, reset, watch } =
+    useForm<FormValues>({
       defaultValues: {
         group: {
           name: "",
@@ -96,35 +80,29 @@ export function SheetCreateComplement({
         },
         productPrice: 0,
       },
-    }
-  );
+    });
 
-  // -----------------------------------
-  // PREVIEW DE IMAGEM
-  // -----------------------------------
-  const handlePreviewImage = (img: { url: string, id: string }) => {
+  const handlePreviewImage = (img: { url: string; id: string }) => {
     const url = img.url;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     setValue("complements.imagePreview", url as string);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    setValue("complements.image", img as any);
+    setValue("complements.image", img);
 
     setImagePreview(url);
   };
 
   const onCaptureGroup = async () => {
-    if (step === 1) return setStep(2);
-
     const group = getValues("group");
-    const comps = complements;
+    // const comps = complements;
 
     const data = {
+      id: Math.random().toString(20).substring(2, 9),
       minSelected: group.minSelected,
       maxSelected: group.maxSelected,
       name: group.name,
       isAvailable: true,
 
-      complements: comps.map((c) => ({
+      complements: itemsComplements.map((c) => ({
         name: c.name,
         description: c.description,
         price: c.price,
@@ -132,24 +110,28 @@ export function SheetCreateComplement({
           c.image &&
           typeof c.image === "object" &&
           "url" in (c.image as Record<string, unknown>)
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ? (c.image as Record<string, any>).url
+            ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (c.image as Record<string, any>).url
             : null,
       })),
-      // image will be handled separately
     };
-
-
-    const res = await api.post(`${storeId}/groups-complements`, data, {
-      headers: {
-        "Content-Type": "application/json",
-      },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    setSelectedComplements((prev) => [data, ...prev] as any);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    setComplements((prev) => [data, ...prev] as any);
+    setOpen(false);
+    setStep(1);
+    reset({
+      complements: { name: "", description: "", image: undefined },
+      group: { name: "", minSelected: 0, maxSelected: 0 },
+      productPrice: 0,
     });
-
-    if (res.status === 201) {
-      onCreateComplement(res.data);
-      setOpen(false);
+    setItemsComplements([]);
+    setImagePreview(null);
+    if (onSubmitGroup) {      
+      onSubmitGroup(data);
     }
+    // }
   };
 
   const onSubmitComplement = () => {
@@ -171,21 +153,25 @@ export function SheetCreateComplement({
       imagePreview: values.complements.imagePreview,
     };
 
-    setComplements((prev) => [...prev, newComplement]);
+    console.log("New Complement:", newComplement);
+    setItemsComplements((prev) => [...prev, newComplement]);
+
+    //  setSelectedComplements((prev) => [...prev, newComplement]);
+
+    console.log("Selected Complements:", selectedComplements);
 
     reset({
       ...values,
       complements: { name: "", description: "", image: undefined },
       productPrice: 0,
-      
     });
     setImagePreview(null);
   };
 
-  const removeComplement = (index: number) => {
-    const newComplements = [...complements];
-    newComplements.splice(index, 1);
-    setComplements(newComplements);
+  const removeComplement = (name: string) => {
+    const newComplements = itemsComplements.filter((c) => c.name !== name);
+
+    setItemsComplements(newComplements);
   };
 
   // -----------------------------------
@@ -196,7 +182,6 @@ export function SheetCreateComplement({
         open={open}
         onOpenChange={() => {
           setOpen(!open);
-          setComplements([]);
           reset({
             complements: { name: "", description: "", image: undefined },
             group: { name: "", minSelected: 0, maxSelected: 0 },
@@ -237,7 +222,7 @@ export function SheetCreateComplement({
                       minSelected: 1,
                       complements: [],
                       description: "",
-
+                      products: [],
                       isAvailable: true,
                       name: "",
                     }}
@@ -277,7 +262,7 @@ export function SheetCreateComplement({
                   />
                 </Field>
 
-                <Field className={'flex flex-row items-center gap-4'}>
+                <Field className={"flex flex-row items-center gap-4"}>
                   <div className='flex flex-col gap-2'>
                     <Label>Imagem</Label>
 
@@ -309,7 +294,7 @@ export function SheetCreateComplement({
                 </Button>
 
                 <div className='mt-4 space-y-4'>
-                  {complements.map((c, i) => (
+                  {itemsComplements.map((c, i) => (
                     <Card
                       key={i}
                       className='flex gap-4 p-2 border-0 bg-secondary'
@@ -330,7 +315,7 @@ export function SheetCreateComplement({
                         </div>
                         <div className='ml-auto flex items-center aspect-square'>
                           <Button
-                            onClick={() => removeComplement(i)}
+                            onClick={() => removeComplement(c.name)}
                             className='aspect-square rounded-full'
                             variant='destructive'
                           >
@@ -350,13 +335,20 @@ export function SheetCreateComplement({
               <Button variant='secondary'>Cancelar</Button>
             </SheetClose>
 
-            {step === 1 && <Button onClick={onCaptureGroup}>Avançar</Button>}
+            {step === 1 && (
+              <Button
+                disabled={watch("group.name").trim() === ""}
+                onClick={() => setStep(2)}
+              >
+                Avançar
+              </Button>
+            )}
             {step === 2 && (
               <Button
-                disabled={complements.length === 0}
+                disabled={itemsComplements.length === 0}
                 onClick={onCaptureGroup}
               >
-                Criar grupo
+                Adicionar grupo
               </Button>
             )}
           </SheetFooter>

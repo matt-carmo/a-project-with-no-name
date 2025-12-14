@@ -17,7 +17,7 @@ export const productSchema = z.object({
     deletedAt: z.date().nullable().optional(),
     productComplementGroups: z.array(
         z.object({
-            groupId: z.string(),
+            groupId: z.string().optional(),
             id: z.string().optional(),
             minSelected: z.number().optional(),
             maxSelected: z.number().optional(),

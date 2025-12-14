@@ -1,8 +1,32 @@
 import { create } from "zustand";
 
-// ---------------------------------------
+
 // Types e constantes
-// ---------------------------------------
+
+export interface iComplement {
+    product: {
+        id: string | number;
+        name: string;};
+
+    id?: string | number;
+    name: string;
+    price: number;
+    photoUrl: string | null;
+
+}
+
+export interface iComplementGroup {
+    product: iComplement;
+    products: iComplement[];
+    id: string;
+    minSelected: number;
+    maxSelected: number;
+    name: string;
+    isAvailable: boolean;
+    complements: iComplement[];
+}
+
+
 export const ComplementState = {
     "none-complement": "none-complement",
     "existing-complement": "existing-complement",
@@ -19,55 +43,75 @@ export const complementIndexMap: Record<ComplementState, number> = {
 };
 
 
+// Store Types
+export interface ComplementsStore {
 
-export type ComplementStore = {
     complementState: ComplementState;
+    arrayLength: number;
+
+    complements: iComplementGroup[];
+    selectedComplements: iComplementGroup[];
+
     setComplementState: (state: ComplementState) => void;
+    setArrayLength: (len: number) => void;
 
+    setComplements: (
+        value: iComplementGroup[] | ((prev: iComplementGroup[]) => iComplementGroup[])
+    ) => void;
 
-    getComplementIndex: () => number;
+    setSelectedComplements: (
+        value: iComplementGroup[] | ((prev: iComplementGroup[]) => iComplementGroup[])
+    ) => void;
+
+    addSelectedComplement: (complement: iComplementGroup) => void;
+    removeSelectedComplement: (id: string | number) => void;
+    clearSelectedComplements: () => void;
 
     resetComplement: () => void;
-    setSelectedComplements: (complements: string[]) => void;
-    setArrayLength: (length: number) => void;
+}
 
-    selectedComplements: string[];
-    arrayLength: number;
-};
-
-export const useComplementStore = create<ComplementStore>((set, get) => ({
+export const useComplementStore = create<ComplementsStore>((set) => ({
     complementState: "none-complement",
     arrayLength: 2,
+    complements: [],
     selectedComplements: [],
-    setComplementState: (state) => {
-        const current = get().complementState;
-        const nextState = state === current ? "none-complement" : state;
+    setComplementState: (state) => set({ complementState: state }),
+    setArrayLength: (len) => set({ arrayLength: len }),
 
-        set({
-            complementState: nextState,
-            arrayLength:
-                nextState === "existing-complement" ||
-                nextState === "new-complement"
-                    ? 4
-                    : 2, 
-        });
-    },
-    setedComplements: (complements: string[]) =>
-        set({ selectedComplements: complements }),
+    setComplements: (value) =>
+        set((state) => ({
+            complements:
+                typeof value === "function" ? value(state.complements) : value,
+        })),
 
-    getComplementIndex: () => {
-        const state = get().complementState;
-        return complementIndexMap[state];
-    },
+    setSelectedComplements: (value) =>
+        set((state) => ({
+            selectedComplements:
+                typeof value === "function"
+                    ? value(state.selectedComplements)
+                    : value,
+        })),
+    addSelectedComplement: (complement) =>
+        set((state) => ({
+            selectedComplements: [...state.selectedComplements, complement],
+        })),
 
+    removeSelectedComplement: (id) =>
+        set((state) => ({
+            selectedComplements: state.selectedComplements.filter(
+                (c) => c.id !== id
+            ),
+        })),
+
+    clearSelectedComplements: () =>
+        set(() => ({
+            selectedComplements: [],
+        })),
     resetComplement: () =>
-        set({
+        set(() => ({
             complementState: "none-complement",
-            arrayLength: 2, 
-        }),
-
-    setArrayLength: (length: number) => set({ arrayLength: length }),
-
-    setSelectedComplements: (complements: string[]) =>
-        set({ selectedComplements: complements }),
+            arrayLength: 2,
+            complements: [],
+            selectedComplements: [],
+        })),
 }));

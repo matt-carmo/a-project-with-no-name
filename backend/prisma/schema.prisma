@@ -121,7 +121,6 @@ model Product {
 model ComplementGroup {
     id          String  @id @default(cuid())
     name        String
-    description String?
     minSelected Int     @default(0)
     maxSelected Int?
     isAvailable Boolean @default(true)

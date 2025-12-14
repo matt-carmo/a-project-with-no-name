@@ -1,20 +1,29 @@
 import { Button } from "@/components/ui/button";
-import { EllipsisVerticalIcon, Pause, Pencil, Play, Trash } from "lucide-react";
+import {
+  EllipsisVerticalIcon,
+  Pause,
+  Pencil,
+  Play,
+  Trash,
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router";
+
+import api from "@/api/axios";
+import { emitRefetch } from "@/lib/utils";
 
 import Stock from "./stock";
-import api from "@/api/axios";
-import { useState } from "react";
 import BRLInput from "./BRLCurrencyInput";
+import Input from "./ui/input";
 import { toastManager } from "./ui/toast";
-import { convertBRL } from "@/utils/convertBRL";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Link } from "react-router";
-import { emitRefetch } from "@/lib/utils";
+
 import {
   Dialog,
   DialogContent,
@@ -33,8 +42,7 @@ interface EditableProductRowProps {
   productId?: string;
   storeId: string;
   complementId?: string;
-  onToggleAvailable?: () => void;
-  onStockChange?: (value: number) => void;
+  name?: string;
   onPriceChange?: (value: number) => void;
 }
 
@@ -46,20 +54,57 @@ export function EditableProductRow({
   storeId,
   complementId,
   type,
-
+  name,
   onPriceChange,
 }: EditableProductRowProps) {
   const [_isAvailable, setIsAvailable] = useState(isAvailable);
   const [_price, setPrice] = useState(price);
+  const [_name, setName] = useState(name ?? "");
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   const endPoint =
     type === "product"
       ? `stores/${storeId}/${type}s/${productId}`
       : `${type}s/${complementId}`;
+
+  const patchData = useCallback(
+    async (data: Partial<{ price: number; name: string }>) => {
+      const res = await api.patch(endPoint, data);
+      if (res.status === 200) {
+        toastManager.add({
+          type: "success",
+          title: "Atualizado",
+          timeout: 1500,
+          description: "Alterações salvas com sucesso.",
+        });
+      } else {
+        alert("Erro ao salvar alterações.");
+      }
+    },
+    [endPoint]
+  );
+
+  const debouncedPatch = useCallback(
+    (data: Partial<{ price: number; name: string }>) => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => patchData(data), 600);
+    },
+    [patchData]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
   const onIsAvailableChange = async () => {
     const res = await api.patch(endPoint, {
       isAvailable: !_isAvailable,
     });
+
     if (res.status === 200) {
       setIsAvailable(!_isAvailable);
       toastManager.add({
@@ -71,122 +116,119 @@ export function EditableProductRow({
         }.`,
       });
     } else {
-      alert("Erro ao atualizar o estoque.");
+      alert("Erro ao atualizar disponibilidade.");
     }
   };
 
   const handleDelete = async () => {
     const res = await api.delete(endPoint);
+
     if (res.status === 204) {
       emitRefetch();
+      setOpenDeleteDialog(false);
       toastManager.add({
         type: "success",
         title: "Item excluído",
         timeout: 1500,
-        description: `O item foi excluído com sucesso.`,
+        description: "O item foi excluído com sucesso.",
       });
     } else {
       toastManager.add({
         type: "error",
         title: "Erro ao excluir item",
         timeout: 3000,
-        description: `Ocorreu um erro ao tentar excluir o item.`,
+        description: "Ocorreu um erro ao tentar excluir o item.",
       });
     }
   };
+
   const handleStockChange = async (value: number | null) => {
-    const res = await api.patch(`stores/${storeId}/${type}s/${productId}`, {
-      stock: value,
-    });
+    const res = await api.patch(
+      `stores/${storeId}/${type}s/${productId}`,
+      { stock: value }
+    );
+
     if (res.status === 200) {
       toastManager.add({
         type: "success",
         title: "Estoque atualizado",
         timeout: 1500,
-        description: `${
+        description:
           value !== null
             ? `O estoque foi atualizado para ${value}.`
-            : "O estoque foi desativado."
-        }`,
+            : "O estoque foi desativado.",
       });
+    } else {
+      alert("Erro ao atualizar o estoque.");
     }
   };
-  const handlePriceChange = async () => {
-    const res = await api.patch(endPoint, {
-      price: _price,
-    });
-    if (res.status === 200) {
-      toastManager.add({
-        type: "success",
-        title: "Preço atualizado",
-        timeout: 1500,
-        description: `O preço foi atualizado com sucesso para ${convertBRL(
-          _price
-        )}.`,
-      });
-    } else alert("Erro ao atualizar o preço.");
-  };
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   return (
-    <div className='flex items-center gap-3'>
-      {/* Stock */}
+    <div className="flex items-center gap-3">
       {stock !== undefined && (
         <Stock stock={stock} onStockChange={handleStockChange} />
       )}
 
-      {/* Price */}
-      <div className='w-22 ml-auto'>
+      {type === "complement" && (
+        <Input
+          value={_name}
+          onChange={(e) => {
+            const value = e.target.value;
+            setName(value);
+            debouncedPatch({ name: value });
+          }}
+          className="font-medium w-40"
+        />
+      )}
+
+      <div className="w-22 ml-auto">
         <BRLInput
           value={_price}
-          onBlur={handlePriceChange}
           onChange={(value) => {
             setPrice(value);
             onPriceChange?.(value);
+            debouncedPatch({ price: value });
           }}
-          className='font-medium'
+          className="font-medium"
         />
       </div>
 
-      {/* Toggle Availability */}
-      <Button
-        variant='outline'
-        size='icon'
-        onClick={() => onIsAvailableChange()}
-      >
+      <Button variant="outline" size="icon" onClick={onIsAvailableChange}>
         {_isAvailable ? <Pause /> : <Play />}
       </Button>
 
-      {type === "product" && (
-        <DropdownMenu>
-          <DropdownMenuTrigger>
-            <EllipsisVerticalIcon />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className='border-secondary'>
-            <DropdownMenuItem
-              className='p-0'
-              onClick={() => setOpenDeleteDialog(true)}
-            >
-              <Button variant='ghost' className='w-full justify-start'>
-                <Trash /> Excluir
-              </Button>
-            </DropdownMenuItem>
+      <DropdownMenu>
+        <DropdownMenuTrigger>
+          <EllipsisVerticalIcon />
+        </DropdownMenuTrigger>
 
-            <DropdownMenuItem className='p-0'>
+        <DropdownMenuContent className="border-secondary">
+          {type === "product" && (
+            <DropdownMenuItem className="p-0">
               <Link
-                className='w-full'
+                className="w-full"
                 to={`/store/${storeId}/${type}/${productId}`}
               >
-                <Button variant='ghost' className='w-full justify-start'>
+                <Button variant="ghost" className="w-full justify-start">
                   <Pencil /> Editar
                 </Button>
               </Link>
             </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
+          )}
+
+          <DropdownMenuItem
+            className="p-0"
+            onClick={() => setOpenDeleteDialog(true)}
+          >
+            <Button variant="ghost" className="w-full justify-start">
+              <Trash /> Excluir
+            </Button>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       <Dialog open={openDeleteDialog} onOpenChange={setOpenDeleteDialog}>
-        <DialogTrigger></DialogTrigger>
+        <DialogTrigger />
 
         <DialogContent>
           <DialogHeader>
@@ -199,20 +241,12 @@ export function EditableProductRow({
 
           <DialogFooter>
             <Button
-              variant='outline'
+              variant="outline"
               onClick={() => setOpenDeleteDialog(false)}
             >
               Cancelar
             </Button>
-
-            <Button
-              className='cursor-pointer'
-              variant='destructive'
-              onClick={() => {
-                handleDelete();
-                // setOpenDeleteDialog(false);
-              }}
-            >
+            <Button variant="destructive" onClick={handleDelete}>
               Excluir
             </Button>
           </DialogFooter>

@@ -24,4 +24,15 @@ export class GroupsComplementsController {
 
         return reply.status(201).send(result);
     }
+    async createWithConnectProduct(req: FastifyRequest<{ Body: CreateGroupComplementInput[], Params: { storeId: string, productId: string } }>, reply: FastifyReply) {
+   
+    
+        const data = req.body;
+
+        
+
+        const result = await this.service.createWithConnectProduct({ data, storeId: req.params.storeId, productId: req.params.productId });
+
+        return reply.status(201).send(result);
+    }
 }

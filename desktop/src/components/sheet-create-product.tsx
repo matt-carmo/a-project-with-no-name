@@ -33,11 +33,12 @@ import { emitRefetch } from "@/lib/utils";
 import { SheetCreateComplement } from "./sheet-create-complement";
 import { ScrollArea } from "./ui/scroll-area";
 import ModalImage from "./modal-image";
+import { iComplementGroup, useComplementStore } from "@/store/complement-store";
 
 export interface ComplementGroup {
   id: string;
   name: string;
-  description: string;
+
   minSelected: number;
   maxSelected: number;
   isAvailable: boolean;
@@ -80,19 +81,20 @@ export function SheetCreateProduct({ category }: { category: Category }) {
   const { setOpen: openCreateComplement } = useSheetComplementStore();
   const [stepsNumber, setStepsNumber] = useState(3);
 
-  const [complements, setComplements] = useState<ComplementGroup[]>([]);
+  const {
+    complements,
+    setComplements,
+    selectedComplements,
+    setSelectedComplements,
+  } = useComplementStore();
 
-  const [selectedsComplements, setSelectedsComplements] = useState<
-    ComplementGroup[]
-  >([]);
-
-  const handleSelectComplement = (complement: ComplementGroup) => {
-    if (selectedsComplements.includes(complement)) {
-      setSelectedsComplements(
-        selectedsComplements.filter((c) => c.id !== complement.id)
+  const handleSelectComplement = (complement: iComplementGroup) => {
+    if (selectedComplements.includes(complement)) {
+      setSelectedComplements(
+        selectedComplements.filter((c) => c.id !== complement.id)
       );
     } else {
-      setSelectedsComplements([...selectedsComplements, complement]);
+      setSelectedComplements([...selectedComplements, complement]);
     }
   };
   const handleSetComplement = (
@@ -163,7 +165,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
         openCreateComplement(true);
       }
     }
-    if (step === 3 && selectedsComplements.length === 0) {
+    if (step === 3 && selectedComplements.length === 0) {
       // eslint-disable-next-line react-hooks/rules-of-hooks
       setError("productComplementGroups", {
         message: "Selecione pelo menos um complemento",
@@ -178,7 +180,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
     }
   };
   useEffect(() => {
-    if (selectedsComplements.length === 0) {
+    if (selectedComplements.length === 0) {
       setError("productComplementGroups", {
         message: "Selecione pelo menos um complemento",
       });
@@ -188,14 +190,15 @@ export function SheetCreateProduct({ category }: { category: Category }) {
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedsComplements]);
+  }, [selectedComplements]);
   const getComplements = async function (): Promise<ComplementGroup[]> {
     const res = await api.get(`${category.storeId}/groups-complements`);
-    setComplements(res.data as ComplementGroup[]);
+    setComplements(res.data);
     return res.data;
   };
   useEffect(() => {
     getComplements();
+    // alert('Fetching complements...');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -204,45 +207,110 @@ export function SheetCreateProduct({ category }: { category: Category }) {
   }, [complement]);
 
   const onSubmit = async (data: ProductInput) => {
+    const complementGroupsWithoutId = selectedComplements.filter(
+      (g) => g.id.length !== 25
+    );
 
+    let resultingComplementGroups: ComplementGroup[] = [];
+
+    // -----------------------------------------------------
+    // 1. Criar grupos de complemento que não possuem ID
+    // -----------------------------------------------------
+    if (complementGroupsWithoutId.length > 0) {
+      try {
+        // Cria todos os grupos em paralelo e coleta os retornos
+        const createdGroups = await Promise.all(
+          complementGroupsWithoutId.map((group) =>
+            api.post(`${category.storeId}/groups-complements`, {
+              name: group.name,
+
+              isAvailable: group.isAvailable,
+              minSelected: group.minSelected,
+              maxSelected: group.maxSelected,
+              complements: group.complements.map((c) => ({
+                name: c.name,
+                price: c.price,
+                isAvailable: true,
+              })),
+            })
+          )
+        );
+
+        resultingComplementGroups = createdGroups.map((res) => res.data);
+
+        toastManager.add({
+          title: "Grupos de complementos criados com sucesso",
+          type: "success",
+        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (err: any) {
+        toastManager.add({
+          title: "Erro ao criar grupos de complementos",
+          type: "error",
+          description: err?.response?.data?.message || "Falha inesperada...",
+        });
+        return;
+      }
+    }
+
+    // -----------------------------------------------------
+    // 2. Gerar o payload final do produto
+    // -----------------------------------------------------
     const formatedData =
       step !== 2
         ? {
             ...data,
-            productComplementGroups: selectedsComplements.map((g) => ({
-              groupId: g.id,
-              minSelected: g.minSelected,
-              maxSelected: g.maxSelected,
-            })),
+            productComplementGroups: [
+              // grupos já existentes selecionados no componente
+              ...selectedComplements
+                .filter((g) => g.id.length === 25)
+                .map((g) => ({
+                  groupId: g.id!,
+                  minSelected: g.minSelected,
+                  maxSelected: g.maxSelected,
+                })),
+
+              // grupos recém criados
+              ...resultingComplementGroups.map((g) => ({
+                groupId: g.id,
+                minSelected: g.minSelected,
+                maxSelected: g.maxSelected,
+              })),
+            ],
           }
         : data;
-    const res = await api.post(
-      `stores/${category.storeId}/products/${category.id}`,
-      formatedData,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
 
-    if (res.status === 201) {
-      emitRefetch();
-      toastManager.add({
-        title: "Produto criado com sucesso",
-        type: "success",
-      });
-      setOpen(false);
-    } else {
+    // -----------------------------------------------------
+    // 3. Criar o produto
+    // -----------------------------------------------------
+    try {
+      const res = await api.post(
+        `stores/${category.storeId}/products/${category.id}`,
+        formatedData,
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      if (res.status === 201) {
+        emitRefetch();
+        toastManager.add({
+          title: "Produto criado com sucesso",
+          type: "success",
+        });
+        setOpen(false);
+      } else {
+        throw new Error("Erro inesperado ao criar produto");
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
       toastManager.add({
         title: "Erro ao criar produto",
         type: "error",
         description:
-          res?.data?.message || "Erro no servidor... Contate o suporte",
+          err?.response?.data?.message ||
+          "Erro no servidor... Contate o suporte",
       });
     }
   };
-
   useEffect(() => {
     console.log(errors);
   }, [errors]);
@@ -250,7 +318,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
     if (step === stepsNumber) {
       return (
         <Button
-          onClick={() => console.log(getValues())}
+          onClick={handleSubmit(onSubmit)}
           disabled={isSubmitting}
           type='submit'
         >
@@ -265,22 +333,13 @@ export function SheetCreateProduct({ category }: { category: Category }) {
 
   return (
     <>
-      <SheetCreateComplement
-        onCreateComplement={async (element) => {
-          const complements = await getComplements();
-          const findComplement = complements.find((c) => c.id === element.id);
-          if (!findComplement) {
-            return;
-          }
-          setSelectedsComplements((prev) => [...prev, findComplement]);
-        }}
-      />
+      <SheetCreateComplement />
       <Sheet
         open={open}
         onOpenChange={() => {
           reset();
           setOpen(!open);
-          setSelectedsComplements([]);
+          setSelectedComplements([]);
           setStep(1);
         }}
       >
@@ -335,7 +394,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                         <Textarea onChange={field.onChange} />
                       )}
                     />
-                    
+
                     {errors.description && (
                       <span className='text-destructive text-sm'>
                         {errors.description.message}
@@ -379,14 +438,9 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                       control={control}
                       name='image'
                       render={({ field }) => (
-                        // <Stock
-                        //   stock={field.value ?? null}
-                        //   onStockChange={field.onChange}
-                        // />
                         <ModalImage onImageSelect={field.onChange} />
                       )}
                     ></Controller>
-                    {/* <Input {...register("image")} type='file' /> */}
                   </Field>
 
                   {/* ESTOQUE */}
@@ -446,14 +500,15 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                 </div>
                 <div className={`${step === 3 ? "flex-1/3" : "hidden"}`}>
                   <h2 className='text-2xl'>Complementos</h2>
+
                   {errors.productComplementGroups && (
                     <span className='text-destructive text-sm'>
                       {errors.productComplementGroups.message}
                     </span>
                   )}
 
-                  <ScrollArea className='max-h-[-webkit-fill-available] absolute'>
-                    {complements.map((complement: ComplementGroup) => (
+                  <ScrollArea className='max-h-10/12 absolute'>
+                    {complements.map((complement) => (
                       <Card
                         onClick={() => handleSelectComplement(complement)}
                         key={complement.id}
@@ -464,7 +519,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                             <span
                               className={`block w-2.5 h-2.5 ${
                                 complement.id ===
-                                selectedsComplements.find(
+                                selectedComplements.find(
                                   (c) => c.id === complement.id
                                 )?.id
                                   ? "bg-white"
@@ -475,8 +530,8 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                         </div>
                         <CardContent className='px-3'>
                           <CardTitle>{complement.name}</CardTitle>
-                          {complement.products.length > 0 && (
-                            <CardDescription>
+                          {complement?.products?.length > 0 && (
+                            <CardDescription className='line-clamp-1'>
                               {" "}
                               Disponível em{" "}
                               {complement.products
@@ -484,7 +539,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                                 .join(", ")}
                             </CardDescription>
                           )}
-                          {complement.products.length === 0 && (
+                          {complement?.products?.length === 0 && (
                             <CardDescription>
                               Nenhum produto vinculado
                             </CardDescription>
@@ -497,54 +552,61 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                 <div className={`${step === 4 ? "flex-1/3" : "hidden"}`}>
                   <h2 className='text-2xl'>Complementos</h2>
 
-                  {selectedsComplements.map(
-                    (complement: ComplementGroup, index) => (
-                      <Card className=' mb-4 py-3 px-0'>
-                        <CardContent className='px-3'>
-                          <CardTitle>{complement.name}</CardTitle>
-                          {complement.products.length > 0 && (
-                            <CardDescription>
-                              {" "}
-                              Disponível em{" "}
-                              {complement.products
-                                .map((product) => product.product.name)
-                                .join(", ")}
-                            </CardDescription>
-                          )}
-                          {complement.products.length === 0 && (
-                            <CardDescription>
-                              Nenhum produto vinculado
-                            </CardDescription>
-                          )}
+                  {selectedComplements?.map((complement, index) => (
+                    <Card className='mb-4 py-3 px-0'>
+                      <CardContent className='px-3'>
+                        <CardTitle>{complement.name}</CardTitle>
+                        {complement?.products?.length > 0 && (
+                          <CardDescription className='line-clamp-1'>
+                            {" "}
+                            Disponível em{" "}
+                            {complement.products
+                              .map((product) => product.product.name)
+                              .join(", ")}
+                          </CardDescription>
+                        )}
+                        {complement?.products?.length === 0 && (
+                          <CardDescription>
+                            Nenhum produto vinculado
+                          </CardDescription>
+                        )}
+                        {!complement.products && (
+                          <CardDescription>
+                            Complemento novo, sem produtos vinculados
+                          </CardDescription>
+                        )}
 
-                          <ComplementAction
-                            control={control}
-                            setValue={setValue}
-                            watch={watch}
-                            nameBase={`productComplementGroups.${index}`}
-                            key={complement.id}
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            props={complement as any}
-                          />
-                        </CardContent>
-                      </Card>
-                    )
-                  )}
+                        <ComplementAction
+                          control={control}
+                          setValue={setValue}
+                          watch={watch}
+                          nameBase={`productComplementGroups.${index}`}
+                          key={complement.id}
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          props={complement as any}
+                        />
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
                 <div className='flex-1'>
                   <div className='border aspect-470/945 rounded-4xl max-w-xs overflow-hidden relative'>
-                    <span className="block w-12 h-2.5 bg-black rounded-full absolute left-1/2 translate-x-[-50%] top-2"></span>
-                    <img src={watch("image")?.url || 'https://placehold.co/600x400'} alt='' />
+                    <span className='block w-12 h-2.5 bg-black rounded-full absolute left-1/2 translate-x-[-50%] top-2'></span>
+                    <img
+                      src={
+                        watch("image")?.url || "https://placehold.co/600x400"
+                      }
+                      alt=''
+                    />
                     <div className='p-4'>
                       <div>
                         <h2 className='font-semibold'>{watch("name")}</h2>
                         <p>{watch("description")}</p>
                       </div>
                       <ul>
-                        {selectedsComplements.map((complement) => (
+                        {selectedComplements.map((complement) => (
                           <li key={complement.id}>
-                            + {complement.name} (
-                            {complement.minSelected}-
+                            + {complement.name} ({complement.minSelected}-
                             {complement.maxSelected})
                           </li>
                         ))}

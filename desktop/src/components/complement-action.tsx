@@ -75,7 +75,6 @@ useEffect(() => {
               value={isRequiredValue ? "Obrigatorio" : "Opcional"}
               onValueChange={(v) => {
                 const isRequired = v === "Obrigatorio";
-                console.log("VALUE SELECTED:", v, isRequired);
                 field.onChange(isRequired);
                 setIsRequiredValue(isRequired);
                 if (isRequired) {
@@ -86,9 +85,6 @@ useEffect(() => {
 
               }}
             >
-              min{JSON.stringify(watch(`${nameBase}.minSelected`))} {" "}
-              max{JSON.stringify(watch(`${nameBase}.maxSelected`))}
-
               <SelectTrigger size='sm'>
                 <SelectValue />
               </SelectTrigger>
