@@ -37,27 +37,27 @@ async function main() {
 
   //
 //   -----------------------------------
-//   2) Criar loja
+//   2) Create a store
 //   -----------------------------------
   
 
-//   const store = await prisma.store.create({
-//     data: {
-//       name: "Lanchonete Central",
-//       slug: "lanchonete-central",
-//       phoneNumber: "55999999999",
-//       settings: {
-//         create: {
-//           isOpen: true,
-//           minOrderValue: 0,
-//           deliveryFee: 5,
-//           pickupEnabled: true,
-//           deliveryEnabled: true,
-//           openHours: "08:00-23:00",
-//         },
-//       },
-//     },
-//   });
+  const store = await prisma.store.create({
+    data: {
+      name: "Lanchonete Central",
+      slug: "lanchonete-central",
+      phoneNumber: "55999999999",
+      settings: {
+        create: {
+          isOpen: true,
+          minOrderValue: 0,
+          deliveryFee: 5,
+          pickupEnabled: true,
+          deliveryEnabled: true,
+          openHours: "08:00-23:00",
+        },
+      },
+    },
+  });
 
 //   //
 //   // -----------------------------------
@@ -65,13 +65,13 @@ async function main() {
 //   // -----------------------------------
 //   //
 
-//   await prisma.storeUser.create({
-//     data: {
-//       userId: 'cmir04ls10000nobc2i88qt8t',
-//         storeId: store.id,
-//       role: 'ADMIN',
-//     },
-//   });
+  await prisma.storeUser.create({
+    data: {
+      userId: 'cmj64l4840000lx6oyaex03rr',
+        storeId: store.id,
+      role: 'ADMIN',
+    },
+  });
 
 //   //
 //   // -----------------------------------
@@ -92,34 +92,34 @@ async function main() {
 //   // -----------------------------------
 //   //
 
-  const burgerCategory = await prisma.category.findFirst({
-    where: { name: "Burgers", storeId: 'cmir07opv0000vdbcgyq81u0q' },
-  });
+  // const burgerCategory = await prisma.category.findFirst({
+  //   where: { name: "Burgers", storeId: 'cmir07opv0000vdbcgyq81u0q' },
+  // });
 
-  const drinksCategory = await prisma.category.findFirst({
-    where: { name: "Bebidas", storeId: 'cmir07opv0000vdbcgyq81u0q' },
-  });
+  // const drinksCategory = await prisma.category.findFirst({
+  //   where: { name: "Bebidas", storeId: 'cmir07opv0000vdbcgyq81u0q' },
+  // });
 
-  const xsalada = await prisma.product.create({
-    data: {
-      storeId: 'cmir07opv0000vdbcgyq81u0q',
-      categoryId: burgerCategory!.id,
-      name: "X-Salada",
-      description: "Hambúrguer artesanal com salada",
-      price: 20,
-      image: null,
-    },
-  });
+  // const xsalada = await prisma.product.create({
+  //   data: {
+  //     storeId: 'cmir07opv0000vdbcgyq81u0q',
+  //     categoryId: burgerCategory!.id,
+  //     name: "X-Salada",
+  //     description: "Hambúrguer artesanal com salada",
+  //     price: 20,
+  //     image: null,
+  //   },
+  // });
 
-  const coca = await prisma.product.create({
-    data: {
-      storeId: 'cmir07opv0000vdbcgyq81u0q',
-      categoryId: drinksCategory!.id,
-      name: "Coca-Cola Lata",
-      description: "350ml",
-      price: 6,
-    },
-  });
+  // const coca = await prisma.product.create({
+  //   data: {
+  //     storeId: 'cmir07opv0000vdbcgyq81u0q',
+  //     categoryId: drinksCategory!.id,
+  //     name: "Coca-Cola Lata",
+  //     description: "350ml",
+  //     price: 6,
+  //   },
+  // });
 
 //   //
 //   // -----------------------------------
@@ -127,27 +127,27 @@ async function main() {
 //   // -----------------------------------
 //   //
 
-  const groupProteinas = await prisma.complementGroup.create({
-    data: {
-      storeId: 'cmir07opv0000vdbcgyq81u0q',
-      name: "Escolha a proteína",
-      description: "Escolha 1 opção",
+  // const groupProteinas = await prisma.complementGroup.create({
+  //   data: {
+  //     storeId: 'cmir07opv0000vdbcgyq81u0q',
+  //     name: "Escolha a proteína",
+  //     description: "Escolha 1 opção",
 
-      minSelected: 1,
-      maxSelected: 1,
-    },
-  });
+  //     minSelected: 1,
+  //     maxSelected: 1,
+  //   },
+  // });
 
-  const groupAdicionais = await prisma.complementGroup.create({
-    data: {
-        storeId: 'cmir07opv0000vdbcgyq81u0q',
-      name: "Adicionais",
-      description: "Aumente seu lanche",
+  // const groupAdicionais = await prisma.complementGroup.create({
+  //   data: {
+  //       storeId: 'cmir07opv0000vdbcgyq81u0q',
+  //     name: "Adicionais",
+  //     description: "Aumente seu lanche",
  
-      minSelected: 0,
-      maxSelected: 5,
-    },
-  });
+  //     minSelected: 0,
+  //     maxSelected: 5,
+  //   },
+  // });
 
   //
   // -----------------------------------
@@ -155,21 +155,21 @@ async function main() {
   // -----------------------------------
   //
 
-  const complementosProtein = await prisma.complement.createMany({
-    data: [
-      { name: "Carne bovina", price: 0, groupId: groupProteinas.id, },
-      { name: "Frango grelhado", price: 0, groupId: groupProteinas.id },
-      { name: "Carne dupla", price: 5, groupId: groupProteinas.id },
-    ],
-  });
+  // const complementosProtein = await prisma.complement.createMany({
+  //   data: [
+  //     { name: "Carne bovina", price: 0, groupId: groupProteinas.id, },
+  //     { name: "Frango grelhado", price: 0, groupId: groupProteinas.id },
+  //     { name: "Carne dupla", price: 5, groupId: groupProteinas.id },
+  //   ],
+  // });
 
-  const complementosAdicionais = await prisma.complement.createMany({
-    data: [
-      { name: "Bacon", price: 4, groupId: groupAdicionais.id },
-      { name: "Cheddar", price: 3, groupId: groupAdicionais.id },
-      { name: "Ovo", price: 2, groupId: groupAdicionais.id },
-    ],
-  });
+  // const complementosAdicionais = await prisma.complement.createMany({
+  //   data: [
+  //     { name: "Bacon", price: 4, groupId: groupAdicionais.id },
+  //     { name: "Cheddar", price: 3, groupId: groupAdicionais.id },
+  //     { name: "Ovo", price: 2, groupId: groupAdicionais.id },
+  //   ],
+  // });
 
   //
   // -----------------------------------
@@ -177,12 +177,12 @@ async function main() {
   // -----------------------------------
   //
 
-  await prisma.productComplementGroup.createMany({
-    data: [
-      { productId: xsalada.id, groupId: groupProteinas.id },
-      { productId: xsalada.id, groupId: groupAdicionais.id },
-    ],
-  });
+  // await prisma.productComplementGroup.createMany({
+  //   data: [
+  //     { productId: xsalada.id, groupId: groupProteinas.id },
+  //     { productId: xsalada.id, groupId: groupAdicionais.id },
+  //   ],
+  // });
 
   //
   // -----------------------------------

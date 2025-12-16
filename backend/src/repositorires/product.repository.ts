@@ -7,7 +7,7 @@ export class ProductRepository {
     constructor(private prisma: PrismaClient) {
 
     }
-    async createProduct({data, storeId, categoryId}: {data: z.infer<typeof createProductSchema>, storeId: string, categoryId: string}) {
+    async createProduct({ data, storeId, categoryId }: { data: z.infer<typeof createProductSchema>, storeId: string, categoryId: string }) {
 
         return this.prisma.product.create({
             data: {
@@ -22,7 +22,7 @@ export class ProductRepository {
             }
         });
     }
-    async createProductWithComplementsGroups({ data, storeId, categoryId }: { data: z.infer<typeof createProductSchema>, storeId: string, categoryId: string } & { productComplementGroups: z.infer<typeof complementGroupSchema>[] } ) {
+    async createProductWithComplementsGroups({ data, storeId, categoryId }: { data: z.infer<typeof createProductSchema>, storeId: string, categoryId: string } & { productComplementGroups: z.infer<typeof complementGroupSchema>[] }) {
 
         return this.prisma.product.create({
             data: {
@@ -62,11 +62,19 @@ export class ProductRepository {
         });
     }
     async deleteProduct({ productId }: { productId: string }) {
-        return this.prisma.product.update({
-            where: { id: productId },
-            data: {
-                deletedAt: new Date(),
-            }
-        });
+        return this.prisma.$transaction([
+            this.prisma.product.update({
+                where: { id: productId },
+                data: {
+                    deletedAt: new Date(),
+                    isAvailable: false, // opcional, mas recomendado
+                },
+            }),
+
+            this.prisma.productComplementGroup.deleteMany({
+                where: { productId },
+            }),
+        ])
     }
+
 }

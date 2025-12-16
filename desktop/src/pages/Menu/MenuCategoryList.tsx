@@ -70,7 +70,7 @@ export function MenuCategoryList({
                 </DialogPopup>
               </Dialog>
 
-              <EditInput onSubmit={onMenuUpdated} props={category} />
+              <EditInput endpoint={`categories/${category.id}`} name={category.name} key={category.id} onSuccess={onMenuUpdated} />
               <SheetCreateProduct category={category} />
             </CardTitle>
 
@@ -88,6 +88,7 @@ export function MenuCategoryList({
             >
               <Collapsible key={item.id} defaultOpen={false}>
                 <div className='grid grid-cols-[auto_1fr] gap-3'>
+
                   {!item.photoUrl ? (
                     <div className='w-16 aspect-5/4'>
                       <CameraOff className='w-full h-full object-cover' />
@@ -95,7 +96,7 @@ export function MenuCategoryList({
                   ) : (
                     <img
                       src={item.photoUrl}
-                      alt={item.name}
+                    
                       className='w-16 aspect-5/4 object-cover rounded-md'
                     />
                   )}
@@ -176,15 +177,23 @@ export function MenuCategoryList({
                                       key={complement.id}
                                       className='flex justify-between'
                                     >
+
+                                      
                                       <div className='flex gap-2 items-center'>
-                                        <img
-                                          src={complement.photoUrl}
-                                          alt=''
-                                          className='w-8 h-8 object-cover rounded-md'
-                                        />
+
+                                        {!complement.photoUrl && (
+                                          <CameraOff className='w-8 h-8 object-cover rounded-md' />
+                                        )}
+                                        {complement.photoUrl && (
+                                          <img
+                                            src={complement.photoUrl}
+                                            className='w-8 h-8 object-cover rounded-md'
+                                          />
+                                        )}
+
                                         {complement.name}
                                       </div>
-
+                                        
                                       <EditableProductRow
                                         storeId={
                                           selectedStore?.store.id as string

@@ -6,13 +6,9 @@ import { GroupsComplementsRepository } from "../repositorires/groups-complements
 import { categorySchema } from "../schemas/category.schema";
 import z from "zod";
 import { createComplementGroupSchema } from "../schemas/complement-group.schema";
-import { id } from "zod/v4/locales";
-
-
 
 export function GroupsComplementsRoutes(server: FastifyInstance) {
     const repo = new GroupsComplementsRepository(server.prisma);
-
     const service = new GroupsComplementsService(repo)
     const controller = new GroupsComplementsController(service);
 
@@ -49,31 +45,49 @@ export function GroupsComplementsRoutes(server: FastifyInstance) {
             },
         },
         controller.createWithConnectProduct.bind(controller)
-    ),
-        server.delete(
-            "/:storeId/groups-complements/:groupId/:productId",
-            {
-                schema: {
-                    params: z.object({
-                        storeId: z.string(),
-                        groupId: z.string(),
-                        productId: z.string(),
-                    }),
-                },
+    )
+    server.put(
+        "/:storeId/groups-complements/:groupId",
+        {
+            schema: {
+                params: z.object({
+                    storeId: z.string(),
+                    groupId: z.string(),
+                }),
             },
-            async (req:FastifyRequest<{ Params: { storeId: string; groupId: string; productId: string; } }>, reply: FastifyReply) => {
-                const { storeId, groupId, productId } = req.params;
-                
-                await server.prisma.productComplementGroup.delete({
-                    where: {
-                        id: groupId,
-                        productId,
-                    
-                    },
-                });
+        },
+        controller.update.bind(controller)
+    )
+    server.delete(
+        "/:storeId/products/:productId/groups-complements/:groupId",
+        {
+            schema: {
+                params: z.object({
+                    storeId: z.string(),
+                    groupId: z.string(),
+                    productId: z.string(),
+                }),
+            },
+        },
+        async (req: FastifyRequest<{ Params: { storeId: string; groupId: string; productId: string; } }>, reply: FastifyReply) => {
+            const { storeId, groupId, productId } = req.params;
+            
 
+            console.log('Deleting group complement', { storeId, groupId, productId });
+            const res = await server.prisma.productComplementGroup.delete({
+                where: {
+                    productId_groupId: {
+                        groupId,
+                        productId,
+                    }
+                }
+            });
+            console.log('res', res);
+            if (res){
                 return reply.status(204).send();
             }
-        );
+            return reply.status(404).send();
+        }
+    );
 
 }

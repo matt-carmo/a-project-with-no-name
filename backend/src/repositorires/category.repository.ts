@@ -9,7 +9,7 @@ export class CategoryRepository {
     }
     async createCategory(data: Pick<Category, "name" | 'storeId'>): Promise<Category> {
         return this.prisma.category.create({
-            data:{
+            data: {
                 name: data.name,
                 storeId: data.storeId
             },
@@ -22,9 +22,17 @@ export class CategoryRepository {
         });
     }
     async deleteCategory(id: string): Promise<void> {
-        await this.prisma.category.update({
-            where: { id },
-            data: { deletedAt: new Date() },
-        });
+        await this.prisma.$transaction([
+            this.prisma.category.update({
+                where: { id },
+                data: { deletedAt: new Date() },
+            }),
+
+            this.prisma.product.updateMany({
+                where: { categoryId: id },
+                data: { categoryId: null },
+            }),
+        ])
     }
+
 }

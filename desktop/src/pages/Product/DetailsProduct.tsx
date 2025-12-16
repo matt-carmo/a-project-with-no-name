@@ -106,8 +106,8 @@ export function DetailsProduct({ item }: { item: any }) {
       <Controller
         name='image'
         control={control}
-        defaultValue={item.image ?? ""}
-        render={({ field }) => <ModalImage onImageSelect={field.onChange} />}
+        defaultValue={item.photoUrl}
+        render={({ field }) => <ModalImage defaultSelectedImage={item.photoUrl} onImageSelect={field.onChange} />}
       />
 
       <Field className='mt-4'>

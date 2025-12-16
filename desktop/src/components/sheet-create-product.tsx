@@ -126,11 +126,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
       photoUrl: "",
       stock: undefined,
       isAvailable: true,
-      productComplementGroups: complements.map((g) => ({
-        groupId: g.id,
-        minSelected: g.minSelected,
-        maxSelected: g.maxSelected,
-      })),
+      productComplementGroups: [],
     },
   });
   const handleNextStep = () => {
@@ -207,6 +203,8 @@ export function SheetCreateProduct({ category }: { category: Category }) {
   }, [complement]);
 
   const onSubmit = async (data: ProductInput) => {
+
+
     const complementGroupsWithoutId = selectedComplements.filter(
       (g) => g.id.length !== 25
     );

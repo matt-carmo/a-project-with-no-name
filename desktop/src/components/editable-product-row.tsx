@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import {
+  AlertTriangle,
   EllipsisVerticalIcon,
   Pause,
   Pencil,
@@ -33,6 +34,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog";
+import ModalImage from "./modal-image";
+import { Alert, AlertDescription } from "./ui/alert";
 
 interface EditableProductRowProps {
   stock?: number | null;
@@ -43,6 +46,9 @@ interface EditableProductRowProps {
   storeId: string;
   complementId?: string;
   name?: string;
+  photoUrl?: string;
+
+  editable?: boolean;
   onPriceChange?: (value: number) => void;
 }
 
@@ -54,12 +60,16 @@ export function EditableProductRow({
   storeId,
   complementId,
   type,
+  photoUrl,
   name,
+
   onPriceChange,
+  editable = false,
 }: EditableProductRowProps) {
   const [_isAvailable, setIsAvailable] = useState(isAvailable);
   const [_price, setPrice] = useState(price);
   const [_name, setName] = useState(name ?? "");
+  const [_photoUrl, setPhotoUrl] = useState(photoUrl ?? "");
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -87,7 +97,7 @@ export function EditableProductRow({
   );
 
   const debouncedPatch = useCallback(
-    (data: Partial<{ price: number; name: string }>) => {
+    (data: Partial<{ price: number; name: string; photoUrl: string }>) => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => patchData(data), 600);
     },
@@ -143,10 +153,9 @@ export function EditableProductRow({
   };
 
   const handleStockChange = async (value: number | null) => {
-    const res = await api.patch(
-      `stores/${storeId}/${type}s/${productId}`,
-      { stock: value }
-    );
+    const res = await api.patch(`stores/${storeId}/${type}s/${productId}`, {
+      stock: value,
+    });
 
     if (res.status === 200) {
       toastManager.add({
@@ -165,11 +174,21 @@ export function EditableProductRow({
 
   return (
     <div className="flex items-center gap-3">
+      {editable && (
+        <ModalImage
+          defaultSelectedImage={_photoUrl}
+          onImageSelect={(url) => {
+            setPhotoUrl(url.url);
+            debouncedPatch({ photoUrl: url.url });
+            // You can implement debounced patch for photoUrl if your API supports it
+          }}
+        />
+      )}
       {stock !== undefined && (
         <Stock stock={stock} onStockChange={handleStockChange} />
       )}
 
-      {type === "complement" && (
+      {type === "complement" && editable && (
         <Input
           value={_name}
           onChange={(e) => {
@@ -234,6 +253,19 @@ export function EditableProductRow({
           <DialogHeader>
             <DialogTitle>Confirmar exclusão</DialogTitle>
             <DialogDescription>
+              {type === "complement" && (
+                <Alert variant="warning" className="mb-4 flex items-center">
+                  <div>
+                    <AlertTriangle size={25} className=" text-yellow-600" />
+                  </div>
+                  <AlertDescription>
+                    <p className="font-medium text-yellow-600">
+                      Ao excluir este complemento, ele será removido de todos os
+                      grupos de complementos e produtos associados.
+                    </p>
+                  </AlertDescription>
+                </Alert>
+              )}
               Tem certeza que deseja excluir este item? Essa ação não poderá ser
               desfeita.
             </DialogDescription>

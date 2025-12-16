@@ -21,6 +21,14 @@ export default class GroupsComplementsService {
         const result = await this.repository.create({ ...data, storeId });
         return result;
     }
+    async update({ data, storeId, groupId }: {
+        data: CreateComplementGroupInput;
+        storeId: string;
+        groupId: string;
+    }) {
+        const result = await this.repository.update({ ...data, storeId, groupId });
+        return result;
+    }
     async createWithConnectProduct({
         data,
         storeId,

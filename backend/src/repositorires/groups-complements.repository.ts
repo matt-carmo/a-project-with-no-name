@@ -1,3 +1,4 @@
+import { UpdateComplementGroupInput } from './../../../desktop/src/schemas/complement-group.schema';
 import { Prisma, PrismaClient } from "@prisma/client";
 
 export type CreateGroupComplementInput = {
@@ -19,14 +20,34 @@ export class GroupsComplementsRepository {
             include: {
                 complements: true,
                 products: {
-                    select: {
+                    where: {
                         product: {
+                            deletedAt: null
+                        }
+                    },
+                    select: {
+                        product:
+                        {
                             select: {
                                 name: true
+
                             }
                         }
                     }
                 },
+            },
+        });
+    }
+    async update(raw: UpdateComplementGroupInput & { storeId: string; groupId: string; }) {
+        const { storeId, groupId, ...group } = raw;
+
+        return await this.prisma.complementGroup.update({
+            where: {
+                id: groupId,
+                storeId,
+            },
+            data: {
+                ...group,
             },
         });
     }
@@ -48,17 +69,23 @@ export class GroupsComplementsRepository {
             },
         });
     }
-    async createWithConnectProduct({data, storeId, productId,}: {data: CreateGroupComplementInput[]; storeId: string; productId: string;}) {
+    async createWithConnectProduct({ data, storeId, productId, }: { data: CreateGroupComplementInput[]; storeId: string; productId: string; }) {
 
-
-        
-       return await this.prisma.$transaction(async (tx) => {
+        const result = await this.prisma.$transaction(async (tx) => {
             return Promise.all(
                 data.map((group) =>
                     tx.complementGroup.create({
                         data: {
                             name: group.name,
                             store: { connect: { id: storeId } },
+                            minSelected: group.minSelected,
+                            maxSelected: group.maxSelected,
+                            isAvailable: group.isAvailable,
+                            complements: {
+                                createMany: {
+                                    data: group.complements,
+                                },
+                            },
                             products: {
                                 create: {
                                     product: { connect: { id: productId } },
@@ -69,8 +96,9 @@ export class GroupsComplementsRepository {
                 )
             );
         });
-
+        return result;
     }
+
 
 
 }

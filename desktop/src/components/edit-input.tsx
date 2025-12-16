@@ -1,58 +1,112 @@
 import { useEffect, useRef, useState } from "react";
-import Input from "./ui/input";
-import { Button } from "./ui/button";
-import { Pen } from "lucide-react";
-import api from "@/api/axios";
-import { UpdateStoreInput } from "@/schemas/store.schema";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Pen } from "lucide-react";
+
+import api from "@/api/axios";
 import { categorySchema } from "@/schemas/category.schema";
+
+import Input from "./ui/input";
+import { Button } from "./ui/button";
 import { Spinner } from "./ui/spinner";
 
-export function EditInput({ props, onSubmit }: { props: { name: string; id: string }; onSubmit: () => void }) {
+// =====================
+// Types
+// =====================
+
+type FormData = {
+  name: string;
+};
+
+type EditInputProps = {
+  name: string;
+  endpoint: string; // ex: "categories"
+  onSuccess?: () => void;
+  method?: 'PATCH' | 'PUT';
+};
+
+// =====================
+// Component
+// =====================
+
+export function EditInput({ name, endpoint, onSuccess, method = 'PATCH' }: EditInputProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [isEditing, setIsEditing] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+useEffect(() => {
+  if (!isEditing) return;
+
+  function handleClickOutside(event: MouseEvent) {
+    if (
+      containerRef.current &&
+      !containerRef.current.contains(event.target as Node)
+    ) {
+      cancelEditing();
+    }
+  }
+
+  document.addEventListener("mousedown", handleClickOutside);
+
+  return () => {
+    document.removeEventListener("mousedown", handleClickOutside);
+  };
+}, [isEditing]);
 
   const {
     control,
     handleSubmit,
     setValue,
     formState: { isSubmitting },
-  } = useForm<{ name: string }>({
+  } = useForm<FormData>({
     resolver: zodResolver(categorySchema.pick({ name: true })),
-    defaultValues: {
-      name: props.name,
-    },
+    defaultValues: { name },
   });
 
-  async function handleEditCategoryName(data: UpdateStoreInput) {
-    try {
-      const response = await api.patch(`categories/${props.id}`, {
-        name: data.name,
-      });
+  // =====================
+  // Sync external name
+  // =====================
+  useEffect(() => {
+    setValue("name", name);
+  }, [name, setValue]);
 
-      if (response.status === 200) {
-        setIsEditing(true);
-        onSubmit();
+  // =====================
+  // Handlers
+  // =====================
+  async function onSubmit(data: FormData) {
+    try {
+      if (method === 'PUT') {
+        await api.put(`${endpoint}`, data);
       }
+      if (method === 'PATCH') {
+        await api.patch(`${endpoint}`, data);
+      }
+      
+      setIsEditing(false);
+      onSuccess?.();
     } catch (error) {
-      console.error("Erro ao editar categoria:", error);
+      console.error("Erro ao editar:", error);
     }
   }
-    useEffect(() => {
-    setValue("name", props.name);
-  }, [props.name, setValue]);
+
+  function startEditing() {
+    setIsEditing(true);
+    requestAnimationFrame(() => inputRef.current?.focus());
+  }
+
+  function cancelEditing() {
+    if (isSubmitting) return;
+    setIsEditing(false);
+    setValue("name", name);
+  }
+
+  // =====================
+  // Render
+  // =====================
   return (
-    <form className="flex-1" onSubmit={handleSubmit(handleEditCategoryName)}>
-      <div className="flex gap-2 items-center ">
-        {isEditing && (
-          <Pen
-            onClick={() => {
-              setIsEditing(false);
-              inputRef.current?.focus();
-            }}
-            className="w-4 cursor-pointer"
-          />
+    <form className="flex-1" onSubmit={handleSubmit(onSubmit)}>
+      <div ref={containerRef} className="flex items-center gap-2">
+        {!isEditing && (
+          <Pen className="w-4 cursor-pointer" onClick={startEditing} />
         )}
 
         <Controller
@@ -60,30 +114,23 @@ export function EditInput({ props, onSubmit }: { props: { name: string; id: stri
           name="name"
           render={({ field }) => (
             <Input
-              className={`${isEditing ? "w-full" : "max-w-80"} `}
               {...field}
-              ref={(el) => {
-                inputRef.current = el;
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsEditing(false);
-              }}
-              onBlur={() => {
-                setTimeout(() => {
-                  setIsEditing(true);
-                  if(isSubmitting) return
-                setValue("name", props.name); 
-                }, 200);
-              }}
-              unstyled={isEditing}
+              ref={inputRef}
               type="text"
+              onClick={startEditing}
+              
+              unstyled={!isEditing}
+              className={isEditing ? "max-w-80" : "w-full"}
+              readOnly={!isEditing}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") cancelEditing();
+              }}
             />
           )}
         />
 
-        {!isEditing && (
-          <Button disabled={isSubmitting} type="submit">
+        {isEditing && (
+          <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? <Spinner /> : "Salvar"}
           </Button>
         )}
