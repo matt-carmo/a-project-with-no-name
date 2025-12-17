@@ -33,6 +33,7 @@ import {
 import { useSheetComplementStore } from "@/store/use-sheet-complement-store";
 import { SheetUpdateComplementX } from "@/components/Complement/sheet-update-complement";
 import { onRefetch } from "@/lib/utils";
+import SelectMinMax from "./SelectMinMax";
 
 // import { useForm } from "react-hook-form";
 
@@ -245,6 +246,9 @@ export default function ProductPage() {
                           >
                             Adicionar complemento
                           </Button>
+                          <div className="max-w-lg mt-2">
+                            <SelectMinMax/>
+                          </div>
                           <ul className="flex flex-col gap-1 py-2 text-sm">
                             {group.complements.map((complement) => (
                               <li>

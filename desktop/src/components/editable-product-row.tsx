@@ -296,7 +296,7 @@ export function EditableProductRow({
           <DialogHeader>
             <DialogTitle>Confirmar exclusão</DialogTitle>
             <DialogDescription>
-              {type === "complement" && (
+              {(type === "complement" )&& (
                 <Alert variant="warning" className="mb-4 flex items-center">
                   <div>
                     <AlertTriangle size={25} className="text-yellow-600" />

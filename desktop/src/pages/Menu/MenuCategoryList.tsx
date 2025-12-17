@@ -16,7 +16,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { SheetCreateProduct } from "@/components/sheet-create-product";
-import { CameraOff, ChevronDownIcon, Trash } from "lucide-react";
+import { CameraOff, ChevronDownIcon, Pause, Play, Trash } from "lucide-react";
 import { EditInput } from "@/components/edit-input";
 import { Badge } from "@/components/ui/badge";
 import { EditableProductRow } from "@/components/editable-product-row";
@@ -27,9 +27,10 @@ import { Category } from "@/interfaces/menu.interface";
 import {
   Collapsible,
   CollapsibleContent,
-  CollapsiblePanel,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import api from "@/api/axios";
+import { toastManager } from "@/components/ui/toast";
 
 export function MenuCategoryList({
   data,
@@ -42,15 +43,56 @@ export function MenuCategoryList({
 }) {
   const { selectedStore } = useAuthStore();
 
+  async function handleToggleGroup(groupId: string, isAvailable: boolean) {
+    if (!selectedStore?.store.id) return;
+
+    const response = await updateGroupComplementAvailability({
+      storeId: selectedStore.store.id,
+      groupId,
+      isAvailable,
+    });
+
+    if (response.status === 200) {
+      onMenuUpdated();
+      toastManager.add({
+        title: "Sucesso",
+        description: `Grupo foi ${
+          isAvailable ? "ativado" : "desativado"
+        } com sucesso.`,
+        type: "success",
+      });
+    }else {
+      toastManager.add({
+        title: "Erro",
+        description: `Não foi possível atualizar o grupo.`,
+        type: "error",
+      });
+    }
+  }
+
+  async function updateGroupComplementAvailability({
+    storeId,
+    groupId,
+    isAvailable,
+  }: {
+    storeId: string;
+    groupId: string;
+    isAvailable: boolean;
+  }) {
+    return api.put(`/${storeId}/groups-complements/${groupId}`, {
+      isAvailable,
+    });
+  }
+
   return (
     <>
       {data.map((category) => (
-        <Card key={category.id} className='border-0 gap-1.5'>
+        <Card key={category.id} className="border-0 gap-1.5">
           <CardHeader>
-            <CardTitle className='flex items-center gap-2'>
+            <CardTitle className="flex items-center gap-2">
               <Dialog>
                 <DialogTrigger>
-                  <Trash className='w-4' />
+                  <Trash className="w-4" />
                 </DialogTrigger>
                 <DialogPopup>
                   <DialogHeader>
@@ -61,16 +103,22 @@ export function MenuCategoryList({
                   </DialogHeader>
                   <DialogFooter>
                     <DialogClose>
-                      <Button variant='outline'>Cancelar</Button>
+                      <Button variant="outline">Cancelar</Button>
                     </DialogClose>
                     <DialogClose onClick={() => onDeleteCategory(category.id)}>
-                      <Button variant='destructive'>Confirmar</Button>
+                      <Button variant="destructive">Confirmar</Button>
                     </DialogClose>
                   </DialogFooter>
                 </DialogPopup>
               </Dialog>
 
-              <EditInput endpoint={`categories/${category.id}`} name={category.name} key={category.id} onSuccess={onMenuUpdated} />
+              <EditInput
+                endpoint={`categories/${category.id}`}
+                name={category.name}
+                key={category.id}
+                onSuccess={onMenuUpdated}
+              />
+
               <SheetCreateProduct category={category} />
             </CardTitle>
 
@@ -86,51 +134,49 @@ export function MenuCategoryList({
                 item.isAvailable && "bg-muted"
               }`}
             >
-              <Collapsible key={item.id} defaultOpen={false}>
-                <div className='grid grid-cols-[auto_1fr] gap-3'>
-
+              <Collapsible>
+                <div className="grid grid-cols-[auto_1fr] gap-3">
                   {!item.photoUrl ? (
-                    <div className='w-16 aspect-5/4'>
-                      <CameraOff className='w-full h-full object-cover' />
+                    <div className="w-16 aspect-5/4">
+                      <CameraOff className="w-full h-full" />
                     </div>
                   ) : (
                     <img
                       src={item.photoUrl}
-                    
-                      className='w-16 aspect-5/4 object-cover rounded-md'
+                      className="w-16 aspect-5/4 object-cover rounded-md"
                     />
                   )}
 
-                  <div className='flex gap-2 items-center'>
-                    <div className='flex-1 min-w-0 '>
+                  <div className="flex gap-2 items-center">
+                    <div className="flex-1 min-w-0">
                       <Link
-                        className='font-semibold'
-                        state={{ item }}
                         to={`/store/${selectedStore?.store.id}/product/${item.id}`}
+                        state={{ item }}
                       >
                         <Button
-                          variant='link'
-                          className='p-0 font-semibold text-base'
+                          variant="link"
+                          className="p-0 font-semibold text-base"
                         >
                           {item.name}
                         </Button>
                       </Link>
-                      <div className='max-w-4xl'>
-                        <p className='text-sm text-muted-foreground  line-clamp-1'>
-                          {item.description || "Sem descricao"}
-                        </p>
-                      </div>
+
+                      <p className="text-sm text-muted-foreground line-clamp-1">
+                        {item.description || "Sem descrição"}
+                      </p>
                     </div>
-                    <CollapsibleTrigger className='inline-flex items-center gap-2 font-medium text-sm data-panel-open:[&_svg]:rotate-180'>
-                      <Button variant='link' className='p-0 text-sm'>
-                        <ChevronDownIcon className='size-5' />
+
+                    <CollapsibleTrigger>
+                      <Button variant="link" className="p-0 text-sm">
+                        <ChevronDownIcon className="size-5" />
                         Complementos
                       </Button>
                     </CollapsibleTrigger>
+
                     <EditableProductRow
                       storeId={selectedStore?.store.id as string}
                       stock={item.stock}
-                      type='product'
+                      type="product"
                       product={item}
                       productId={item.id}
                       isAvailable={item.isAvailable}
@@ -140,82 +186,71 @@ export function MenuCategoryList({
                 </div>
 
                 <CollapsibleContent>
-                  <ul className='space-y-2'>
-                    {item?.productComplementGroups?.map((complementGroup) => (
-                      <li key={complementGroup.id} className='mt-2'>
-                        <CardPanel className='border border-foreground/20 p-4 rounded-2xl'>
-                          <div className='flex gap-2 items-center'>
-                            <div className='flex-1 min-w-0'>
-                              <p className='font-semibold'>
-                                {complementGroup.group.name}
-                              </p>
-                              <p>{complementGroup.group.isAvailable}</p>
+                  <ul className="space-y-2">
+                    {item.productComplementGroups?.map((complementGroup) => {
+                      const group = complementGroup.group;
 
-                              <ul>
-                                <li>
-                                  {complementGroup.group.minSelected > 0 ? (
-                                    <Badge
-                                      variant='required'
-                                      className='rounded-full px-2 py-0.5'
-                                    >
-                                      Obrigatorio
-                                    </Badge>
-                                  ) : (
-                                    <Badge
-                                      variant='optional'
-                                      className='rounded-full px-2 py-0.5'
-                                    >
-                                      Opcional
-                                    </Badge>
-                                  )}
-                                </li>
-                              </ul>
+                      return (
+                        <li key={group.id} className="mt-2">
+                          <CardPanel className="border p-4 rounded-2xl">
+                            <div className="flex justify-between items-center">
+                              <p className="font-semibold">{group.name}</p>
 
-                              <ul className='w-full flex flex-col gap-2 mt-2'>
-                                {complementGroup?.group?.complements?.map(
-                                  (complement) => (
-                                    <li
-                                      key={complement.id}
-                                      className='flex justify-between'
-                                    >
-
-                                      
-                                      <div className='flex gap-2 items-center'>
-
-                                        {!complement.photoUrl && (
-                                          <CameraOff className='w-8 h-8 object-cover rounded-md' />
-                                        )}
-                                        {complement.photoUrl && (
-                                          <img
-                                            src={complement.photoUrl}
-                                            className='w-8 h-8 object-cover rounded-md'
-                                          />
-                                        )}
-
-                                        {complement.name}
-                                      </div>
-                                        
-                                      <EditableProductRow
-                                        storeId={
-                                          selectedStore?.store.id as string
-                                        }
-                                        type='complement'
-                                        complementId={complement.id}
-                                        productId={item.id}
-                                        isAvailable={
-                                          complement.isAvailable
-                                        }
-                                        price={complement.price}
-                                      />
-                                    </li>
+                              <Button
+                              className="mr-8"
+                                variant={"outline"}
+                                onClick={() =>
+                                  handleToggleGroup(
+                                    group.id as string,
+                                    !group.isAvailable
                                   )
-                                )}
-                              </ul>
+                                }
+                              >
+                                {group.isAvailable ? <Pause /> : <Play />}
+                              </Button>
                             </div>
-                          </div>
-                        </CardPanel>
-                      </li>
-                    ))}
+
+                            <div className="mt-2">
+                              {group.minSelected > 0 ? (
+                                <Badge variant="required">Obrigatório</Badge>
+                              ) : (
+                                <Badge variant="optional">Opcional</Badge>
+                              )}
+                            </div>
+
+                            <ul className="flex flex-col gap-2 mt-3">
+                              {group.complements?.map((complement) => (
+                                <li
+                                  key={complement.id}
+                                  className="flex justify-between items-center"
+                                >
+                                  <div className="flex gap-2 items-center">
+                                    {!complement.photoUrl ? (
+                                      <CameraOff className="w-8 h-8" />
+                                    ) : (
+                                      <img
+                                        src={complement.photoUrl}
+                                        className="w-8 h-8 object-cover rounded-md"
+                                      />
+                                    )}
+                                    {complement.name}
+                                  </div>
+
+                                  <EditableProductRow
+                                    storeId={selectedStore?.store.id as string}
+                                    type="complement"
+                                    complementId={complement.id}
+                                    productId={item.id}
+                                    isAvailable={complement.isAvailable}
+                                    price={complement.price}
+                                  />
+                                </li>
+                              ))}
+                            </ul>
+                          </CardPanel>
+                        </li>
+                      );
+                    })}
                   </ul>
                 </CollapsibleContent>
               </Collapsible>

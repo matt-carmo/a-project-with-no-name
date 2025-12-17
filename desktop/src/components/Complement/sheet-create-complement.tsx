@@ -140,7 +140,7 @@ export function SheetCreateComplement({
       name: values.complements.name,
       description: values.complements.description,
       price: values.productPrice,
-
+      isAvailable: true,
       image: values?.complements?.image || null,
       imagePreview: values.complements.imagePreview,
     };

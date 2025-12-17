@@ -38,7 +38,7 @@ export default function Layout() {
             <main className='grid grid-rows-[auto_1fr_auto] flex-1 h-screen  overflow-hidden'>
               <div>
                 <SidebarTrigger />
-                <header>HEADER {token}</header>
+                {/* <header>HEADER</header> */}
               </div>
               <ScrollArea>
                 <div className='container p-5'>

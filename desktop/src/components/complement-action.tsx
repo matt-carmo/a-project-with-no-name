@@ -65,7 +65,7 @@ useEffect(() => {
       />
 
       <div className='flex gap-2'>
-        {/* IS REQUIRED */}
+     
         <Controller
           control={control}
           name={`${nameBase}.isRequired`}

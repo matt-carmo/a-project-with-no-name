@@ -1,4 +1,3 @@
-
 import { convertBRL } from "@/utils/convertBRL";
 import { Complement } from "@/interfaces/menu.interface";
 import { Field } from "../ui/field";
@@ -38,10 +37,7 @@ export function ComplementStep({
       {/* Nome */}
       <Field>
         <Label>Nome*</Label>
-        <Input
-          placeholder="Ex: Coca-Cola"
-          {...register("complements.name")}
-        />
+        <Input placeholder="Ex: Coca-Cola" {...register("complements.name")} />
       </Field>
 
       {/* Descrição */}
@@ -100,6 +96,7 @@ export function ComplementStep({
         <Plus />
         Adicionar complemento
       </Button>
+      
 
       {/* Lista de complementos */}
       {items.length > 0 && (
@@ -110,7 +107,6 @@ export function ComplementStep({
               className="flex gap-4 p-2 border-0 bg-secondary"
             >
               <CardContent className="flex gap-4 p-2 w-full">
-                
                 {c.image && (
                   <div className="rounded-md h-16 aspect-4/3 overflow-hidden">
                     <img
@@ -128,9 +124,7 @@ export function ComplementStep({
                       {c.description}
                     </span>
                   )}
-                  <span className="text-sm">
-                    {convertBRL(c.price)}
-                  </span>
+                  <span className="text-sm">{convertBRL(c.price)}</span>
                 </div>
 
                 <div className="ml-auto flex items-center">
