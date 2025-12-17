@@ -7,24 +7,23 @@ import {
   SheetPanel,
   SheetPopup,
   SheetTitle,
-} from "./ui/sheet";
+} from "../ui/sheet";
 
-import { Controller, useForm } from "react-hook-form";
-import { Field } from "./ui/field";
-import Input from "./ui/input";
-import { Button } from "./ui/button";
-import { Label } from "./ui/label";
-import { Plus, Trash } from "lucide-react";
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { Field } from "../ui/field";
+import Input from "../ui/input";
+import { Button } from "../ui/button";
+import { Label } from "../ui/label";
+
+import { useEffect, useState } from "react";
 import { z } from "zod";
-import BRLInput from "./BRLCurrencyInput";
-import ComplementAction from "./complement-action";
-import { Card, CardContent } from "./ui/card";
-import { convertBRL } from "@/utils/convertBRL";
+
+import ComplementAction from "../complement-action";
+
 import { Complement } from "@/interfaces/menu.interface";
-import ModalImage from "./modal-image";
-import { Textarea } from "./ui/textarea";
+
 import { useComplementStore } from "@/store/complement-store";
+import { ComplementStep } from "./ComplementStep";
 
 const complementSchema = z.object({
   complements: z.object({
@@ -37,13 +36,15 @@ const complementSchema = z.object({
 
 export function SheetCreateComplement({
   onSubmitGroup,
+
+
 }: {
   onSubmitGroup?: (data: any) => void;
 }) {
-  const { open, setOpen } = useSheetComplementStore();
   const [step, setStep] = useState(1);
-  const { setComplements, selectedComplements, setSelectedComplements } =
-    useComplementStore();
+
+  const {open, setOpen} = useSheetComplementStore();
+  const { setComplements, setSelectedComplements } = useComplementStore();
 
   const [itemsComplements, setItemsComplements] = useState<Complement[]>([]);
 
@@ -82,15 +83,6 @@ export function SheetCreateComplement({
       },
     });
 
-  const handlePreviewImage = (img: { url: string; id: string }) => {
-    const url = img.url;
-
-    setValue("complements.imagePreview", url as string);
-    setValue("complements.image", img);
-
-    setImagePreview(url);
-  };
-
   const onCaptureGroup = async () => {
     const group = getValues("group");
     // const comps = complements;
@@ -119,7 +111,7 @@ export function SheetCreateComplement({
     setSelectedComplements((prev) => [data, ...prev] as any);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setComplements((prev) => [data, ...prev] as any);
-    setOpen(false);
+
     setStep(1);
     reset({
       complements: { name: "", description: "", image: undefined },
@@ -128,7 +120,7 @@ export function SheetCreateComplement({
     });
     setItemsComplements([]);
     setImagePreview(null);
-    if (onSubmitGroup) {      
+    if (onSubmitGroup) {
       onSubmitGroup(data);
     }
     // }
@@ -153,25 +145,15 @@ export function SheetCreateComplement({
       imagePreview: values.complements.imagePreview,
     };
 
-    console.log("New Complement:", newComplement);
     setItemsComplements((prev) => [...prev, newComplement]);
-
-    //  setSelectedComplements((prev) => [...prev, newComplement]);
-
-    console.log("Selected Complements:", selectedComplements);
 
     reset({
       ...values,
       complements: { name: "", description: "", image: undefined },
       productPrice: 0,
     });
+    // onOpenChange()
     setImagePreview(null);
-  };
-
-  const removeComplement = (name: string) => {
-    const newComplements = itemsComplements.filter((c) => c.name !== name);
-
-    setItemsComplements(newComplements);
   };
 
   // -----------------------------------
@@ -181,7 +163,7 @@ export function SheetCreateComplement({
       <Sheet
         open={open}
         onOpenChange={() => {
-          setOpen(!open);
+          setOpen(false);
           reset({
             complements: { name: "", description: "", image: undefined },
             group: { name: "", minSelected: 0, maxSelected: 0 },
@@ -190,9 +172,7 @@ export function SheetCreateComplement({
           setStep(1);
         }}
       >
-        {/* <SheetTrigger>Open</SheetTrigger> */}
-
-        <SheetPopup className='max-w-2xl'>
+        <SheetPopup className="max-w-2xl">
           <SheetHeader>
             <SheetTitle>Cadastrar complemento — Step {step}</SheetTitle>
           </SheetHeader>
@@ -200,11 +180,11 @@ export function SheetCreateComplement({
           <SheetPanel>
             {/* STEP 1 ----------------------- */}
             {step === 1 && (
-              <div className='space-y-4'>
+              <div className="space-y-4">
                 <Field>
                   <Label>Nome do grupo*</Label>
                   <Input
-                    placeholder='Ex: Bebidas'
+                    placeholder="Ex: Bebidas"
                     {...register("group.name")}
                   />
                 </Field>
@@ -216,7 +196,7 @@ export function SheetCreateComplement({
                     setValue={setValue}
                     watch={watch}
                     control={control}
-                    nameBase='group'
+                    nameBase="group"
                     props={{
                       maxSelected: 1,
                       minSelected: 1,
@@ -233,106 +213,25 @@ export function SheetCreateComplement({
 
             {/* STEP 2 ----------------------- */}
             {step === 2 && (
-              <div className='space-y-4'>
-                <Field>
-                  <Label>Nome*</Label>
-                  <Input
-                    placeholder='Ex: Coca-Cola'
-                    {...register("complements.name")}
-                  />
-                </Field>
-
-                <Field>
-                  <Label>Descrição</Label>
-                  <Textarea {...register("complements.description")} />
-                </Field>
-
-                <Field>
-                  <Label>Preço*</Label>
-                  <Controller
-                    control={control}
-                    name='productPrice'
-                    defaultValue={0}
-                    render={({ field }) => (
-                      <BRLInput
-                        value={field.value ?? 0}
-                        onChange={(v) => field.onChange(v)}
-                      />
-                    )}
-                  />
-                </Field>
-
-                <Field className={"flex flex-row items-center gap-4"}>
-                  <div className='flex flex-col gap-2'>
-                    <Label>Imagem</Label>
-
-                    <Controller
-                      control={control}
-                      name='complements.image'
-                      render={() => (
-                        <ModalImage onImageSelect={handlePreviewImage} />
-                      )}
-                    />
-                  </div>
-                  <img
-                    src={imagePreview || "https://placehold.co/600x400"}
-                    className='h-12 aspect-4/3 border-0'
-                    alt=''
-                  />
-                </Field>
-
-                <Button
-                  className='w-full py-2 font-semibold text-lg'
-                  type='button'
-                  onClick={onSubmitComplement}
-                >
-                  <div>
-                    {" "}
-                    <Plus />
-                  </div>{" "}
-                  Adicionar complemento
-                </Button>
-
-                <div className='mt-4 space-y-4'>
-                  {itemsComplements.map((c, i) => (
-                    <Card
-                      key={i}
-                      className='flex gap-4 p-2 border-0 bg-secondary'
-                    >
-                      <CardContent className='flex gap-4 p-2'>
-                        {c.image && (
-                          <div className='rounded-md h-16 aspect-4/3 overflow-hidden'>
-                            <img
-                              src={c.imagePreview}
-                              className='h-full mx-auto max-h-full rounded-md object-cover '
-                            />
-                          </div>
-                        )}
-                        <div className='flex flex-col gap-0'>
-                          <span className='font-semibold'>{c.name}</span>
-                          <span className='text-sm'>{c.description}</span>
-                          <span className='text-sm'>{convertBRL(c.price)}</span>
-                        </div>
-                        <div className='ml-auto flex items-center aspect-square'>
-                          <Button
-                            onClick={() => removeComplement(c.name)}
-                            className='aspect-square rounded-full'
-                            variant='destructive'
-                          >
-                            <Trash />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
+              <ComplementStep
+                register={register}
+                control={control}
+                imagePreview={imagePreview}
+                setImagePreview={setImagePreview}
+                items={itemsComplements}
+                onAdd={onSubmitComplement}
+                onRemove={(name) =>
+                  setItemsComplements((prev) =>
+                    prev.filter((c) => c.name !== name)
+                  )
+                }
+              />
             )}
           </SheetPanel>
 
           <SheetFooter>
             <SheetClose>
-              <Button variant='secondary'>Cancelar</Button>
+              <Button variant="secondary">Cancelar</Button>
             </SheetClose>
 
             {step === 1 && (

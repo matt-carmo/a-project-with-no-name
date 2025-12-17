@@ -1,8 +1,4 @@
 import { Complement, ComplementGroup, Prisma, PrismaClient } from "@prisma/client";
-import { Category } from "../schemas/category.schema";
-import { CreateComplementGroupInput } from "../schemas/complement-group.schema";
-import { ComplementCreateSchema } from "../schemas/complement.schema";
-import z from "zod";
 
 export class ComplementsRepository {
     private prisma: PrismaClient;
@@ -11,10 +7,10 @@ export class ComplementsRepository {
         this.prisma = prisma;
     }
 
-    async createComplement(data: Prisma.ComplementUncheckedCreateInput): Promise<Complement> {
+    async createComplement(data: Array<Prisma.ComplementUncheckedCreateInput>) {
 
     // async createComplement(data: z.infer<typeof ComplementCreateSchema>): Promise<Complement> {
-        return this.prisma.complement.create({data});
+         return await this.prisma.complement.createMany({data});
     }
     async getComplementsByStoreId(
         data: Pick<ComplementGroup, "storeId">
@@ -44,9 +40,10 @@ export class ComplementsRepository {
     }
 
     async updateComplement({ id, data }: { id: string, data: Partial<Complement> }): Promise<Complement> {
+        
         return this.prisma.complement.update({
             where: { id },
-            data,
+            data: {...data}
         });
     }
     async deleteComplement({ id }: { id: string }): Promise<Complement> {

@@ -52,6 +52,7 @@ export interface ComplementGroup {
 
 
 export interface Complement {
+    isAvailable: boolean;
     id?: string;
     groupId?: string;
     name: string;
@@ -63,7 +64,7 @@ export interface Complement {
     } | null;
     description?: string;
     price: number;
-    isActive?: boolean;
+
     stock?: number | null;
 }
 

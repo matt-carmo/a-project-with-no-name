@@ -15,9 +15,16 @@ export class ComplementsController {
         const complements = await this.complementsService.getComplementsByStoreId({ storeId });
         return reply.status(200).send(complements);
     }
-    async create(request: FastifyRequest<{ Body: Prisma.ComplementUncheckedCreateInput}>, reply: FastifyReply) {
+    async create(request: FastifyRequest<{ Body: Array<Prisma.ComplementUncheckedCreateInput>, Params: {storeId:string, groupId:string} }>, reply: FastifyReply) {
         const data = request.body;
-        const created = await this.complementsService.createComplement(
+        const { storeId, groupId } = request.params;
+        
+        data.forEach((complement) => {
+
+            complement.groupId = groupId;
+        });
+
+        const created = await this.complementsService.createComplements(
             data
         );
         return reply.status(201).send(created);
@@ -25,18 +32,18 @@ export class ComplementsController {
 
     async delete(request: FastifyRequest, reply: FastifyReply) {
         const { id } = request.params as { id: string };
-        const res = await this.complementsService.deleteComplement({id})
+        const res = await this.complementsService.deleteComplement({ id })
         if (res) {
             return reply.status(204).send();
         }
     };
-        
-    
+
+
     async update(request: FastifyRequest<{ Params: { id: string }; Body: Partial<Complement> }>, reply: FastifyReply) {
 
         const { id } = request.params as { id: string };
         const data = request.body;
-
+                console.log("Body:2", request.body);
 
         return this.complementsService.updateComplement({ data, id });
     }

@@ -7,7 +7,7 @@ export const ComplementSchema = z.object({
 
     description: z.string().min(2).max(1000).optional(),
 
-    price: z.number().int().nonnegative().default(0),
+    price: z.number().int().nonnegative(),
 
     isAvailable: z.boolean().default(true),
 

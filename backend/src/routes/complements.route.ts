@@ -18,11 +18,11 @@ export function ComplementsRoutes(server: FastifyInstance) {
     const service = new ComplementsService(repo);
     const controller = new ComplementsController(service);
     server.post(
-        "/:storeId/complements",
+        "/:storeId/complement-groups/:groupId/complements",
         {
             schema: {
-                params: z.object({ storeId: z.string() }),
-                body: ComplementCreateSchema, // TODO: replace with a proper Zod schema for Prisma.ComplementCreateInput
+                params: z.object({ storeId: z.string(), groupId: z.string() }),
+                // body: ComplementCreateSchema.omit({groupId:true}), // TODO: replace with a proper Zod schema for Prisma.ComplementCreateInput
             },
         },
         controller.create.bind(controller)

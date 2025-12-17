@@ -29,11 +29,11 @@ import { productSchema } from "@/schemas/product.shema";
 import Stock from "./stock";
 import { useSheetComplementStore } from "@/store/use-sheet-complement-store";
 import { emitRefetch } from "@/lib/utils";
-
-import { SheetCreateComplement } from "./sheet-create-complement";
 import { ScrollArea } from "./ui/scroll-area";
 import ModalImage from "./modal-image";
 import { iComplementGroup, useComplementStore } from "@/store/complement-store";
+import { SheetUpdateComplementX } from "./Complement/sheet-update-complement";
+// import { SheetUpdateComplement } from "./Complement/sheet-update-complement";
 
 export interface ComplementGroup {
   id: string;
@@ -331,7 +331,9 @@ export function SheetCreateProduct({ category }: { category: Category }) {
 
   return (
     <>
-      <SheetCreateComplement />
+      {/* <SheetCreateComplement  onOpenChange={() => setOpen(!open)} open={open} /> */}
+      <SheetUpdateComplementX  onOpenChange={() => setOpen(!open)} open={open} />
+
       <Sheet
         open={open}
         onOpenChange={() => {

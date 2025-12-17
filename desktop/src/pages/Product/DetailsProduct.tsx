@@ -14,9 +14,10 @@ import { useNavigate } from "react-router";
 
 export function DetailsProduct({ item }: { item: any }) {
 
+
+  if(!item) return null;
   const navigate = useNavigate();
   const {
-
     control,
     handleSubmit,
 
@@ -35,7 +36,7 @@ export function DetailsProduct({ item }: { item: any }) {
     },
   });
 
-  const onSubmit = async (_data) => {
+  const onSubmit = async (_data: any) => {
     const data = {
       name: _data.name,
       description: _data.description,
@@ -67,62 +68,72 @@ export function DetailsProduct({ item }: { item: any }) {
         title: "Erro ao atualizar produto",
         timeout: 3000,
         description:
-          "Log: " + error?.response?.data.errors.map((e) => e.message),
+          "Log: " +
+          error?.response?.data.errors.map((e: { message: any }) => e.message),
       });
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className='flex flex-col'>
-      <code className='text-lg'>{JSON.stringify(watch())}</code>
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col justify-between">
+      {/* <code className="text-lg">{JSON.stringify(watch())}</code> */}
 
-      <Label className='mt-4 mb-2'>Nome do Produto</Label>
-      <Controller
-        name='name'
-        control={control}
-        defaultValue={item.name}
-        render={({ field }) => <Input {...field} />}
-      />
-
-      <Label className='mt-4 mb-2'>Descrição</Label>
-      <Controller
-        name='description'
-        control={control}
-        defaultValue={item.description}
-        render={({ field }) => <Textarea {...field} />}
-      />
-
-      <Label className='mt-4 mb-2'>Preço</Label>
-      <Controller
-        name='price'
-        control={control}
-        defaultValue={item.price}
-        render={({ field }) => (
-          <BRLInput value={field.value} onChange={field.onChange} />
-        )}
-      />
-
-      <Label className='mt-4 mb-2'>Imagem URL</Label>
-      <Controller
-        name='image'
-        control={control}
-        defaultValue={item.photoUrl}
-        render={({ field }) => <ModalImage defaultSelectedImage={item.photoUrl} onImageSelect={field.onChange} />}
-      />
-
-      <Field className='mt-4'>
-        <FieldLabel>Estoque</FieldLabel>
+      <div>
+        <Label className="mt-4 mb-2">Nome do Produto</Label>
         <Controller
+          name="name"
           control={control}
-          name='stock'
-          defaultValue={item.stock ?? null}
+          defaultValue={item.name}
+          render={({ field }) => <Input {...field} />}
+        />
+
+        <Label className="mt-4 mb-2">Descrição</Label>
+        <Controller
+          name="description"
+          control={control}
+          defaultValue={item.description}
+          render={({ field }) => <Textarea {...field} />}
+        />
+
+        <Label className="mt-4 mb-2">Preço</Label>
+        <Controller
+          name="price"
+          control={control}
+          defaultValue={item.price}
           render={({ field }) => (
-            <Stock stock={field.value} onStockChange={field.onChange} />
+            <BRLInput value={field.value} onChange={field.onChange} />
           )}
         />
-      </Field>
 
-      <Button className='mt-6 w-32' type='submit' disabled={isSubmitting}>
+        <Label className="mt-4 mb-2">Imagem URL</Label>
+        <Controller
+          name="image"
+          control={control}
+          defaultValue={item.photoUrl}
+          render={({ field }) => (
+            <div className="w-20">
+              <ModalImage
+                defaultSelectedImage={item.photoUrl}
+                onImageSelect={field.onChange}
+              />
+            </div>
+          )}
+        />
+
+        <Field className="mt-4">
+          <FieldLabel>Estoque</FieldLabel>
+          <Controller
+            control={control}
+            name="stock"
+            defaultValue={item.stock ?? null}
+            render={({ field }) => (
+              <Stock stock={field.value} onStockChange={field.onChange} />
+            )}
+          />
+        </Field>
+      </div>
+
+      <Button className="mt-6 w-32" type="submit" disabled={isSubmitting}>
         Salvar
       </Button>
     </form>

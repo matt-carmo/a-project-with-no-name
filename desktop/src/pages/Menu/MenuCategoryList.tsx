@@ -131,6 +131,7 @@ export function MenuCategoryList({
                       storeId={selectedStore?.store.id as string}
                       stock={item.stock}
                       type='product'
+                      product={item}
                       productId={item.id}
                       isAvailable={item.isAvailable}
                       price={item.price}
@@ -202,7 +203,7 @@ export function MenuCategoryList({
                                         complementId={complement.id}
                                         productId={item.id}
                                         isAvailable={
-                                          complement.isActive as boolean
+                                          complement.isAvailable
                                         }
                                         price={complement.price}
                                       />
