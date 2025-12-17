@@ -80,6 +80,7 @@ export default function ProductPage() {
         type: "success",
         title: "Grupo de complementos criado com sucesso!",
       });
+      setOpen(false)
       fetchComplements();
     }
     if (result.status !== 201) {
@@ -160,8 +161,11 @@ export default function ProductPage() {
         }}
       />
       <SheetCreateComplement
+      open={false}
+      onOpenChange={setOpen}
         onSubmitGroup={(data) => {
-          if (!selectedGroupId) return;
+          
+          // if (!selectedGroupId) return;
           handleCreateGroupComplement(data);
         }}
       />

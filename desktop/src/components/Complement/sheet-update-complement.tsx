@@ -35,7 +35,7 @@ export function SheetUpdateComplementX({
 }: {
   onSubmitGroup?: (data: any) => void;
   open: boolean;
-    onOpenChange: () => void;
+  onOpenChange: () => void;
 }) {
   const [step, setStep] = useState(1);
   const { setComplements, setSelectedComplements } = useComplementStore();
@@ -78,12 +78,9 @@ export function SheetUpdateComplementX({
     });
 
   const onCaptureGroup = async () => {
-
     // const comps = complements;
 
     const data = {
-
-
       complements: itemsComplements.map((c) => ({
         name: c.name,
         description: c.description,
@@ -104,8 +101,8 @@ export function SheetUpdateComplementX({
 
     setStep(1);
     reset({
-      complements: { name: "", description: "", image: undefined}
-    })
+      complements: { name: "", description: "", image: undefined },
+    });
     setItemsComplements([]);
     setImagePreview(null);
     if (onSubmitGroup) {
@@ -130,7 +127,7 @@ export function SheetUpdateComplementX({
       name: values.complements.name,
       description: values.complements.description,
       price: values.complements.productPrice,
-
+      isAvailable: true,
       image: values?.complements?.image || null,
       imagePreview: values.complements.imagePreview,
     };
@@ -139,8 +136,13 @@ export function SheetUpdateComplementX({
 
     reset({
       ...values,
-      complements: { name: "", description: "", image: undefined, imagePreview: undefined, productPrice: 0},
-      
+      complements: {
+        name: "",
+        description: "",
+        image: undefined,
+        imagePreview: undefined,
+        productPrice: 0,
+      },
     });
     setImagePreview(null);
   };
@@ -154,9 +156,14 @@ export function SheetUpdateComplementX({
         onOpenChange={() => {
           onOpenChange();
           reset({
-            complements: { name: "", description: "", image: undefined, imagePreview: undefined , productPrice: 0},
+            complements: {
+              name: "",
+              description: "",
+              image: undefined,
+              imagePreview: undefined,
+              productPrice: 0,
+            },
             group: { name: "", minSelected: 0, maxSelected: 0 },
-            
           });
           setStep(1);
         }}

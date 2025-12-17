@@ -6,7 +6,8 @@ import { create } from "zustand";
 export interface iComplement {
     product: {
         id: string | number;
-        name: string;};
+        name: string;
+    };
 
     id?: string | number;
     name: string;
@@ -114,4 +115,6 @@ export const useComplementStore = create<ComplementsStore>((set) => ({
             complements: [],
             selectedComplements: [],
         })),
+
+        
 }));

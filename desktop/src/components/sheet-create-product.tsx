@@ -33,7 +33,8 @@ import { ScrollArea } from "./ui/scroll-area";
 import ModalImage from "./modal-image";
 import { iComplementGroup, useComplementStore } from "@/store/complement-store";
 import { SheetUpdateComplementX } from "./Complement/sheet-update-complement";
-// import { SheetUpdateComplement } from "./Complement/sheet-update-complement";
+import { useToggleTableList } from "@/hooks/use-toggle-table-list";
+import { SheetCreateComplement } from "./Complement/sheet-create-complement";
 
 export interface ComplementGroup {
   id: string;
@@ -78,7 +79,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
   const [complement, setComplement] = useState<ComplementState>(
     ComplementState.NONE
   );
-  const { setOpen: openCreateComplement } = useSheetComplementStore();
+  const { setOpenCreateComplementSheet,  } = useSheetComplementStore();
   const [stepsNumber, setStepsNumber] = useState(3);
 
   const {
@@ -88,15 +89,6 @@ export function SheetCreateProduct({ category }: { category: Category }) {
     setSelectedComplements,
   } = useComplementStore();
 
-  const handleSelectComplement = (complement: iComplementGroup) => {
-    if (selectedComplements.includes(complement)) {
-      setSelectedComplements(
-        selectedComplements.filter((c) => c.id !== complement.id)
-      );
-    } else {
-      setSelectedComplements([...selectedComplements, complement]);
-    }
-  };
   const handleSetComplement = (
     _complement: "none-complement" | "existing-complement" | "new-complement"
   ) => {
@@ -148,7 +140,6 @@ export function SheetCreateProduct({ category }: { category: Category }) {
 
       if (!result.success) {
         result.error.issues.forEach((issue) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           return setError(issue.path[0] as any, {
             message: issue.message,
           });
@@ -158,11 +149,11 @@ export function SheetCreateProduct({ category }: { category: Category }) {
     }
     if (step === 2) {
       if (complement === "new-complement") {
-        openCreateComplement(true);
+        setOpenCreateComplementSheet(true);
+
       }
     }
     if (step === 3 && selectedComplements.length === 0) {
-      // eslint-disable-next-line react-hooks/rules-of-hooks
       setError("productComplementGroups", {
         message: "Selecione pelo menos um complemento",
       });
@@ -185,7 +176,6 @@ export function SheetCreateProduct({ category }: { category: Category }) {
         message: "",
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedComplements]);
   const getComplements = async function (): Promise<ComplementGroup[]> {
     const res = await api.get(`${category.storeId}/groups-complements`);
@@ -194,8 +184,6 @@ export function SheetCreateProduct({ category }: { category: Category }) {
   };
   useEffect(() => {
     getComplements();
-    // alert('Fetching complements...');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -203,20 +191,14 @@ export function SheetCreateProduct({ category }: { category: Category }) {
   }, [complement]);
 
   const onSubmit = async (data: ProductInput) => {
-
-
     const complementGroupsWithoutId = selectedComplements.filter(
       (g) => g.id.length !== 25
     );
 
     let resultingComplementGroups: ComplementGroup[] = [];
 
-    // -----------------------------------------------------
-    // 1. Criar grupos de complemento que não possuem ID
-    // -----------------------------------------------------
     if (complementGroupsWithoutId.length > 0) {
       try {
-        // Cria todos os grupos em paralelo e coleta os retornos
         const createdGroups = await Promise.all(
           complementGroupsWithoutId.map((group) =>
             api.post(`${category.storeId}/groups-complements`, {
@@ -240,7 +222,6 @@ export function SheetCreateProduct({ category }: { category: Category }) {
           title: "Grupos de complementos criados com sucesso",
           type: "success",
         });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         toastManager.add({
           title: "Erro ao criar grupos de complementos",
@@ -251,15 +232,11 @@ export function SheetCreateProduct({ category }: { category: Category }) {
       }
     }
 
-    // -----------------------------------------------------
-    // 2. Gerar o payload final do produto
-    // -----------------------------------------------------
     const formatedData =
       step !== 2
         ? {
             ...data,
             productComplementGroups: [
-              // grupos já existentes selecionados no componente
               ...selectedComplements
                 .filter((g) => g.id.length === 25)
                 .map((g) => ({
@@ -268,7 +245,6 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                   maxSelected: g.maxSelected,
                 })),
 
-              // grupos recém criados
               ...resultingComplementGroups.map((g) => ({
                 groupId: g.id,
                 minSelected: g.minSelected,
@@ -278,9 +254,6 @@ export function SheetCreateProduct({ category }: { category: Category }) {
           }
         : data;
 
-    // -----------------------------------------------------
-    // 3. Criar o produto
-    // -----------------------------------------------------
     try {
       const res = await api.post(
         `stores/${category.storeId}/products/${category.id}`,
@@ -298,7 +271,6 @@ export function SheetCreateProduct({ category }: { category: Category }) {
       } else {
         throw new Error("Erro inesperado ao criar produto");
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toastManager.add({
         title: "Erro ao criar produto",
@@ -318,21 +290,26 @@ export function SheetCreateProduct({ category }: { category: Category }) {
         <Button
           onClick={handleSubmit(onSubmit)}
           disabled={isSubmitting}
-          type='submit'
+          type="submit"
         >
           {isSubmitting ? <Spinner /> : "Criar"}
         </Button>
       );
     }
-    return <Button onClick={handleNextStep}>Próximo</Button>;
+    return <Button onClick={handleNextStep}>Próximo {complement}</Button>;
   };
 
-  const [open, setOpen] = useState(false);
+  const { open, setOpen, openCreateComplementSheet } = useSheetComplementStore();
+
+  const { toggle: toggleComplement, isSelected: isComplementSelected } =
+    useToggleTableList({
+      selected: selectedComplements,
+      setSelected: setSelectedComplements,
+    });
 
   return (
     <>
-      {/* <SheetCreateComplement  onOpenChange={() => setOpen(!open)} open={open} /> */}
-      <SheetUpdateComplementX  onOpenChange={() => setOpen(!open)} open={open} />
+      <SheetUpdateComplementX onOpenChange={() => setOpen(!open)} open={open} />
 
       <Sheet
         open={open}
@@ -350,15 +327,15 @@ export function SheetCreateProduct({ category }: { category: Category }) {
           className={"w-1/2 max-w-none justify-between max-h-screen "}
         >
           <form
-            className='flex flex-col justify-between flex-1 max-h-screen'
+            className="flex flex-col justify-between flex-1 max-h-screen"
             onSubmit={handleSubmit(onSubmit)}
           >
-            <SheetHeader className='h-full overflow-hidden'>
+            <SheetHeader className="h-full overflow-hidden">
               <SheetTitle>
                 Adicionar produto na categoria{" "}
-                <span className='font-bold'>{category.name}</span>
+                <span className="font-bold">{category.name}</span>
               </SheetTitle>
-              <div className='flex  gap-2'>
+              <div className="flex  gap-2">
                 {Array.from({ length: stepsNumber }).map((_, index) => (
                   <span
                     key={index}
@@ -375,10 +352,10 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                   {/* NOME */}
                   <Field>
                     <FieldLabel>Nome do produto</FieldLabel>
-                    <Input {...register("name")} type='text' />
+                    <Input {...register("name")} type="text" />
 
                     {errors.name && (
-                      <span className='text-destructive text-sm'>
+                      <span className="text-destructive text-sm">
                         {errors.name.message}
                       </span>
                     )}
@@ -389,14 +366,14 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                     <FieldLabel>Descrição do produto</FieldLabel>
                     <Controller
                       control={control}
-                      name='description'
+                      name="description"
                       render={({ field }) => (
                         <Textarea onChange={field.onChange} />
                       )}
                     />
 
                     {errors.description && (
-                      <span className='text-destructive text-sm'>
+                      <span className="text-destructive text-sm">
                         {errors.description.message}
                       </span>
                     )}
@@ -408,7 +385,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
 
                     <Controller
                       control={control}
-                      name='price'
+                      name="price"
                       render={({ field }) => (
                         <BRLInput
                           value={field.value ?? 0}
@@ -418,7 +395,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                     />
 
                     {errors.price && (
-                      <span className='text-destructive text-sm'>
+                      <span className="text-destructive text-sm">
                         {errors.price.message}
                       </span>
                     )}
@@ -428,15 +405,15 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                   <Field>
                     <FieldLabel>Imagem</FieldLabel>
 
-                    <div className='max-w-48 rounded-md overflow-hidden border-primary border'>
+                    <div className="max-w-48 rounded-md overflow-hidden border-primary border">
                       <img
-                        className='aspect-4/3 object-cover'
+                        className="aspect-4/3 object-cover"
                         src={watch("image")?.url}
                       />
                     </div>
                     <Controller
                       control={control}
-                      name='image'
+                      name="image"
                       render={({ field }) => (
                         <ModalImage onImageSelect={field.onChange} />
                       )}
@@ -448,7 +425,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                     <FieldLabel>Estoque</FieldLabel>
                     <Controller
                       control={control}
-                      name='stock'
+                      name="stock"
                       render={({ field }) => (
                         <Stock
                           stock={field.value ?? null}
@@ -459,35 +436,35 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                   </Field>
                 </div>
                 <div className={`${step === 2 ? "flex-1/3" : "hidden"}`}>
-                  <h2 className='text-2xl'>Complementos</h2>
+                  <h2 className="text-2xl">Complementos</h2>
 
-                  <div className='grid grid-cols-2 gap-4 mt-2'>
+                  <div className="grid grid-cols-2 gap-4 mt-2">
                     <Card
                       onClick={() => {
                         handleSetComplement("new-complement");
                       }}
-                      className=''
+                      className=""
                     >
-                      <div className='flex justify-end absolute top-2 right-2'>
-                        <button className='aspect-square w-5 h-5 bg-secondary  rounded-full flex items-center justify-center'>
+                      <div className="flex justify-end absolute top-2 right-2">
+                        <button className="aspect-square w-5 h-5 bg-secondary  rounded-full flex items-center justify-center">
                           {complement === "new-complement" && (
-                            <span className='block w-2.5 h-2.5 bg-white rounded-full'></span>
+                            <span className="block w-2.5 h-2.5 bg-white rounded-full"></span>
                           )}
                         </button>
                       </div>
                       <CardContent>
                         <CardTitle>Criar complemento</CardTitle>
-                        <CardDescription>...</CardDescription>
+                        <CardDescription>[...]</CardDescription>
                       </CardContent>
                     </Card>
                     <Card
                       onClick={() => handleSetComplement("existing-complement")}
-                      className=''
+                      className=""
                     >
-                      <div className='flex justify-end absolute top-2 right-2'>
-                        <button className='aspect-square w-5 h-5 bg-secondary  rounded-full flex items-center justify-center'>
+                      <div className="flex justify-end absolute top-2 right-2">
+                        <button className="aspect-square w-5 h-5 bg-secondary  rounded-full flex items-center justify-center">
                           {complement === "existing-complement" && (
-                            <span className='block w-2.5 h-2.5 bg-white rounded-full'></span>
+                            <span className="block w-2.5 h-2.5 bg-white rounded-full"></span>
                           )}
                         </button>
                       </div>
@@ -499,39 +476,36 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                   </div>
                 </div>
                 <div className={`${step === 3 ? "flex-1/3" : "hidden"}`}>
-                  <h2 className='text-2xl'>Complementos</h2>
+                  <h2 className="text-2xl">Complementos</h2>
 
                   {errors.productComplementGroups && (
-                    <span className='text-destructive text-sm'>
+                    <span className="text-destructive text-sm">
                       {errors.productComplementGroups.message}
                     </span>
                   )}
 
-                  <ScrollArea className='max-h-10/12 absolute'>
+                  <ScrollArea className="max-h-10/12 absolute">
                     {complements.map((complement) => (
                       <Card
-                        onClick={() => handleSelectComplement(complement)}
+                        onClick={() => toggleComplement(complement)}
                         key={complement.id}
-                        className='mb-4 py-3 px-0'
+                        className="mb-4 py-3 px-0"
                       >
-                        <div className='flex justify-end absolute top-2 right-2'>
-                          <button className='aspect-square w-5 h-5 bg-secondary  rounded-full flex items-center justify-center'>
+                        <div className="flex justify-end absolute top-2 right-2">
+                          <button className="aspect-square w-5 h-5 bg-secondary  rounded-full flex items-center justify-center">
                             <span
                               className={`block w-2.5 h-2.5 ${
-                                complement.id ===
-                                selectedComplements.find(
-                                  (c) => c.id === complement.id
-                                )?.id
+                                isComplementSelected(complement.id)
                                   ? "bg-white"
                                   : "bg-transparent"
                               } rounded-full`}
-                            ></span>
+                            />
                           </button>
                         </div>
-                        <CardContent className='px-3'>
+                        <CardContent className="px-3">
                           <CardTitle>{complement.name}</CardTitle>
                           {complement?.products?.length > 0 && (
-                            <CardDescription className='line-clamp-1'>
+                            <CardDescription className="line-clamp-1">
                               {" "}
                               Disponível em{" "}
                               {complement.products
@@ -550,14 +524,14 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                   </ScrollArea>
                 </div>
                 <div className={`${step === 4 ? "flex-1/3" : "hidden"}`}>
-                  <h2 className='text-2xl'>Complementos</h2>
+                  <h2 className="text-2xl">Complementos</h2>
 
                   {selectedComplements?.map((complement, index) => (
-                    <Card className='mb-4 py-3 px-0'>
-                      <CardContent className='px-3'>
+                    <Card className="mb-4 py-3 px-0">
+                      <CardContent className="px-3">
                         <CardTitle>{complement.name}</CardTitle>
                         {complement?.products?.length > 0 && (
-                          <CardDescription className='line-clamp-1'>
+                          <CardDescription className="line-clamp-1">
                             {" "}
                             Disponível em{" "}
                             {complement.products
@@ -582,25 +556,24 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                           watch={watch}
                           nameBase={`productComplementGroups.${index}`}
                           key={complement.id}
-                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
                           props={complement as any}
                         />
                       </CardContent>
                     </Card>
                   ))}
                 </div>
-                <div className='flex-1'>
-                  <div className='border aspect-470/945 rounded-4xl max-w-xs overflow-hidden relative'>
-                    <span className='block w-12 h-2.5 bg-black rounded-full absolute left-1/2 translate-x-[-50%] top-2'></span>
+                <div className="flex-1">
+                  <div className="border aspect-470/945 rounded-4xl max-w-xs overflow-hidden relative">
+                    <span className="block w-12 h-2.5 bg-black rounded-full absolute left-1/2 translate-x-[-50%] top-2"></span>
                     <img
                       src={
                         watch("image")?.url || "https://placehold.co/600x400"
                       }
-                      alt=''
+                      alt=""
                     />
-                    <div className='p-4'>
+                    <div className="p-4">
                       <div>
-                        <h2 className='font-semibold'>{watch("name")}</h2>
+                        <h2 className="font-semibold">{watch("name")}</h2>
                         <p>{watch("description")}</p>
                       </div>
                       <ul>
@@ -618,7 +591,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
             </SheetHeader>
 
             <SheetFooter>
-              <Button variant='outline' onClick={handlePreviousStep}>
+              <Button variant="outline" onClick={handlePreviousStep}>
                 Voltar
               </Button>
               <ButtonAction />
@@ -626,6 +599,8 @@ export function SheetCreateProduct({ category }: { category: Category }) {
           </form>
         </SheetPopup>
       </Sheet>
+      <SheetCreateComplement open={openCreateComplementSheet} onOpenChange={setOpenCreateComplementSheet} />
+
     </>
   );
 }
