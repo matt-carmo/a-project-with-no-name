@@ -104,7 +104,7 @@ model Product {
     name                    String
     description             String?
     price                   Int
-    image                   String?
+    image                   Json?
     isAvailable             Boolean                  @default(true)
     stock                   Int?
     createdAt               DateTime                 @default(now())
@@ -139,7 +139,6 @@ model Complement {
     description String?
     price       Int             @default(0)
     isAvailable    Boolean         @default(true)
-    stock       Int?
     photoUrl    String?
 
     orderItemComplements OrderItemComplement[]

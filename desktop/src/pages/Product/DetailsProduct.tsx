@@ -1,26 +1,22 @@
-import api from "@/api/axios";
+
 import BRLInput from "@/components/BRLCurrencyInput";
 import ModalImage from "@/components/modal-image";
 import Stock from "@/components/stock";
-import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import Input from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { toastManager } from "@/components/ui/toast";
+
+import { useEffect } from "react";
 
 import { Controller, useForm } from "react-hook-form";
-import { useNavigate } from "react-router";
-
-export function DetailsProduct({ item }: { item: any }) {
 
 
-  if(!item) return null;
-  const navigate = useNavigate();
+export function DetailsProduct({ item, onChange }: { item: any, onChange: (data: any) => void }) {
+  if (!item) return null;
+  
   const {
     control,
-    handleSubmit,
-
     watch,
 
     formState: { errors, isSubmitting },
@@ -36,46 +32,20 @@ export function DetailsProduct({ item }: { item: any }) {
     },
   });
 
-  const onSubmit = async (_data: any) => {
-    const data = {
-      name: _data.name,
-      description: _data.description,
-      price: _data.price,
-      stock: _data.stock,
-      isAvailable: _data.isAvailable,
+  useEffect(() => {
+    const subscription = watch((value) => {
+      onChange(value);
+    });
+    return () => subscription.unsubscribe();
+  }, [watch, onChange]);
 
-      ...(_data?.image?.url && { image: _data.image }),
-    };
-    try {
-      const res = await api.patch(
-        `stores/${item.storeId}/products/${item.id}`,
-        data
-      );
-
-      if (res.status === 200) {
-        toastManager.add({
-          type: "success",
-          title: "Produto atualizado",
-          timeout: 1500,
-          description: `As informações do produto foram atualizadas com sucesso.`,
-        });
-        navigate(-1);
-      }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
-      toastManager.add({
-        type: "error",
-        title: "Erro ao atualizar produto",
-        timeout: 3000,
-        description:
-          "Log: " +
-          error?.response?.data.errors.map((e: { message: any }) => e.message),
-      });
-    }
-  };
+  
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col justify-between">
+    <form
+      
+      className="flex flex-col justify-between"
+    >
       {/* <code className="text-lg">{JSON.stringify(watch())}</code> */}
 
       <div>
@@ -132,10 +102,6 @@ export function DetailsProduct({ item }: { item: any }) {
           />
         </Field>
       </div>
-
-      <Button className="mt-6 w-32" type="submit" disabled={isSubmitting}>
-        Salvar
-      </Button>
     </form>
   );
 }

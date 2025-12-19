@@ -17,6 +17,8 @@ export default function MenuPage() {
   const getMenu = async () => {
     try {
       const response = await api.get(`stores/${selectedStore?.store.id}/menu`);
+
+      console.log("Menu fetched:", response.data);
       setData(response.data);
     } catch (err) {
       alert(JSON.stringify(err));

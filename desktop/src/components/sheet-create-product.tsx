@@ -13,8 +13,6 @@ import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
 import { Field, FieldLabel } from "./ui/field";
 import Input from "./ui/input";
-
-import { Card, CardContent, CardDescription, CardTitle } from "./ui/card";
 import api from "@/api/axios";
 import { Category } from "@/schemas/category.schema";
 import { Controller, useForm } from "react-hook-form";
@@ -22,19 +20,20 @@ import BRLInput from "./BRLCurrencyInput";
 import z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import ComplementAction from "./complement-action";
 import { toastManager } from "./ui/toast";
 import { Spinner } from "./ui/spinner";
 import { productSchema } from "@/schemas/product.shema";
 import Stock from "./stock";
 import { useSheetComplementStore } from "@/store/use-sheet-complement-store";
 import { emitRefetch } from "@/lib/utils";
-import { ScrollArea } from "./ui/scroll-area";
 import ModalImage from "./modal-image";
-import { iComplementGroup, useComplementStore } from "@/store/complement-store";
+import { useComplementStore } from "@/store/complement-store";
 import { SheetUpdateComplementX } from "./Complement/sheet-update-complement";
 import { useToggleTableList } from "@/hooks/use-toggle-table-list";
-import { SheetCreateComplement } from "./Complement/sheet-create-complement";
+import { ComplementGroupChoiceStep } from "./Complement/ComplementGroupChoiceStep";
+import { ComplementGroupSelectionStep } from "./Complement/ComplementGroupSelectionStep";
+import { ComplementGroupConfigurationStep } from "./Complement/ComplementGroupConfigurationStep";
+import { CreateGroupComplementSheet } from "./Complement/CreateGroupComplementWizard";
 
 export interface ComplementGroup {
   id: string;
@@ -59,6 +58,7 @@ export interface ProductInfo {
 }
 export const ComplementState = {
   NONE: "none-complement",
+
   EXISTING: "existing-complement",
   NEW: "new-complement",
 } as const;
@@ -68,6 +68,7 @@ export type ComplementState =
 const complementIndexMap: Record<ComplementState, number> = {
   "none-complement": 0,
   "existing-complement": 2,
+
   "new-complement": 2,
 };
 
@@ -79,7 +80,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
   const [complement, setComplement] = useState<ComplementState>(
     ComplementState.NONE
   );
-  const { setOpenCreateComplementSheet,  } = useSheetComplementStore();
+
   const [stepsNumber, setStepsNumber] = useState(3);
 
   const {
@@ -149,9 +150,11 @@ export function SheetCreateProduct({ category }: { category: Category }) {
     }
     if (step === 2) {
       if (complement === "new-complement") {
-        setOpenCreateComplementSheet(true);
-
+      
+        setOpenCreateGroupComplementSheet(true);
       }
+    }
+    if (complement === "new-complement" && step === 3) {
     }
     if (step === 3 && selectedComplements.length === 0) {
       setError("productComplementGroups", {
@@ -167,6 +170,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
     }
   };
   useEffect(() => {
+    console.log("Selected Complements:", selectedComplements);
     if (selectedComplements.length === 0) {
       setError("productComplementGroups", {
         message: "Selecione pelo menos um complemento",
@@ -198,9 +202,10 @@ export function SheetCreateProduct({ category }: { category: Category }) {
     let resultingComplementGroups: ComplementGroup[] = [];
 
     if (complementGroupsWithoutId.length > 0) {
+      console.log("Creating new complement groups:", complementGroupsWithoutId);
       try {
         const createdGroups = await Promise.all(
-          complementGroupsWithoutId.map((group) =>
+          complementGroupsWithoutId?.map((group) =>
             api.post(`${category.storeId}/groups-complements`, {
               name: group.name,
 
@@ -223,6 +228,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
           type: "success",
         });
       } catch (err: any) {
+        console.error("Erro ao criar grupos de complementos:", err);
         toastManager.add({
           title: "Erro ao criar grupos de complementos",
           type: "error",
@@ -299,7 +305,14 @@ export function SheetCreateProduct({ category }: { category: Category }) {
     return <Button onClick={handleNextStep}>Próximo {complement}</Button>;
   };
 
-  const { open, setOpen, openCreateComplementSheet } = useSheetComplementStore();
+  const {
+    open,
+    setOpen,
+
+    setOpenCreateComplementSheet,
+  } = useSheetComplementStore();
+
+  const [openCreateGroupComplement, setOpenCreateGroupComplementSheet] = useState(false);
 
   const { toggle: toggleComplement, isSelected: isComplementSelected } =
     useToggleTableList({
@@ -310,7 +323,6 @@ export function SheetCreateProduct({ category }: { category: Category }) {
   return (
     <>
       <SheetUpdateComplementX onOpenChange={() => setOpen(!open)} open={open} />
-
       <Sheet
         open={open}
         onOpenChange={() => {
@@ -328,7 +340,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
         >
           <form
             className="flex flex-col justify-between flex-1 max-h-screen"
-            onSubmit={handleSubmit(onSubmit)}
+            onSubmit={() => onSubmit(getValues())}
           >
             <SheetHeader className="h-full overflow-hidden">
               <SheetTitle>
@@ -405,12 +417,6 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                   <Field>
                     <FieldLabel>Imagem</FieldLabel>
 
-                    <div className="max-w-48 rounded-md overflow-hidden border-primary border">
-                      <img
-                        className="aspect-4/3 object-cover"
-                        src={watch("image")?.url}
-                      />
-                    </div>
                     <Controller
                       control={control}
                       name="image"
@@ -435,134 +441,33 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                     ></Controller>
                   </Field>
                 </div>
-                <div className={`${step === 2 ? "flex-1/3" : "hidden"}`}>
-                  <h2 className="text-2xl">Complementos</h2>
+                {step === 2 && (
+                  <ComplementGroupChoiceStep
+                    value={complement as any}
+                    
+                    onChange={handleSetComplement}
+                  />
+                )}
 
-                  <div className="grid grid-cols-2 gap-4 mt-2">
-                    <Card
-                      onClick={() => {
-                        handleSetComplement("new-complement");
-                      }}
-                      className=""
-                    >
-                      <div className="flex justify-end absolute top-2 right-2">
-                        <button className="aspect-square w-5 h-5 bg-secondary  rounded-full flex items-center justify-center">
-                          {complement === "new-complement" && (
-                            <span className="block w-2.5 h-2.5 bg-white rounded-full"></span>
-                          )}
-                        </button>
-                      </div>
-                      <CardContent>
-                        <CardTitle>Criar complemento</CardTitle>
-                        <CardDescription>[...]</CardDescription>
-                      </CardContent>
-                    </Card>
-                    <Card
-                      onClick={() => handleSetComplement("existing-complement")}
-                      className=""
-                    >
-                      <div className="flex justify-end absolute top-2 right-2">
-                        <button className="aspect-square w-5 h-5 bg-secondary  rounded-full flex items-center justify-center">
-                          {complement === "existing-complement" && (
-                            <span className="block w-2.5 h-2.5 bg-white rounded-full"></span>
-                          )}
-                        </button>
-                      </div>
-                      <CardContent>
-                        <CardTitle>Vincular complemento existente</CardTitle>
-                        <CardDescription>...</CardDescription>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-                <div className={`${step === 3 ? "flex-1/3" : "hidden"}`}>
-                  <h2 className="text-2xl">Complementos</h2>
+                {step === 3 && (
+                  <ComplementGroupSelectionStep
+                    complements={complements}
+                    selectedIds={selectedComplements.map((c) => c.id)}
+                    isSelected={isComplementSelected}
+                    onToggle={toggleComplement}
+                    error={errors.productComplementGroups?.message}
+                  />
+                )}
 
-                  {errors.productComplementGroups && (
-                    <span className="text-destructive text-sm">
-                      {errors.productComplementGroups.message}
-                    </span>
-                  )}
-
-                  <ScrollArea className="max-h-10/12 absolute">
-                    {complements.map((complement) => (
-                      <Card
-                        onClick={() => toggleComplement(complement)}
-                        key={complement.id}
-                        className="mb-4 py-3 px-0"
-                      >
-                        <div className="flex justify-end absolute top-2 right-2">
-                          <button className="aspect-square w-5 h-5 bg-secondary  rounded-full flex items-center justify-center">
-                            <span
-                              className={`block w-2.5 h-2.5 ${
-                                isComplementSelected(complement.id)
-                                  ? "bg-white"
-                                  : "bg-transparent"
-                              } rounded-full`}
-                            />
-                          </button>
-                        </div>
-                        <CardContent className="px-3">
-                          <CardTitle>{complement.name}</CardTitle>
-                          {complement?.products?.length > 0 && (
-                            <CardDescription className="line-clamp-1">
-                              {" "}
-                              Disponível em{" "}
-                              {complement.products
-                                .map((product) => product.product.name)
-                                .join(", ")}
-                            </CardDescription>
-                          )}
-                          {complement?.products?.length === 0 && (
-                            <CardDescription>
-                              Nenhum produto vinculado
-                            </CardDescription>
-                          )}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </ScrollArea>
-                </div>
-                <div className={`${step === 4 ? "flex-1/3" : "hidden"}`}>
-                  <h2 className="text-2xl">Complementos</h2>
-
-                  {selectedComplements?.map((complement, index) => (
-                    <Card className="mb-4 py-3 px-0">
-                      <CardContent className="px-3">
-                        <CardTitle>{complement.name}</CardTitle>
-                        {complement?.products?.length > 0 && (
-                          <CardDescription className="line-clamp-1">
-                            {" "}
-                            Disponível em{" "}
-                            {complement.products
-                              .map((product) => product.product.name)
-                              .join(", ")}
-                          </CardDescription>
-                        )}
-                        {complement?.products?.length === 0 && (
-                          <CardDescription>
-                            Nenhum produto vinculado
-                          </CardDescription>
-                        )}
-                        {!complement.products && (
-                          <CardDescription>
-                            Complemento novo, sem produtos vinculados
-                          </CardDescription>
-                        )}
-
-                        <ComplementAction
-                          control={control}
-                          setValue={setValue}
-                          watch={watch}
-                          nameBase={`productComplementGroups.${index}`}
-                          key={complement.id}
-                          props={complement as any}
-                        />
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-                <div className="flex-1">
+                {step === 4 && (
+                  <ComplementGroupConfigurationStep
+                    complements={selectedComplements}
+                    control={control}
+                    setValue={setValue}
+                    watch={watch}
+                  />
+                )}
+                <div>
                   <div className="border aspect-470/945 rounded-4xl max-w-xs overflow-hidden relative">
                     <span className="block w-12 h-2.5 bg-black rounded-full absolute left-1/2 translate-x-[-50%] top-2"></span>
                     <img
@@ -571,6 +476,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                       }
                       alt=""
                     />
+                 
                     <div className="p-4">
                       <div>
                         <h2 className="font-semibold">{watch("name")}</h2>
@@ -599,8 +505,30 @@ export function SheetCreateProduct({ category }: { category: Category }) {
           </form>
         </SheetPopup>
       </Sheet>
-      <SheetCreateComplement open={openCreateComplementSheet} onOpenChange={setOpenCreateComplementSheet} />
+      {/* <SheetCreateComplement
+        onOpenChange={setOpenCreateComplementSheet}
+        open={openCreateComplementSheet}
+      /> */}
 
+      <CreateGroupComplementSheet
+        onSubmitGroup={(data) => {
+          
+          const group = {
+            ...data.group,
+            complements: data.complements,
+            
+          };
+     
+
+          console.log("New Complement Group: ", group);
+
+        
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setSelectedComplements((prev) => [group, ...prev] as any);
+        }}
+        onOpenChange={setOpenCreateGroupComplementSheet}
+        open={openCreateGroupComplement}
+      />
     </>
   );
 }

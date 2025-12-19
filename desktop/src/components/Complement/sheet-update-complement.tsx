@@ -11,13 +11,20 @@ import {
 import { useForm } from "react-hook-form";
 import { Button } from "../ui/button";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 
 import { Complement } from "@/interfaces/menu.interface";
 
 import { useComplementStore } from "@/store/complement-store";
 import { ComplementStep } from "./ComplementStep";
+import { ComplementState } from "../sheet-create-product";
+import { Card, CardContent, CardDescription, CardTitle } from "../ui/card";
+import api from "@/api/axios";
+import { useParams } from "react-router";
+import { ComplementGroup } from "@/schemas/complement-group.schema";
+import { ScrollArea } from "../ui/scroll-area";
+import { useToggleTableList } from "@/hooks/use-toggle-table-list";
 
 const complementSchema = z.object({
   complements: z.object({
@@ -38,10 +45,35 @@ export function SheetUpdateComplementX({
   onOpenChange: () => void;
 }) {
   const [step, setStep] = useState(1);
-  const { setComplements, setSelectedComplements } = useComplementStore();
 
   const [itemsComplements, setItemsComplements] = useState<Complement[]>([]);
+  const [complement, setComplement] =
+    useState<ComplementState>("none-complement");
 
+  const {
+    complements,
+    setComplements,
+    selectedComplements,
+    setSelectedComplements,
+  } = useComplementStore();
+  const { toggle: toggleComplement, isSelected: isComplementSelected } =
+    useToggleTableList({
+      selected: selectedComplements,
+      setSelected: setSelectedComplements,
+    });
+
+  const { id: storeId } = useParams();
+
+  const getComplements = async function (): Promise<ComplementGroup[]> {
+    const res = await api.get(`${storeId}/groups-complements`);
+
+    console.log("RES COMPLEMENTS GROUPS:", complements);
+    setComplements(res.data);
+    return res.data;
+  };
+  useEffect(() => {
+    getComplements();
+  }, []);
   type FormValues = {
     group: {
       name: string;
@@ -148,7 +180,14 @@ export function SheetUpdateComplementX({
   };
 
   // -----------------------------------
-
+  const handleSetComplement = (
+    _complement: "none-complement" | "existing-complement" | "new-complement"
+  ) => {
+    if (_complement === complement) {
+      return setComplement("none-complement");
+    }
+    setComplement(_complement);
+  };
   return (
     <>
       <Sheet
@@ -170,36 +209,149 @@ export function SheetUpdateComplementX({
       >
         <SheetPopup className="max-w-2xl">
           <SheetHeader>
-            <SheetTitle>Cadastrar complemento — Step {step}</SheetTitle>
+            <SheetTitle>Cadastrar complemento — Step... {step}</SheetTitle>
           </SheetHeader>
 
-          <SheetPanel>
-            <ComplementStep
-              register={register}
-              control={control}
-              imagePreview={imagePreview}
-              setImagePreview={setImagePreview}
-              items={itemsComplements}
-              onAdd={onSubmitComplement}
-              onRemove={(name) =>
-                setItemsComplements((prev) =>
-                  prev.filter((c) => c.name !== name)
-                )
-              }
-            />
+          <SheetPanel className="h-full">
+            <div className={`${step === 1 ? "flex-1/3" : "hidden"}`}>
+              <h2 className="text-2xl">Complementos</h2>
+
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                <Card
+                  onClick={() => {
+                    handleSetComplement("new-complement");
+                  }}
+                  className=""
+                >
+                  <div className="flex justify-end absolute top-2 right-2">
+                    <button className="aspect-square w-5 h-5 bg-secondary  rounded-full flex items-center justify-center">
+                      {complement === "new-complement" && (
+                        <span className="block w-2.5 h-2.5 bg-white rounded-full"></span>
+                      )}
+                    </button>
+                  </div>
+                  <CardContent>
+                    <CardTitle>Criar complemento</CardTitle>
+                    <CardDescription>[...]</CardDescription>
+                  </CardContent>
+                </Card>
+                <Card
+                  onClick={() => handleSetComplement("existing-complement")}
+                  className=""
+                >
+                  <div className="flex justify-end absolute top-2 right-2">
+                    <button className="aspect-square w-5 h-5 bg-secondary  rounded-full flex items-center justify-center">
+                      {complement === "existing-complement" && (
+                        <span className="block w-2.5 h-2.5 bg-white rounded-full"></span>
+                      )}
+                    </button>
+                  </div>
+                  <CardContent>
+                    <CardTitle>Vincular complemento existente</CardTitle>
+                    <CardDescription>...</CardDescription>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+            {step === 2 && complement === "new-complement" && (
+              <ComplementStep
+                getValues={() => {}}
+                register={register}
+                control={control}
+                imagePreview={imagePreview}
+                setImagePreview={setImagePreview}
+                items={itemsComplements}
+                onAdd={onSubmitComplement}
+                onRemove={(name) =>
+                  setItemsComplements((prev) =>
+                    prev.filter((c) => c.name !== name)
+                  )
+                }
+              />
+            )}
+            {step === 2 && complement === "existing-complement" && (
+              <div>
+                <h2 className="text-2xl mb-4">Complementos existentes</h2>
+                <ScrollArea className="">
+                  {complements.map((complement) => (
+                    <Card
+                      onClick={() => toggleComplement(complement)}
+                      key={complement.id}
+                      className="mb-4 py-3 px-0"
+                    >
+                      <div className="flex justify-end absolute top-2 right-2">
+                        <button className="aspect-square w-5 h-5 bg-secondary  rounded-full flex items-center justify-center">
+                          <span
+                            className={`block w-2.5 h-2.5 ${
+                              isComplementSelected(complement.id)
+                                ? "bg-white"
+                                : "bg-transparent"
+                            } rounded-full`}
+                          />
+                        </button>
+                      </div>
+                      <CardContent className="px-3">
+                        <CardTitle>{complement.name}</CardTitle>
+                        {complement?.products?.length > 0 && (
+                          <CardDescription className="line-clamp-1">
+                            {" "}
+                            Disponível em{" "}
+                            {complement.products
+                              .map((product) => product.product.name)
+                              .join(", ")}
+                          </CardDescription>
+                        )}
+                        {complement?.products?.length === 0 && (
+                          <CardDescription>
+                            Nenhum produto vinculado
+                          </CardDescription>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </ScrollArea>
+              </div>
+            )}
           </SheetPanel>
 
-          <SheetFooter>
-            <SheetClose>
-              <Button variant="secondary">Cancelar</Button>
-            </SheetClose>
+          <SheetFooter className="flex justify-between">
+            <Button>
+              {step === 2 && (
+                <span
+                  onClick={() => {
+                    setStep(1);
+                  }}
+                >
+                  Voltar
+                </span>
+              )}
+            </Button>
+            <div>
+              <SheetClose>
+                <Button variant="secondary">Cancelar</Button>
+              </SheetClose>
 
-            <Button
-              disabled={itemsComplements.length === 0}
+              {/* <Button
+              disabled={complement === 'none-complement'}
               onClick={onCaptureGroup}
             >
               Adicionar grupo
-            </Button>
+            </Button> */}
+              <Button>
+                {step === 1 ? (
+                  <span
+                    onClick={() => {
+                      if (complement === "none-complement") return;
+                      setStep(2);
+                    }}
+                  >
+                    Próximo
+                  </span>
+                ) : (
+                  <span onClick={onCaptureGroup}>Adicionar grupo</span>
+                )}
+              </Button>
+            </div>
           </SheetFooter>
         </SheetPopup>
       </Sheet>

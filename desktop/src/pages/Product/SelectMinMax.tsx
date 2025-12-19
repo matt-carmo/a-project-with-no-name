@@ -49,7 +49,7 @@ export default function SelectMinMax({
         maxSelected,
       });
     }
-  }, [id, isRequired, minSelected, maxSelected, onChange]);
+  }, [id, isRequired, minSelected, maxSelected]);
 
   useEffect(() => {
     const newIsRequired = minSelected > 0;

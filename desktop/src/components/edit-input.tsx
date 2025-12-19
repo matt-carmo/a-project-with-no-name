@@ -20,37 +20,44 @@ type FormData = {
 
 type EditInputProps = {
   name: string;
-  endpoint: string; // ex: "categories"
+  endpoint?: string; // ex: "categories"
   onSuccess?: () => void;
-  method?: 'PATCH' | 'PUT';
+  method?: "PATCH" | "PUT";
+  onchange?: (text: string) => void;
 };
 
 // =====================
 // Component
 // =====================
 
-export function EditInput({ name, endpoint, onSuccess, method = 'PATCH' }: EditInputProps) {
+export function EditInput({
+  name,
+  endpoint,
+  onSuccess,
+  method = "PATCH",
+  onchange,
+}: EditInputProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
-useEffect(() => {
-  if (!isEditing) return;
+  useEffect(() => {
+    if (!isEditing) return;
 
-  function handleClickOutside(event: MouseEvent) {
-    if (
-      containerRef.current &&
-      !containerRef.current.contains(event.target as Node)
-    ) {
-      cancelEditing();
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        cancelEditing();
+      }
     }
-  }
 
-  document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
 
-  return () => {
-    document.removeEventListener("mousedown", handleClickOutside);
-  };
-}, [isEditing]);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isEditing]);
 
   const {
     control,
@@ -67,6 +74,7 @@ useEffect(() => {
   // =====================
   useEffect(() => {
     setValue("name", name);
+    
   }, [name, setValue]);
 
   // =====================
@@ -74,13 +82,19 @@ useEffect(() => {
   // =====================
   async function onSubmit(data: FormData) {
     try {
-      if (method === 'PUT') {
+      if (!endpoint) {
+        setIsEditing(false);
+        onSuccess?.();
+        onchange?.(data.name);
+        return;
+      }
+      if (method === "PUT") {
         await api.put(`${endpoint}`, data);
       }
-      if (method === 'PATCH') {
+      if (method === "PATCH") {
         await api.patch(`${endpoint}`, data);
       }
-      
+
       setIsEditing(false);
       onSuccess?.();
     } catch (error) {
@@ -118,7 +132,6 @@ useEffect(() => {
               ref={inputRef}
               type="text"
               onClick={startEditing}
-              
               unstyled={!isEditing}
               className={isEditing ? "max-w-80" : "w-full"}
               readOnly={!isEditing}

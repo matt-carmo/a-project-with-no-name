@@ -1,4 +1,5 @@
 import { Button } from "./ui/button";
+import { MdOutlineAddAPhoto } from "react-icons/md";
 import {
   Dialog,
   DialogClose,
@@ -26,7 +27,7 @@ import { useParams } from "react-router";
 
 import { Skeleton } from "./ui/skeleton";
 import { ScrollArea } from "./ui/scroll-area";
-import { Image } from "lucide-react";
+
 
 interface imageData {
   url: string;
@@ -97,7 +98,7 @@ export default function ModalImage({
         {selectedImage ? (
           <button type="button" className="relative group block cursor-pointer">
             <img
-              className="max-h-14 aspect-4/3 rounded-md border border-primary object-cover"
+              className="max-h-24 aspect-4/3 rounded-md border border-primary object-cover"
               src={selectedImage}
               alt=""
             />
@@ -113,8 +114,8 @@ export default function ModalImage({
             </div>
           </button>
         ) : (
-          <div className="relative group">
-            <Image className="w-full h-full cursor-pointer" size={100} />
+          <div className="relative group bg-secondary rounded-md w-32 h-24 flex items-center justify-center border border-dashed cursor-pointer">
+            <MdOutlineAddAPhoto className="text-7xl" />
           </div>
         )}
       </DialogTrigger>

@@ -11,9 +11,9 @@ export const ComplementSchema = z.object({
 
     isAvailable: z.boolean().default(true),
 
-    stock: z.number().int().nonnegative().optional(),
+    stock: z.number().int().nonnegative().optional().nullable(),
 
-    photoUrl: z.url().optional(),
+    photoUrl: z.url().optional().nullable(),
 });
 export const ComplementCreateSchema = ComplementSchema.omit({
     id: true,
