@@ -1,10 +1,20 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useLocation, useNavigate } from "react-router";
-import { DetailsProduct } from "./DetailsProduct";
-import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
-import api from "@/api/axios";
 import { useEffect, useState } from "react";
-import { Complement, ComplementGroup } from "@/interfaces/menu.interface";
+import { useLocation, useNavigate } from "react-router";
+
+import api from "@/api/axios";
+import { onRefetch } from "@/lib/utils";
+import { toastManager } from "@/components/ui/toast";
+
+import { DetailsProduct } from "./DetailsProduct";
+import { EditableProductRowLocal } from "@/components/Complement/EditableProductRowLocal";
+import { SheetUpdateComplementX } from "@/components/Complement/sheet-update-complement";
+import { CreateGroupComplementSheet } from "@/components/Complement/CreateGroupComplementWizard";
+
+import { updateComplement } from "@/services/complements/updateComplementField.service";
+import { updateProduct } from "@/services/products/updateProductField.service";
+
+import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,8 +22,6 @@ import {
   CollapsiblePanel,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDownIcon, Trash } from "lucide-react";
-import { EditInput } from "@/components/edit-input";
 import {
   Dialog,
   DialogClose,
@@ -24,18 +32,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { SheetUpdateComplementX } from "@/components/Complement/sheet-update-complement";
-import { onRefetch } from "@/lib/utils";
+import { EditInput } from "@/components/edit-input";
+import { ChevronDownIcon, Trash } from "lucide-react";
 
-import { EditableProductRowLocal } from "@/components/Complement/EditableProductRowLocal";
-import { updateComplement } from "@/services/complements/updateComplementField.service";
-import { updateProduct } from "@/services/products/updateProductField.service";
-import { toastManager } from "@/components/ui/toast";
-import { CreateGroupComplementSheet } from "@/components/Complement/CreateGroupComplementWizard";
-
-/* =========================
-   TIPOS LOCAIS
-========================= */
+import {
+  Complement,
+  ComplementGroup,
+  Product,
+} from "@/interfaces/menu.interface";
+import ComplementActionLocal from "@/components/complement-action-local";
 
 type ActionType = "create" | "update" | "delete" | undefined;
 
@@ -48,18 +53,10 @@ interface ComplementGroupLocal extends ComplementGroup {
   complements: ComplementLocal[];
 }
 
-/* =========================
-   UTILS
-========================= */
-
 function markUpdate(action?: ActionType): ActionType {
-  if (action === "create") return "create";
-  return "update";
+  return action === "create" ? "create" : "update";
 }
 
-/* =========================
-   COMPONENT
-========================= */
 function splitGroupsByAction(groups: ComplementGroupLocal[]) {
   const create: ComplementGroupLocal[] = [];
   const update: ComplementGroupLocal[] = [];
@@ -67,7 +64,6 @@ function splitGroupsByAction(groups: ComplementGroupLocal[]) {
 
   for (const group of groups) {
     if (!group.action) continue;
-
     if (group.action === "create") create.push(group);
     if (group.action === "update") update.push(group);
     if (group.action === "delete") remove.push(group);
@@ -75,55 +71,63 @@ function splitGroupsByAction(groups: ComplementGroupLocal[]) {
 
   return { create, update, remove };
 }
+
 function splitComplementsByAction(groups: ComplementGroupLocal[]) {
-  const create: ComplementLocal[] = [];
-  const update: ComplementLocal[] = [];
-  const remove: ComplementLocal[] = [];
+  const createComplements: ComplementLocal[] = [];
+  const updateComplements: ComplementLocal[] = [];
+  const removeComplements: ComplementLocal[] = [];
 
   for (const group of groups) {
     for (const complement of group.complements) {
       if (!complement.action) continue;
-
-      if (complement.action === "create") create.push(complement);
-      if (complement.action === "update") update.push(complement);
-      if (complement.action === "delete") remove.push(complement);
+      if (complement.action === "create") createComplements.push(complement);
+      if (complement.action === "update") updateComplements.push(complement);
+      if (complement.action === "delete") removeComplements.push(complement);
     }
   }
 
-  return { create, update, remove };
+  return { createComplements, updateComplements, removeComplements };
 }
 
+/* =========================
+   COMPONENT
+========================= */
 export default function ProductPage() {
   const { state } = useLocation();
   const { item } = state;
 
+  const navigate = useNavigate();
+
+  const [product, setProduct] = useState<Product>({
+    ...item,
+    name: item.name,
+    description: item.description,
+    price: item.price,
+    image: item.image?.url,
+    photoUrl: item.image?.photoUrl,
+    stock: item.stock,
+  });
+
   const [groupedComplements, setGroupedComplements] = useState<
     ComplementGroupLocal[]
   >([]);
-
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+
   const [open, setOpen] = useState(false);
   const [openUpdateComplement, setOpenUpdateComplement] = useState(false);
-  const [product, setProduct] = useState<any>(item);
 
   /* =========================
-     FETCH
-  ========================= */
-  const navigate = useNavigate();
-
+     FETCH COMPLEMENTS
+  ========================== */
   async function fetchComplements() {
     const response = await api.get(
       `/${item.storeId}/groups-complements?productId=${item.id}`
     );
-
     setGroupedComplements(
       response.data.map((g: ComplementGroup) => ({
         ...g,
         action: undefined,
-        complements: g.complements.map((c) => ({
-          ...c,
-          action: undefined,
-        })),
+        complements: g.complements.map((c) => ({ ...c, action: undefined })),
       }))
     );
   }
@@ -138,16 +142,14 @@ export default function ProductPage() {
   }, []);
 
   /* =========================
-     CREATE
-  ========================= */
-
+     HANDLERS: CREATE
+  ========================== */
   const handleCreateComplement = (data: Complement[]) => {
     if (!selectedGroupId) return;
 
     const newComplements: ComplementLocal[] = data.map((c) => ({
       ...c,
       id: c.id ?? crypto.randomUUID(),
- 
       groupId: selectedGroupId,
       action: "create",
     }));
@@ -155,19 +157,15 @@ export default function ProductPage() {
     setGroupedComplements((prev) =>
       prev.map((group) =>
         group.id === selectedGroupId
-          ? {
-              ...group,
-              complements: [...group.complements, ...newComplements],
-            }
+          ? { ...group, complements: [...group.complements, ...newComplements] }
           : group
       )
     );
   };
 
   /* =========================
-     UPDATE
-  ========================= */
-
+     HANDLERS: UPDATE
+  ========================== */
   function updateComplementLocal(
     groupId?: string,
     complementId?: string,
@@ -185,11 +183,7 @@ export default function ProductPage() {
               complements: group.complements.map((c) =>
                 c.id !== complementId
                   ? c
-                  : {
-                      ...c,
-                      ...changes,
-                      action: markUpdate(c.action),
-                    }
+                  : { ...c, ...changes, action: markUpdate(c.action) }
               ),
             }
       )
@@ -197,12 +191,10 @@ export default function ProductPage() {
   }
 
   /* =========================
-     DELETE (LÓGICO)
-  ========================= */
-
+     HANDLERS: DELETE (LÓGICO)
+  ========================== */
   function removeComplementLocal(groupId?: string, complementId?: string) {
     if (!groupId || !complementId) return;
-
     setGroupedComplements((prev) =>
       prev.map((group) =>
         group.id !== groupId
@@ -226,38 +218,36 @@ export default function ProductPage() {
   }
 
   /* =========================
-     SUBMIT
-  ========================= */
-
+     HANDLE SUBMIT
+  ========================== */
   const handleSubmit = async () => {
     try {
-      // 1. Produto
+      // Atualiza produto
       await updateProduct(item.storeId, item.id, {
         name: product.name,
-        description: product.descriptiotn,
+        description: product.description,
         price: product.price,
+        image: product.image,
         ...(typeof product.image === "object" && { image: product.image }),
-
         isAvailable: product.isAvailable,
       });
 
-      // 2. Complementos
-      const { create, update, remove } =
+      // Atualiza complementos
+      const { createComplements, updateComplements, removeComplements } =
         splitComplementsByAction(groupedComplements);
-
       const {
         create: createGroups,
         update: updateGroups,
         remove: removeGroups,
       } = splitGroupsByAction(groupedComplements);
-      // UPDATE
+
+      // UPDATE complementos
       await Promise.all(
-        update.map((c) =>
+        updateComplements.map((c) =>
           updateComplement(c.id as string, {
             name: c.name,
             price: c.price,
             isAvailable: c.isAvailable,
-            
             photoUrl: c.photoUrl,
           })
         )
@@ -274,6 +264,8 @@ export default function ProductPage() {
           complements: g.complements,
         }))
       );
+
+      // UPDATE grupos
       await Promise.all(
         updateGroups.map((g) =>
           api.put(`${item.storeId}/groups-complements/${g.id}`, {
@@ -285,22 +277,38 @@ export default function ProductPage() {
           })
         )
       );
-      // CREATE
-      await Promise.all(
-        create.map((c) =>
-          api.post(
-            `${item.storeId}/complement-groups/${c.groupId}/complements`,
-            {
-              name: c.name,
-              price: c.price,
-              isAvailable: c.isAvailable,
-              stock: c.stock,
-              photoUrl: c.image?.url,
-              image: c.image,
-            }
-          )
-        )
+
+      const results = await Promise.all(
+        createComplements.map(async (c) => {
+          try {
+            const res = await api.post(
+              `${item.storeId}/complement-groups/${c.groupId}/complements`,
+              [
+                {
+                  name: c.name,
+                  price: c.price,
+                  isAvailable: c.isAvailable,
+                  stock: c.stock,
+                  photoUrl: c.image?.url,
+                  image: c.image,
+                },
+              ]
+            );
+            return { success: true, data: res.data };
+          } catch (err) {
+            console.error(err);
+            return { success: false, error: err, item: c };
+          }
+        })
       );
+
+      results.forEach((r) =>
+        r.success
+          ? console.log("Criado com sucesso:", r.data)
+          : console.log("Falhou:", r.item, r.error)
+      );
+
+      // DELETE grupos
       await Promise.all(
         removeGroups.map(
           async (g) =>
@@ -310,8 +318,10 @@ export default function ProductPage() {
         )
       );
 
-      // DELETE
-      await Promise.all(remove.map((c) => api.delete(`complements/${c.id}`)));
+      // DELETE complementos
+      await Promise.all(
+        removeComplements.map((c) => api.delete(`complements/${c.id}`))
+      );
 
       toastManager.add({
         type: "success",
@@ -330,16 +340,18 @@ export default function ProductPage() {
 
   /* =========================
      RENDER
-  ========================= */
-
+  ========================== */
   return (
     <>
+      {/* Sheets */}
       <SheetUpdateComplementX
         open={open}
         onOpenChange={() => setOpen(false)}
         onSubmitGroup={(data) => handleCreateComplement(data.complements)}
       />
       <CreateGroupComplementSheet
+        open={openUpdateComplement}
+        onOpenChange={setOpenUpdateComplement}
         onSubmitGroup={(data) => {
           setGroupedComplements((prev) => [
             ...prev,
@@ -358,12 +370,11 @@ export default function ProductPage() {
             },
           ]);
         }}
-        open={openUpdateComplement}
-        onOpenChange={setOpenUpdateComplement}
       />
 
-      <div className="justify-between flex flex-col h-full">
-        <div className="grid grid-cols-2 gap-x-10">
+      <div className="flex flex-col h-full justify-between ">
+        <div className="grid grid-cols-[3fr_1fr] gap-x-10">
+          {/* Tabs */}
           <Tabs defaultValue="tab-1">
             <TabsList>
               <TabsTab value="tab-1">Detalhes</TabsTab>
@@ -371,13 +382,14 @@ export default function ProductPage() {
             </TabsList>
 
             <TabsPanel value="tab-1">
-              <DetailsProduct onChange={setProduct} item={item} />
+              <DetailsProduct item={item} onChange={setProduct} />
             </TabsPanel>
 
             <TabsPanel value="tab-2" className="space-y-4">
               <Button onClick={() => setOpenUpdateComplement(true)}>
                 Adicionar grupo de complementos
               </Button>
+
               <ul className="space-y-4">
                 {groupedComplements
                   .filter((g) => g.action !== "delete")
@@ -385,23 +397,7 @@ export default function ProductPage() {
                     <Card key={group.id}>
                       <CardContent>
                         <Collapsible>
-                          <div className="flex justify-between items-center">
-                            <EditInput
-                              name={group.name}
-                              onchange={(name) =>
-                                setGroupedComplements((prev) =>
-                                  prev.map((g) =>
-                                    g.id === group.id
-                                      ? {
-                                          ...g,
-                                          action: markUpdate(g.action),
-                                          name,
-                                        }
-                                      : g
-                                  )
-                                )
-                              }
-                            />
+                          <div className="flex gap-x-2 justify-between items-center">
                             <Dialog>
                               <DialogTrigger>
                                 <Trash className="w-4" />
@@ -430,6 +426,24 @@ export default function ProductPage() {
                                 </DialogFooter>
                               </DialogPopup>
                             </Dialog>
+
+                            <EditInput
+                              name={group.name}
+                              onchange={(name) =>
+                                setGroupedComplements((prev) =>
+                                  prev.map((g) =>
+                                    g.id === group.id
+                                      ? {
+                                          ...g,
+                                          action: markUpdate(g.action),
+                                          name,
+                                        }
+                                      : g
+                                  )
+                                )
+                              }
+                            />
+
                             <CollapsibleTrigger>
                               <ChevronDownIcon />
                             </CollapsibleTrigger>
@@ -446,67 +460,91 @@ export default function ProductPage() {
                             >
                               Adicionar complemento
                             </Button>
+                            <ComplementActionLocal
+                              maxSelected={group.maxSelected}
+                              minSelected={group.minSelected}
+                              onMinChange={(min) => {
+                                setGroupedComplements((prev) =>
+                                  prev.map((g) =>
+                                    g.id === group.id
+                                      ? {
+                                          ...g,
+                                          action: markUpdate(g.action),
+                                          minSelected: min,
+                                        }
+                                      : g
+                                  )
+                                );
+                              }}
+                              onMaxChange={() => {
+                                setGroupedComplements((prev) =>
+                                  prev.map((g) =>
+                                    g.id === group.id
+                                      ? {
+                                          ...g,
+                                          action: markUpdate(g.action),
+                                          maxSelected: group.complements.filter(
+                                            (c) => c.action !== "delete"
+                                          ).length,
+                                        }
+                                      : g
+                                  )
+                                );
+                              }}
+                            />
 
                             {group.complements
                               .filter((c) => c.action !== "delete")
                               .map((complement) => (
-                                <EditableProductRowLocal
-                                  key={complement.id}
-                                  type="complement"
-                                  editable
-                                  {...complement}
-                                  onStockChange={(v) =>
-                                    updateComplementLocal(
-                                      group.id,
-                                      complement.id,
-                                      {
-                                        stock: v,
-                                      }
-                                    )
-                                  }
-                                  onPhotoChange={(v) => {
-                                    updateComplementLocal(
-                                      group.id,
-                                      complement.id,
-                                      {
-                                        photoUrl: v,
-                                      }
-                                    );
-                                  }}
-                                  onNameChange={(v) =>
-                                    updateComplementLocal(
-                                      group.id,
-                                      complement.id,
-                                      {
-                                        name: v,
-                                      }
-                                    )
-                                  }
-                                  onPriceChange={(v) =>
-                                    updateComplementLocal(
-                                      group.id,
-                                      complement.id,
-                                      {
-                                        price: v,
-                                      }
-                                    )
-                                  }
-                                  onToggleAvailable={() =>
-                                    updateComplementLocal(
-                                      group.id,
-                                      complement.id,
-                                      {
-                                        isAvailable: !complement.isAvailable,
-                                      }
-                                    )
-                                  }
-                                  onDelete={() =>
-                                    removeComplementLocal(
-                                      group.id,
-                                      complement.id
-                                    )
-                                  }
-                                />
+                                <>
+                                  <EditableProductRowLocal
+                                    key={complement.id}
+                                    type="complement"
+                                    editable
+                                    {...complement}
+                                    onStockChange={(v) =>
+                                      updateComplementLocal(
+                                        group.id,
+                                        complement.id,
+                                        { stock: v }
+                                      )
+                                    }
+                                    onPhotoChange={(v) =>
+                                      updateComplementLocal(
+                                        group.id,
+                                        complement.id,
+                                        { photoUrl: v }
+                                      )
+                                    }
+                                    onNameChange={(v) =>
+                                      updateComplementLocal(
+                                        group.id,
+                                        complement.id,
+                                        { name: v }
+                                      )
+                                    }
+                                    onPriceChange={(v) =>
+                                      updateComplementLocal(
+                                        group.id,
+                                        complement.id,
+                                        { price: v }
+                                      )
+                                    }
+                                    onToggleAvailable={() =>
+                                      updateComplementLocal(
+                                        group.id,
+                                        complement.id,
+                                        { isAvailable: !complement.isAvailable }
+                                      )
+                                    }
+                                    onDelete={() =>
+                                      removeComplementLocal(
+                                        group.id,
+                                        complement.id
+                                      )
+                                    }
+                                  />
+                                </>
                               ))}
                           </CollapsiblePanel>
                         </Collapsible>
@@ -517,17 +555,19 @@ export default function ProductPage() {
             </TabsPanel>
           </Tabs>
 
+          {/* Debug */}
           <pre className="mt-4 bg-muted p-4 rounded text-xs overflow-auto">
             {JSON.stringify(product, null, 2)}
             {JSON.stringify(groupedComplements, null, 2)}
           </pre>
         </div>
-        <div className="flex justify-end gap-2 mt-4">
+
+        {/* Actions */}
+        <div className="flex justify-end gap-2 mt-4 pb-2">
           <Button variant="outline" onClick={() => navigate(-1)}>
             Cancelar
           </Button>
           <Button onClick={handleSubmit}>Salvar alterações</Button>
-          
         </div>
       </div>
     </>

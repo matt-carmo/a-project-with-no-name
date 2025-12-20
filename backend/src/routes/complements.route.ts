@@ -28,6 +28,8 @@ export function ComplementsRoutes(server: FastifyInstance) {
         controller.create.bind(controller)
     );
 
+  
+
     server.delete(
         "/complements/:id",
         {

@@ -18,9 +18,11 @@ export class ComplementsController {
     async create(request: FastifyRequest<{ Body: Array<Prisma.ComplementUncheckedCreateInput>, Params: {storeId:string, groupId:string} }>, reply: FastifyReply) {
         const data = request.body;
 
-        return console.log("Body:1", request.body);
+
         const { storeId, groupId } = request.params;
         
+
+        console.log("Creating complements:", { storeId, groupId, data });
         data.forEach((complement) => {
 
             complement.groupId = groupId;

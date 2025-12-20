@@ -150,7 +150,6 @@ export function SheetCreateProduct({ category }: { category: Category }) {
     }
     if (step === 2) {
       if (complement === "new-complement") {
-      
         setOpenCreateGroupComplementSheet(true);
       }
     }
@@ -312,7 +311,8 @@ export function SheetCreateProduct({ category }: { category: Category }) {
     setOpenCreateComplementSheet,
   } = useSheetComplementStore();
 
-  const [openCreateGroupComplement, setOpenCreateGroupComplementSheet] = useState(false);
+  const [openCreateGroupComplement, setOpenCreateGroupComplementSheet] =
+    useState(false);
 
   const { toggle: toggleComplement, isSelected: isComplementSelected } =
     useToggleTableList({
@@ -444,7 +444,6 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                 {step === 2 && (
                   <ComplementGroupChoiceStep
                     value={complement as any}
-                    
                     onChange={handleSetComplement}
                   />
                 )}
@@ -476,7 +475,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
                       }
                       alt=""
                     />
-                 
+
                     <div className="p-4">
                       <div>
                         <h2 className="font-semibold">{watch("name")}</h2>
@@ -512,17 +511,13 @@ export function SheetCreateProduct({ category }: { category: Category }) {
 
       <CreateGroupComplementSheet
         onSubmitGroup={(data) => {
-          
           const group = {
             ...data.group,
             complements: data.complements,
-            
           };
-     
 
           console.log("New Complement Group: ", group);
 
-        
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           setSelectedComplements((prev) => [group, ...prev] as any);
         }}

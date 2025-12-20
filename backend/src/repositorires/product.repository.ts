@@ -46,8 +46,7 @@ export class ProductRepository {
         });
     }
     async updateProduct({ productId, data }: { productId: string, data: z.infer<typeof updateProductSchema> }) {
-
-        console.log("Updating product:", data);
+        
         return this.prisma.product.update({
             where: { id: productId, storeId: data.storeId },
             data: {
