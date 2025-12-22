@@ -41,7 +41,8 @@ export default function Layout() {
                 {/* <header>HEADER</header> */}
               </div>
               <ScrollArea>
-                <div className='container p-5 h-full'>
+                {/* <div className='container p-5 h-full'> */}
+                <div className='p-5 h-full'>
                   <Outlet />
                 </div>
               </ScrollArea>

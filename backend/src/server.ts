@@ -18,6 +18,8 @@ import { ProductRoutes } from "./routes/product.route";
 import fastifyMultipart from "@fastify/multipart";
 import { GroupsComplementsRoutes } from "./routes/groups-complements.route";
 import { ImageRoutes } from "./routes/image.route";
+import { OrdersRoutes } from "./routes/orders.route";
+
 export const server = fastify();
 export function buildServer() {
     server.register(prismaPlugin);
@@ -79,5 +81,6 @@ export function buildServer() {
     server.register(ProductRoutes);
     server.register(GroupsComplementsRoutes);
     server.register(ImageRoutes);
+    server.register(OrdersRoutes);
     return server;
 }

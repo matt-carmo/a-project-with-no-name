@@ -14,9 +14,9 @@ export class ComplementsService {
     async getComplementsByStoreId(data: Pick<ComplementGroup, "storeId">): Promise<ComplementGroup[]> {
         return this.complementsRepository.getComplementsByStoreId(data);
     }
-    async updateComplement({id, data}: {id: string, data: Partial<Complement>} ): Promise<Complement> {
+    async updateComplement({id, groupId, data}: {id: string, groupId:string, data: Partial<Complement>} ): Promise<Complement> {
 
-        return this.complementsRepository.updateComplement({id, data});
+        return this.complementsRepository.updateComplement({id, groupId, data});
     }
     async deleteComplement({id}: {id: string}): Promise<Complement> {
         return this.complementsRepository.deleteComplement({id});

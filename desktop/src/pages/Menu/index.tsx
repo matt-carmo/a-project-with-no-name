@@ -52,11 +52,11 @@ export default function MenuPage() {
     }
   }
   return (
-    <div className='space-y-4'>
-      <h1 className='text-4xl font-semibold'>Cardápio</h1>
+    <div className="space-y-4">
+      <h1 className="text-4xl font-semibold">Cardápio</h1>
       <p>Gerencie e customize o cardápio do seu restaurante</p>
 
-      <CategoryCreateForm />
+      <CategoryCreateForm onCreated={getMenu} />
       <MenuCategoryList
         key={data.length}
         data={data}

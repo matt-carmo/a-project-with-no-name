@@ -1,12 +1,21 @@
 // services/complements/updateComplement.service.ts
 import api from "@/api/axios";
 
-export async function updateComplement(
-  complementId: string,
-  data: Record<string, any>
-) {
+interface UpdateComplementParams {
+  complementId: string;
+  storeId: string;
+  groupId: string;
+  data: Record<string, any>;
+}
+
+export async function updateComplement({
+  complementId,
+  storeId,
+  groupId,
+  data,
+}: UpdateComplementParams) {
   return api.patch(
-    `complements/${complementId}`,
+    `/${storeId}/complement-groups/${groupId}/complements/${complementId}`,
     data
   );
 }

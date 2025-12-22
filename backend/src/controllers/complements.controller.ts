@@ -43,12 +43,12 @@ export class ComplementsController {
     };
 
 
-    async update(request: FastifyRequest<{ Params: { id: string }; Body: Partial<Complement> }>, reply: FastifyReply) {
+    async update(request: FastifyRequest<{ Params: { id: string, groupId:string }; Body: Partial<Complement> }>, reply: FastifyReply) {
 
-        const { id } = request.params as { id: string };
+        const { id, groupId  } = request.params as { id: string, groupId:string };
         const data = request.body;
                 console.log("Body:2", request.body);
 
-        return this.complementsService.updateComplement({ data, id });
+        return this.complementsService.updateComplement({ data, groupId, id });
     }
 }

@@ -27,13 +27,13 @@ async function main() {
     // Clear existing data (optional)
     // await prisma.user.deleteMany()
 
-//   const user = await prisma.user.create({
-//     data: {
-//       name: "Admin",
-//       email: "admin@example.com",
-//       password: "$2b$10$hashAquiExemplo123", // coloque um hash real!
-//     },
-//   });
+  const user = await prisma.user.create({
+    data: {
+      name: "Admin",
+      email: "admin@example.com",
+      password: "$2b$10$hashAquiExemplo123", // coloque um hash real!
+    },
+  });
 
   //
 //   -----------------------------------

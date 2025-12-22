@@ -7,6 +7,11 @@ export class ProductRepository {
     constructor(private prisma: PrismaClient) {
 
     }
+    async getById(productId: string) {
+        return this.prisma.product.findUnique({
+            where: { id: productId, deletedAt: null },
+        });
+    }
     async createProduct({ data, storeId, categoryId }: { data: z.infer<typeof createProductSchema>, storeId: string, categoryId: string }) {
 
         return this.prisma.product.create({

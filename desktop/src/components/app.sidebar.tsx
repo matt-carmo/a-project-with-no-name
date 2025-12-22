@@ -17,7 +17,8 @@ import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import { Card } from "./ui/card";
 import { useAuthStore } from "@/store/auth-store";
 import { Badge } from "./ui/badge";
-
+import useOrderStore from "@/store/userOrderStore";
+import { cn } from "@/lib/utils";
 
 export function AppSidebar() {
   const { selectedStore } = useAuthStore();
@@ -26,37 +27,62 @@ export function AppSidebar() {
   const { open } = useSidebar();
   const { isReachable } = useOnlineStatus();
   const { user } = useAuthStore();
+  const { orders } = useOrderStore();
+
+  const notificationCount =
+    orders?.filter((order) => order.status === "PENDING").length || 0;
 
   const items = [
-  { title: "Home", url: base, icon: <Home /> },
-  {
-    title: "Cardápio",
-    url: `${base}/menu`,
-    icon: <BiFoodMenu className='text-2xl' />,
-  },
-  { title: "Settings", url: `${base}/settings`, icon: <Settings /> },
-];
+    {
+      title: "Pedidos",
+      url: base,
+      icon: (
+        <div className={`relative`}>
+          {notificationCount > 0 && (
+          <Badge
+            variant="destructive"
+            className={cn(
+              "absolute rounded-full aspect-square",
+              open
+                ? "top-0 right-0 translate-x-1/2 -translate-y-1/2"
+                : "-top-1 left-1/2 -translate-x-1/2"
+            )}
+          >
+            {notificationCount}
+          </Badge>
+        )}
+          <Home />
+        </div>
+      ),
+    },
+    {
+      title: "Cardápio",
+      url: `${base}/menu`,
+      icon: <BiFoodMenu className="text-2xl" />,
+    },
+    { title: "Settings", url: `${base}/settings`, icon: <Settings /> },
+  ];
   const { store, role } = user?.stores?.[0] ?? {};
 
   return (
-    <Sidebar collapsible='icon'>
+    <Sidebar collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className='mt-2 mb-4'>
-            <Card className='p-1 gap-2 rounded-md border-accent'>
-              <p className='font-semibold'>{store?.name}</p>
-              <div className='flex items-center gap-2'>
+          <SidebarGroupLabel className="mt-2 mb-4">
+            <Card className="p-1 gap-2 rounded-md border-accent">
+              <p className="font-semibold">{store?.name}</p>
+              <div className="flex items-center gap-2">
                 <p>{user?.name}</p>
-                <Badge variant='destructive'>{role}</Badge>
+                <Badge variant="destructive">{role}</Badge>
               </div>
             </Card>
           </SidebarGroupLabel>
-          <SidebarGroupContent className='relative'>
+          <SidebarGroupContent className="relative">
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton>
-                    <Link to={item.url} className='flex items-center gap-2'>
+                  <SidebarMenuButton className="pt-5">
+                    <Link to={item.url} className="flex items-center gap-2">
                       {item.icon}
                       <span>{item.title}</span>
                     </Link>
@@ -67,10 +93,10 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
         {!isReachable && (
-          <div className='w-full px-2 mb-1 absolute bottom-0'>
+          <div className="w-full px-2 mb-1 absolute bottom-0">
             <Alert
               className={`p-2.5 flex flex-col gap-2 ${!open && "h-40"}`}
-              variant='error'
+              variant="error"
             >
               <CircleAlertIcon />
               {open && (
@@ -83,7 +109,7 @@ export function AppSidebar() {
               )}
               {!open && (
                 <>
-                  <AlertTitle className='rotate-90 text-nowrap absolute left-1/2 -translate-x-1/2 top-1/2'>
+                  <AlertTitle className="rotate-90 text-nowrap absolute left-1/2 -translate-x-1/2 top-1/2">
                     {" "}
                     Você está offline
                   </AlertTitle>

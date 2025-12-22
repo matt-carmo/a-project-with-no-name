@@ -41,10 +41,10 @@ export function ComplementsRoutes(server: FastifyInstance) {
     );
 
     server.patch(
-        "/complements/:id",
+        "/:storeId/complement-groups/:groupId/complements/:id",
         {
             schema: {
-                params: z.object({ id: z.string() }),
+                params: z.object({ id: z.string(), groupId: z.string() }),
                 body: ComplementUpdateSchema,
             },
         },

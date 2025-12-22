@@ -166,9 +166,9 @@ export function MenuCategoryList({
                       </p>
                     </div>
 
-                    <CollapsibleTrigger>
-                      <Button variant="link" className="p-0 text-sm">
-                        <ChevronDownIcon className="size-5" />
+                    <CollapsibleTrigger className={'data-panel-open:[&_svg]:rotate-180'}>
+                      <Button variant="link" className="p-0 text-sm ">
+                        <ChevronDownIcon className="size-5 " />
                         Complementos
                       </Button>
                     </CollapsibleTrigger>

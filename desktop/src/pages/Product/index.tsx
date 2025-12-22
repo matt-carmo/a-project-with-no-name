@@ -81,6 +81,11 @@ function splitComplementsByAction(groups: ComplementGroupLocal[]) {
     for (const complement of group.complements) {
       if (!complement.action) continue;
       if (complement.action === "create") createComplements.push(complement);
+      if (
+        (group.action === "create" || group.action === "delete") &&
+        complement.action === "update"
+      )
+        continue;
       if (complement.action === "update") updateComplements.push(complement);
       if (complement.action === "delete") removeComplements.push(complement);
     }
@@ -193,8 +198,21 @@ export default function ProductPage() {
   /* =========================
      HANDLERS: DELETE (LÓGICO)
   ========================== */
-  function removeComplementLocal(groupId?: string, complementId?: string) {
+  function removeComplementLocal(action:ActionType,  groupId?: string, complementId?: string) {
     if (!groupId || !complementId) return;
+
+    if( action === "create"){
+      setGroupedComplements((prev) =>
+      prev.map((group) =>
+        group.id !== groupId
+          ? group
+          : {
+              ...group,
+              complements: group.complements.filter((c) => c.id !== complementId),
+        })
+      );
+      return;
+    }
     setGroupedComplements((prev) =>
       prev.map((group) =>
         group.id !== groupId
@@ -227,7 +245,7 @@ export default function ProductPage() {
         name: product.name,
         description: product.description,
         price: product.price,
-        image: product.image,
+
         ...(typeof product.image === "object" && { image: product.image }),
         isAvailable: product.isAvailable,
       });
@@ -244,15 +262,19 @@ export default function ProductPage() {
       // UPDATE complementos
       await Promise.all(
         updateComplements.map((c) =>
-          updateComplement(c.id as string, {
-            name: c.name,
-            price: c.price,
-            isAvailable: c.isAvailable,
-            photoUrl: c.photoUrl,
+          updateComplement({
+            complementId: c.id || "",
+            storeId: item.storeId, // vem do contexto (state, props, etc.)
+            groupId: c.groupId || "",
+            data: {
+              name: c.name,
+              price: c.price,
+              isAvailable: c.isAvailable,
+              photoUrl: c.photoUrl,
+            },
           })
         )
       );
-
       await api.post(
         `${item.storeId}/groups-complements/${item.id}`,
         createGroups.map((g) => ({
@@ -539,6 +561,7 @@ export default function ProductPage() {
                                     }
                                     onDelete={() =>
                                       removeComplementLocal(
+                                        group.action as ActionType,
                                         group.id,
                                         complement.id
                                       )

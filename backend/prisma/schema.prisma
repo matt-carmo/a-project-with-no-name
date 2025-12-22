@@ -119,11 +119,11 @@ model Product {
 //
 
 model ComplementGroup {
-    id          String  @id @default(cuid())
+    id          String                   @id @default(cuid())
     name        String
-    minSelected Int     @default(0)
+    minSelected Int                      @default(0)
     maxSelected Int?
-    isAvailable Boolean @default(true)
+    isAvailable Boolean                  @default(true)
     deletedAt   DateTime?
     storeId     String
     store       Store                    @relation(fields: [storeId], references: [id])
@@ -138,10 +138,10 @@ model Complement {
     name        String
     description String?
     price       Int             @default(0)
-    isAvailable    Boolean         @default(true)
+    isAvailable Boolean         @default(true)
     photoUrl    String?
 
-    orderItemComplements OrderItemComplement[]
+
 }
 
 model ProductComplementGroup {
@@ -165,46 +165,49 @@ model Image {
 }
 
 model Order {
-    id            String      @id @default(cuid())
-    storeId       String
-    store         Store       @relation(fields: [storeId], references: [id])
+    id      String @id @default(cuid())
+    storeId String
+    store   Store  @relation(fields: [storeId], references: [id])
+
     customerName  String?
     customerPhone String?
-    status        OrderStatus @default(PENDING)
-    items         OrderItem[]
-    total         Float
-    notes         String?
-    createdAt     DateTime    @default(now())
+
+    status OrderStatus @default(PENDING)
+
+    items OrderItem[]
+
+    total Int // valor final fechado
+    notes String?
+
+    createdAt DateTime @default(now())
 }
 
 model OrderItem {
-    id      String @id @default(cuid())
-    orderId String
-    order   Order  @relation(fields: [orderId], references: [id])
+  id        String @id @default(cuid())
+  orderId   String
+  order     Order  @relation(fields: [orderId], references: [id])
+  productId String?
+  name     String
+  quantity Int
+  price    Int
 
-    productId String
-    name      String
-    quantity  Int
-    price     Int
-
-    orderItemComplements OrderItemComplement[]
+  complements OrderItemComplement[]
 }
 
 model OrderItemComplement {
-    id          String    @id @default(cuid())
-    orderItemId String
-    orderItem   OrderItem @relation(fields: [orderItemId], references: [id])
-
-    complementId String
-    complement   Complement @relation(fields: [complementId], references: [id])
-
-    price Int
+  id           String   @id @default(cuid())
+  orderItemId  String
+  orderItem    OrderItem @relation(fields: [orderItemId], references: [id])
+  complementId String?
+  name     String
+  price    Int
+  quantity Int
 }
-
 enum OrderStatus {
     PENDING
     CONFIRMED
     IN_PREPARATION
+    IN_DELIVERY
     READY
     COMPLETED
     CANCELLED

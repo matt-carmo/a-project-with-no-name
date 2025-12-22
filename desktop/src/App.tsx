@@ -8,8 +8,28 @@ import { useAuthStore } from "./store/auth-store";
 
 import "./globals.css";
 import ProductPage from "./pages/Product";
+import OrdersPage from "./pages/Orders";
+import Pusher from "pusher-js";
+import { useEffect, useMemo, useRef, useState } from "react";
+
+import { getOrders } from "./services/orders/getOrders";
+
 function App() {
+  const { selectedStore } = useAuthStore();
+  const storeId = selectedStore?.store.id;
   document.body.classList.add("dark");
+const pusher = new Pusher("edce887501b56a510763", {
+  cluster: "sa1",
+});
+const channel = pusher.subscribe("store-" + storeId);
+channel.bind("order-status-updated", () => {
+  getOrders();
+});
+
+
+  useEffect(() => {
+    getOrders();
+  }, []);
 
   return (
     <HashRouter>
@@ -44,7 +64,8 @@ function AppRoutes() {
               path="/store/:id/product/:productId"
               element={<ProductPage />}
             />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="" element={<OrdersPage />} />
+            {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
           </Route>
         </>
       )}
