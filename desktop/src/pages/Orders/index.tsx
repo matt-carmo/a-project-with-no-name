@@ -6,7 +6,7 @@ import useOrderStore from "@/store/userOrderStore";
 
 
 export default function OrdersPage() {
-  const { orders, setSelectedOrder } = useOrderStore();
+  const { orders } = useOrderStore();
 
 
  const loading = false

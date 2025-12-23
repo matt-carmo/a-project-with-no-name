@@ -119,7 +119,7 @@ export function MenuCategoryList({
                 onSuccess={onMenuUpdated}
               />
 
-              <SheetCreateProduct category={category} />
+              <SheetCreateProduct key={category.id} category={category} />
             </CardTitle>
 
             <CardDescription>

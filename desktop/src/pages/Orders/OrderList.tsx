@@ -6,10 +6,12 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Order } from "@/interfaces/order/order-response";
 import { OrderStatus } from "@/interfaces/order/order-status";
 import { getOrders } from "@/services/orders/getOrders";
 import useOrderStore from "@/store/userOrderStore";
+import { User } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 export const ORDER_STATUS_CONFIG: Record<
@@ -35,11 +37,10 @@ export const ORDER_STATUS_CONFIG: Record<
     label: "Pronto",
     className: "bg-green-500/10 text-green-600",
   },
-  [OrderStatus.IN_DELIVERY]: 
-  {
+  [OrderStatus.IN_DELIVERY]: {
     label: "Em entrega",
     className: "bg-purple-500/10 text-purple-600",
-  },  
+  },
   [OrderStatus.COMPLETED]: {
     label: "Finalizado",
     className: "bg-emerald-500/10 text-emerald-600",
@@ -60,7 +61,6 @@ export function OrderList({
   const [selectedOrderId, setSelectedOrderId] = useState<string>();
   const { setSelectedOrder } = useOrderStore();
 
-
   const handleSelectOrder = (order: Order) => {
     setSelectedOrderId(order.id);
 
@@ -74,77 +74,80 @@ export function OrderList({
   useEffect(() => {
     getOrders();
   }, []);
-  const handleAcceptOrder = useCallback(async (order:Order) => {
+  const handleAcceptOrder = useCallback(async (order: Order) => {
     const response = await api.patch(`/orders/${order.id}/status`, {
       status: OrderStatus.CONFIRMED,
     });
     if (response.status === 200) {
       getOrders();
-      setSelectedOrder(
-        {
-          ...order,
-          status: OrderStatus.CONFIRMED,
-        } as Order
-       );
-   
+      setSelectedOrder({
+        ...order,
+        status: OrderStatus.CONFIRMED,
+      } as Order);
     }
   }, []);
   return (
-    <ul className="space-y-2">
-      {orders?.map((order) => {
-        const statusConfig = ORDER_STATUS_CONFIG[order.status as OrderStatus];
+    <ScrollArea className={'absolute'}>
+      <ul className="space-y-2">
+        {orders?.map((order) => {
+          const statusConfig = ORDER_STATUS_CONFIG[order.status as OrderStatus];
 
-        return (
-          <li key={order.id}>
-            <button
-              onClick={() => handleSelectOrder(order)}
-              className="w-full p-0 text-sm overflow-hidden"
-            >
-              <Card
-                className={`
+          return (
+            <li key={order.id}>
+              <button
+                onClick={() => handleSelectOrder(order)}
+                className="w-full p-0 text-sm overflow-hidden"
+              >
+                <Card
+                  className={`
                   flex flex-col gap-2 py-4 hover:bg-accent/50 bg-muted/10 border-accent
                   text-start
                   ${selectedOrderId === order.id && "border-primary"}
                 `}
-              >
-                <CardHeader className="flex flex-row items-center justify-between py-0">
-                  <span className="font-medium">
-                    #{order.id} • {order.customerName}
-                  </span>
+                >
+                  <CardHeader className="flex flex-row items-center justify-between py-0">
+                    <div>
+                      <p className="text-accent-foreground/50">#{order.id}</p>
+                      <p className="flex items-center">
+                        <User size={20} />
+                        {order.customerName}
+                      </p>
+                    </div>
 
-                  <span
-                    className={`text-xs px-2 py-1 rounded-md ${
-                      selectedOrderId === order.id
-                        ? "bg-primary/10 text-primary"
-                        : statusConfig.className
-                    }`}
-                  >
-                    {statusConfig.label}
-                  </span>
-                </CardHeader>
-
-                <CardContent className="py-0 text-muted-foreground">
-                  {order.createdAt}
-                </CardContent>
-
-                <CardFooter className="py-0 text-xs text-muted-foreground">
-                  {order.status === OrderStatus.PENDING && (
-                    <Button
-                      variant="default"
-                      size="lg"
-                      className="flex-1 border-0"
-                      onClick={() => handleAcceptOrder(order)}
+                    <span
+                      className={`text-xs px-2 py-1 rounded-md ${
+                        selectedOrderId === order.id
+                          ? "bg-primary/10 text-primary"
+                          : statusConfig.className
+                      }`}
                     >
-                      Aceitar
-                    </Button>
-                  )}
-                </CardFooter>
-              </Card>
-            </button>
-          </li>
-        );
-      })}
-    </ul>
+                      {statusConfig.label}
+                    </span>
+                  </CardHeader>
+
+                  <CardContent className="py-0 text-muted-foreground">
+                    {order.createdAt}
+                  </CardContent>
+
+                  <CardFooter className="py-0 text-xs text-muted-foreground">
+                    {order.status === OrderStatus.PENDING && (
+                      <Button
+                        variant="default"
+                        size="lg"
+                        className="flex-1 border-0"
+                        onClick={() => handleAcceptOrder(order)}
+                      >
+                        Aceitar
+                      </Button>
+                    )}
+                  </CardFooter>
+                </Card>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </ScrollArea>
   );
 }
 

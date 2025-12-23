@@ -6,14 +6,16 @@ import { convertBRL } from "@/utils/convertBRL";
 import { ORDER_STATUS_CONFIG } from "./OrderList";
 import { OrderStatus } from "@/interfaces/order/order-status";
 import api from "@/api/axios";
-import { useCallback } from "react";
+
 import { getOrders } from "@/services/orders/getOrders";
 import { Button } from "@/components/ui/button";
 import { Order } from "@/interfaces/order/order-response";
 
+
+
 export function OrderDetails() {
   const { selectedOrder, setSelectedOrder } = useOrderStore();
-
+console.log(window.order)
   if (!selectedOrder) {
     return (
       <Card>
@@ -24,32 +26,35 @@ export function OrderDetails() {
     );
   }
   const statusConfig = ORDER_STATUS_CONFIG[selectedOrder.status as OrderStatus];
-  const handleSetOrder = 
-    async (id: string, status: OrderStatus) => {
-      // otimista
+  const handleSetOrder = async (id: string, status: OrderStatus) => {
+    // otimista
 
-      try {
-        const res = await api.patch(`/orders/${id}/status`, { status });
-         await getOrders(); // opcional, se quiser garantir s
+    try {
+      const res = await api.patch(`/orders/${id}/status`, { status });
+      await getOrders(); // opcional, se quiser garantir s
 
-        // console.log(res)
-        setSelectedOrder({
-          ...selectedOrder,
-          status: res.data.status,
-        } as Order);
-      } catch (error) {
-        console.error("Erro ao atualizar status do pedido", error);
+      console.log("Resposta da atualização de status:", status);
+      const reswpp = await window.order.sendStatus({
+        phone: res.data.customerPhone, // deve ser string tipo "5511999999999"
+        status // ex: "CONFIRMED"
+      });
+      console.log("Resposta do envio de status:", reswpp);
+      setSelectedOrder({
+        ...selectedOrder,
+        status: res.data.status,
+      } as Order);
+    } catch (error) {
+      console.error("Erro ao atualizar status do pedido", error);
 
-        // rollback opcional
-        await getOrders();
-      }
+      // rollback opcional
+      await getOrders();
     }
-  
+  };
 
   return (
     <Card className="w-full border-none">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+        <CardTitle className="flex  justify-between">
           Pedido #{selectedOrder.id}
           <Badge className={statusConfig?.className}>
             {statusConfig?.label}

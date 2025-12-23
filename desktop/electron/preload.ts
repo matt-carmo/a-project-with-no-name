@@ -50,6 +50,21 @@ contextBridge.exposeInMainWorld("whatsapp", {
 contextBridge.exposeInMainWorld("env", {
   BASE_URL: process.env.BASE_URL || "http://localhost:8080",
 });
+console.log("🔥 PRELOAD CARREGADO");
+
+contextBridge.exposeInMainWorld("order", {
+  sendStatus: (data: { phone: string; status: string }) =>
+    ipcRenderer.invoke("order:send-status", data),
+});
+
+contextBridge.exposeInMainWorld("whatsapp", {
+  start: () => ipcRenderer.invoke("whatsapp:start"),
+  reset: () => ipcRenderer.invoke("whatsapp:reset"),
+
+  onStatus: (callback: (status: any) => void) => {
+    ipcRenderer.on("whatsapp:status", (_, data) => callback(data));
+  },
+});
 
 
 // --------- Expose some API to the Renderer process ---------

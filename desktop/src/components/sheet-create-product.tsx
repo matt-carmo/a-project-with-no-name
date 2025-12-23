@@ -24,7 +24,7 @@ import { toastManager } from "./ui/toast";
 import { Spinner } from "./ui/spinner";
 import { productSchema } from "@/schemas/product.shema";
 import Stock from "./stock";
-import { useSheetComplementStore } from "@/store/use-sheet-complement-store";
+
 import { emitRefetch } from "@/lib/utils";
 import ModalImage from "./modal-image";
 import { useComplementStore } from "@/store/complement-store";
@@ -80,7 +80,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
   const [complement, setComplement] = useState<ComplementState>(
     ComplementState.NONE
   );
-
+  const [open, setOpen] = useState(false);
   const [stepsNumber, setStepsNumber] = useState(3);
 
   const {
@@ -304,12 +304,12 @@ export function SheetCreateProduct({ category }: { category: Category }) {
     return <Button onClick={handleNextStep}>Próximo {complement}</Button>;
   };
 
-  const {
-    open,
-    setOpen,
+  // const {
+  //   open,
+  //   setOpen,
 
-    setOpenCreateComplementSheet,
-  } = useSheetComplementStore();
+  //   setOpenCreateComplementSheet,
+  // } = useSheetComplementStore();
 
   const [openCreateGroupComplement, setOpenCreateGroupComplementSheet] =
     useState(false);
@@ -332,7 +332,7 @@ export function SheetCreateProduct({ category }: { category: Category }) {
           setStep(1);
         }}
       >
-        <SheetTrigger>
+        <SheetTrigger >
           <Button>Adicionar produto</Button>
         </SheetTrigger>
         <SheetPopup

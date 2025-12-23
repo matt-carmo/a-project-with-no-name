@@ -13,7 +13,7 @@ import { AnchoredToastProvider, ToastProvider } from "@/components/ui/toast";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { Wifi, WifiOff } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useAuthStore } from "@/store/auth-store";
+
 
 export default function Layout() {
   const { status, setStatus } = useWhatsAppStore();
@@ -28,7 +28,7 @@ export default function Layout() {
       }
     });
   }, []);
-  const { token } = useAuthStore.getState();
+
   return (
     <>
       <SidebarProvider>
@@ -102,7 +102,7 @@ export default function Layout() {
                         </div>
                         <span>
                           Desconectado{" "}
-                          <Link to='/settings'>
+                          <Link to='settings'>
                             <Button variant={"link"}>
                               clique aqui para scanear o QR code
                             </Button>
