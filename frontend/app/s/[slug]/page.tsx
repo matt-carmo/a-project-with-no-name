@@ -256,7 +256,94 @@ const categories = [
 export default function Home() {
   return (
     <>
-     <h1>Home</h1>
+      <header className="bg-primary ">
+        <div className="bg-primary/90 backdrop-blur pt-1.5 px-4 ">
+          <div className="flex items-center gap-2 text-white text-sm font-medium">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75 animate-ping" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-green-500" />
+            </span>
+            Loja aberta
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 px-4 py-3">
+          <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-sm">
+            <Image
+              src="/vercel.svg"
+              alt="Logo"
+              width={40}
+              height={40}
+              className="object-contain"
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <h1 className="text-white font-semibold text-lg leading-tight">
+              Nome da loja
+            </h1>
+            <span className="text-white/80 text-xs">
+              Pipocas gourmet & degustações
+            </span>
+          </div>
+        </div>
+      </header>
+
+      <Menu categories={categories} />
+
+      <footer>
+        {/* <Drawer
+          dismissible={false}
+          closeThreshold={1}
+          activeSnapPoint={1}
+          disablePreventScroll={false}
+          modal={false}
+          defaultOpen={true}
+          snapPoints={[1, 2]}
+          snapToSequentialPoint={true}
+        >
+        
+          <DrawerContent className="rounded-t-3xl p-4">
+            <div className="w-12 h-1.5 bg-zinc-300 rounded-full mx-auto mb-4" />
+
+            <h2 className="text-lg font-semibold mb-4">Seu carrinho</h2>
+
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span>Pipoca de Ninho</span>
+                <span>R$ 12,80</span>
+              </div>
+            </div>
+
+            <button className="mt-6 w-full bg-primary text-white py-4 rounded-2xl font-semibold">
+              Finalizar pedido
+            </button>
+          </DrawerContent>
+        </Drawer> */}
+        <div className="px-3 pb-3">
+          <div className="w-full bg-primary text-white rounded-2xl px-4 py-3 shadow-lg flex items-center gap-3">
+            {/* Ícone */}
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <ShoppingBag size={18} />
+            </div>
+
+            {/* Totais */}
+            <div className="flex-1 leading-tight">
+              <span className="text-sm text-white/80">Total com entrega</span>
+              <div className="font-semibold text-base">R$ 29,00 / 1 tem</div>
+          
+            </div>
+
+            {/* Botão */}
+            {/* <button className="bg-white text-primary font-semibold text-sm px-4 py-2 rounded-xl">
+              Ver carrinho
+            </button> */}
+             <Button className="bg-white text-primary font-semibold text-sm px-4 py-2 rounded-xl">
+              Ver carrinho
+            </Button>
+          </div>
+        </div>
+      </footer>
     </>
   );
 }
