@@ -15,7 +15,7 @@ import { Order } from "@/interfaces/order/order-response";
 
 export function OrderDetails() {
   const { selectedOrder, setSelectedOrder } = useOrderStore();
-console.log(window.order)
+
   if (!selectedOrder) {
     return (
       <Card>
