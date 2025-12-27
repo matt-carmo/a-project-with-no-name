@@ -18,4 +18,14 @@ export async function storeMenuRoute(server: FastifyInstance) {
     },
     controller.getMenuByStoreId.bind(controller)
   );
+  server.get(
+    "/stores/:storeId/customer-menu",
+    {
+        schema: {
+          params: z.object({ storeId: z.cuid() }),
+        },
+        config: { public: true },
+    },
+    controller.getCustomerMenuByStoreId.bind(controller)
+  )
 }

@@ -9,6 +9,16 @@ export function ProductRoutes(server: FastifyInstance) {
     const repo = new ProductRepository(server.prisma);
     const service = new ProductService(repo);
     const controller = new ProductController(service);
+
+    server.get(
+        "/stores/:storeId/products/:productId",
+        {
+            schema: {
+                params: z.object({ storeId: z.cuid(), productId: z.cuid() }),
+            },
+        },
+        repo.getById.bind(repo)
+    )
     server.post(
         "/stores/:storeId/products/:categoryId",
         {

@@ -10,6 +10,25 @@ export class ProductRepository {
     async getById(productId: string) {
         return this.prisma.product.findUnique({
             where: { id: productId, deletedAt: null },
+            include: {
+                productComplementGroups: {
+                    where:{
+                        group:{
+                            deletedAt: null, isAvailable: true,
+                            
+                        }
+                    },
+                    include: {
+                        group: {
+                            include: {
+                                complements: {
+                                    where: { deletedAt: null, isAvailable: true },
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         });
     }
     async createProduct({ data, storeId, categoryId }: { data: z.infer<typeof createProductSchema>, storeId: string, categoryId: string }) {

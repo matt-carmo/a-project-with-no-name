@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/**",
       },
+       {
+        protocol: "https",
+        hostname: "popshow.vercel.app",
+        port: "",
+        pathname: "/**",
+      },
     ],
   },
   /* config options here */

@@ -28,8 +28,8 @@ export class StoreController {
     return reply.send(result);
   }
 
-  async findOne(req: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
-    const store = await this.service.findOne(req.params.id);
+  async findOne(req: FastifyRequest<{ Params: { slug: string } }>, reply: FastifyReply) {
+    const store = await this.service.findOne(req.params.slug);
 
     if (!store) return reply.status(404).send({ error: "STORE_NOT_FOUND" });
 

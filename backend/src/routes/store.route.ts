@@ -18,16 +18,7 @@ export async function storeRoutes(app: FastifyInstance) {
   );
 
   app.get("/stores", controller.findAll.bind(controller));
-
-  app.get(
-    "/stores/:id",
-    {
-      schema: {
-        params: z.object({ id: z.cuid() }),
-      },
-    },
-    controller.findOne.bind(controller)
-  );
+  app.get("/stores/slug/:slug",{    config: { public: true }, }, controller.findOne.bind(controller));
 
   app.patch(
     "/stores/:id",

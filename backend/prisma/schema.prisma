@@ -39,6 +39,10 @@ model Store {
     id               String            @id @default(cuid())
     name             String
     slug             String            @unique
+    description      String?
+    logoUrl          String?
+    coverUrl         String?
+    address          String?
     phoneNumber      String?
     categories       Category[]
     products         Product[]
@@ -91,6 +95,7 @@ model Category {
     storeId   String
     store     Store     @relation(fields: [storeId], references: [id])
     name      String
+    isAvailable Boolean   @default(true)
     order     Int       @default(0)
     products  Product[]
     deletedAt DateTime?

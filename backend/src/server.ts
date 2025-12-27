@@ -1,7 +1,5 @@
 import fastify, { FastifyError } from "fastify";
 import prismaPlugin from "./plugins/prisma";
-
-import { ERRORS } from "./errors/app.errors";
 import cors from "@fastify/cors";
 import authRoute from "./routes/auth.route";
 import healthCheckRoute from "./routes/health-check.auth";
@@ -42,17 +40,27 @@ export function buildServer() {
         },
         attachFieldsToBody: true,
     });
+
     server.addHook("onRequest", async (request, reply) => {
+        const isPublic = request.routeOptions.config?.public;
+
+        if (isPublic) return;
+
+        await request.jwtVerify();
+        if (isPublic) {
+            return;
+        }
+
         try {
-            if (request.url !== "/auth/signup" && request.url !== "/auth/login") {
-                const payload = await request.jwtVerify();
-                console.log(payload);
-            }
+
+            const payload = await request.jwtVerify();
+            console.log(payload);
         } catch (err) {
             console.log(err);
-            reply.status(401).send({ message: "Unauthorized" });
+            return reply.status(401).send({ message: "Unauthorized" });
         }
     });
+
 
     server.setErrorHandler((error: FastifyError, request, reply) => {
         if (error.validation || error.name === "ZodError") {

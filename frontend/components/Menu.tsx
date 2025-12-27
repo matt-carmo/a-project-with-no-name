@@ -3,48 +3,40 @@ import Image from "next/image";
 import { Plus } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 
-type Category = {
-  id: string;
-  name: string;
-  products: Product[];
-};
+import { useParams } from "next/navigation";
+import Link from "next/link";
+import useSWR from "swr";
+import axios from "axios";
+import { useProductStore } from "@/store/useProductStore";
+import { MenuProps } from "@/app/types/menu";
+import { formatPrice } from "@/lib/utils";
 
-type Product = {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  photoUrl: string | null;
-  isAvailable: boolean;
-  productComplementGroups: any[];
-};
+const fetcher = (url: string) => axios.get(url).then((res) => res.data);
 
-interface MenuProps {
-  categories: Category[];
-}
-function formatPrice(price: number) {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(price);
-}
-console.log();
 
-export function Menu({ categories }: MenuProps) {
+
+
+
+export function Menu({ storeId }: { storeId: string }) {
+  const { slug } = useParams();
+  
+  const {data, error, isLoading} = useSWR<MenuProps>(`http://localhost:8080/stores/${storeId}/customer-menu`, fetcher);
+
+ const setProduct = useProductStore(state => state.setProduct);
   return (
     <main className="space-y-4 flex-1 overflow-hidden pt-3 px-3">
       <ScrollArea>
-        {categories.map((category) => (
+        {data?.map((category) => (
           <section key={category.id}>
             <h2 className="text-lg font-semibold mt-4 mb-2">{category.name}</h2>
 
             <div className="grid lg:grid-cols-3">
               {category.products.map((product) => (
-                <div
+                <Link
+                  href={`${slug}/product/${product.id}`}
                   key={product.id}
-                  className={`flex gap-3 bg-white py-2.5  border-y border-black/5 ${
-                    !product.isAvailable && "opacity-50"
-                  }`}
+                  onClick={() => setProduct(product)  }
+                  className={`flex gap-3 bg-white py-2.5  border-y border-black/5`}
                 >
                   <div className="h-20 w-20 rounded-lg overflow-hidden bg-zinc-100 shrink-0">
                     {product.photoUrl ? (
@@ -77,7 +69,7 @@ export function Menu({ categories }: MenuProps) {
                       </span>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </section>

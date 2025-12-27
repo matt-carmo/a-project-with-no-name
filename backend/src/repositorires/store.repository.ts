@@ -3,17 +3,14 @@ import { CreateStoreInput, UpdateStoreInput } from "../schemas/store.schema";
 
 
 export class StoreRepository {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: PrismaClient) { }
   findAll() {
     return this.prisma.store.findMany();
   }
-  findById(id: string) {
+  findById(slug: string) {
     return this.prisma.store.findUnique({
-      where: { id },
+      where: { slug },
       include: {
-        categories: true,
-        products: true,
-        users: true,
         settings: true,
       },
     });
