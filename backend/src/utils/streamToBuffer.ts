@@ -1,12 +1,12 @@
 import { fileTypeFromBuffer } from "file-type";
-export async function streamToBuffer(stream) {
+export async function streamToBuffer(stream:any): Promise<Buffer> {
   const chunks = [];
   for await (const chunk of stream) chunks.push(chunk);
   return Buffer.concat(chunks);
 }
 
 
-export async function processImage(fileStream) {
+export async function processImage(fileStream: any) {
   const buffer = await streamToBuffer(fileStream);
 
   // Detecta tipo real do arquivo

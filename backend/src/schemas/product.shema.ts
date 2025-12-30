@@ -6,7 +6,7 @@ export const productSchema = z.object({
     photoUrl: z.string().nullable().optional(),
     name: z.string(),
     description: z.string().nullable().optional(),
-    price: z.number(),
+    price: z.number().optional(),
     image: z.object({
         url: z.string(),
         id: z.string(),
@@ -31,5 +31,6 @@ export const createProductSchema = productSchema.omit({
     id: true,
     createdAt: true,
     deletedAt: true,
+    imageBuffer: true,
 });
 

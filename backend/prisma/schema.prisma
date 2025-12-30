@@ -2,12 +2,14 @@
 
 datasource db {
     provider = "postgresql"
-    
+
     // url      = env("DATABASE_URL"),
 }
-generator erd {
-  provider = "prisma-erd-generator"
-}
+
+// generator erd {
+//     provider = "prisma-erd-generator"
+// }
+
 generator client {
     provider        = "prisma-client-js"
     previewFeatures = ["clientExtensions", "driverAdapters"]
@@ -91,14 +93,14 @@ enum StoreRole {
 //
 
 model Category {
-    id        String    @id @default(cuid())
-    storeId   String
-    store     Store     @relation(fields: [storeId], references: [id])
-    name      String
+    id          String    @id @default(cuid())
+    storeId     String
+    store       Store     @relation(fields: [storeId], references: [id])
+    name        String
     isAvailable Boolean   @default(true)
-    order     Int       @default(0)
-    products  Product[]
-    deletedAt DateTime?
+    order       Int       @default(0)
+    products    Product[]
+    deletedAt   DateTime?
 }
 
 model Product {
@@ -148,8 +150,6 @@ model Complement {
     price       Int             @default(0)
     isAvailable Boolean         @default(true)
     photoUrl    String?
-
-
 }
 
 model ProductComplementGroup {
@@ -184,33 +184,44 @@ model Order {
 
     items OrderItem[]
 
-    total Int // valor final fechado
-    notes String?
+    total      Int // valor final fechado
+    notes      String?
+    // Endereço
+    street     String?
+    number     String?
+    lat        Float?
+    lon        Float?
+    district   String?
+    city       String?
+    state      String?
+    zipCode    String?
+    complement String?
 
     createdAt DateTime @default(now())
 }
 
 model OrderItem {
-  id        String @id @default(cuid())
-  orderId   String
-  order     Order  @relation(fields: [orderId], references: [id])
-  productId String?
-  name     String
-  quantity Int
-  price    Int
+    id        String  @id @default(cuid())
+    orderId   String
+    order     Order   @relation(fields: [orderId], references: [id])
+    productId String?
+    name      String
+    quantity  Int
+    price     Int
 
-  complements OrderItemComplement[]
+    complements OrderItemComplement[]
 }
 
 model OrderItemComplement {
-  id           String   @id @default(cuid())
-  orderItemId  String
-  orderItem    OrderItem @relation(fields: [orderItemId], references: [id])
-  complementId String?
-  name     String
-  price    Int
-  quantity Int
+    id           String    @id @default(cuid())
+    orderItemId  String
+    orderItem    OrderItem @relation(fields: [orderItemId], references: [id])
+    complementId String?
+    name         String
+    price        Int
+    quantity     Int
 }
+
 enum OrderStatus {
     PENDING
     CONFIRMED

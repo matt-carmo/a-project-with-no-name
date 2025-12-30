@@ -14,7 +14,7 @@ export class ProductRepository {
                 productComplementGroups: {
                     where:{
                         group:{
-                            deletedAt: null, isAvailable: true,
+                            deletedAt: null, isAvailable: true
                             
                         }
                     },
@@ -22,7 +22,7 @@ export class ProductRepository {
                         group: {
                             include: {
                                 complements: {
-                                    where: { deletedAt: null, isAvailable: true },
+                                    where: { isAvailable: true },
                                 }
                             }
                         }
@@ -37,7 +37,7 @@ export class ProductRepository {
             data: {
                 name: data.name,
                 description: data.description,
-                price: data.price,
+                price: data.price as number,
                 photoUrl: data.image?.url,
                 stock: data.stock ?? null,
                 categoryId,
@@ -52,7 +52,7 @@ export class ProductRepository {
             data: {
                 name: data.name,
                 description: data.description,
-                price: data.price,
+                price: data.price as number,
                 categoryId,
                 stock: data.stock ?? null,
                 photoUrl: data.image?.url,

@@ -14,7 +14,17 @@ export const complementGroupSchema = z.object({
 
 //   complements: z.array(z.any()).optional(),
 //   products: z.array(z.any()).optional(),    
-})
+}).superRefine((obj, ctx) => {
+  if (obj.maxSelected != null) {
+    if (obj.maxSelected < obj.minSelected) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "maxSelected deve ser maior ou igual a minSelected",
+        path: ["maxSelected"],
+      });
+    }
+  }
+});
 
 
 export const createComplementGroupSchema = z.object({
@@ -25,16 +35,18 @@ export const createComplementGroupSchema = z.object({
   isAvailable: z.boolean().optional().default(true),
 
   storeId: z.cuid(),
-  complements: z.array(
-    z.object({
-      name: z.string().min(1, "Nome do complemento é obrigatório").max(100, "Nome muito longo"),
-      description: z.string().max(1000).optional().nullable(),
-      price: z.number().nonnegative(),
-      photoUrl: z.url().optional().nullable(),
-    })
-  ).optional(),
-
-})
+  // Se quiser aceitar relações já criadas no payload, descomente / substitua:
+  // complements: z.array(complementCreateSchema).optional(),
+  // products: z.array(productComplementGroupCreateSchema).optional(),
+}).superRefine((obj, ctx) => {
+  if (obj.maxSelected != null && obj.maxSelected < obj.minSelected) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "maxSelected deve ser maior ou igual a minSelected",
+      path: ["maxSelected"],
+    });
+  }
+});
 
 /**
  * Schema para atualização parcial.

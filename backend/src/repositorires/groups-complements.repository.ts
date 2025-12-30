@@ -1,5 +1,5 @@
-import { UpdateComplementGroupInput } from './../../../desktop/src/schemas/complement-group.schema';
 import { Prisma, PrismaClient } from "@prisma/client";
+import { UpdateComplementGroupInput } from "../schemas/complement-group.schema";
 
 export type CreateGroupComplementInput = {
     storeId: string;

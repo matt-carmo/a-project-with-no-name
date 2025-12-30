@@ -25,12 +25,16 @@ export async function parseMultipartProduct(
   return {
     name: form.name,
     description: form.description ?? null,
-    price: form.price ? Number(form.price) : undefined,
+    price: (form.price ? Number(form.price) : undefined) as number,
     isAvailable: form.isAvailable === "true",
     stock: form.stock ? Number(form.stock) : undefined,
     categoryId: form.categoryId || undefined,
     storeId,
     imageBuffer,
+    image: {
+      url: form.imageUrl,
+      id: form.imageId,
+    },
 
     productComplementGroups: form.productComplementGroups
       ? JSON.parse(form.productComplementGroups)

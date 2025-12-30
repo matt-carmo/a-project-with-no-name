@@ -7,9 +7,9 @@ import { FastifyInstance } from "fastify";
 import { ComplementsRepository } from "../repositorires/complements.repository";
 import { ComplementsService } from "../services/complements.service";
 import { ComplementsController } from "../controllers/complements.controller";
-import { Prisma } from "@prisma/client";
-import { omit } from "zod/v4/core/util.cjs";
-import { ComplementCreateSchema, ComplementUpdateSchema } from "../schemas/complement.schema";
+
+
+import { ComplementUpdateSchema } from "../schemas/complement.schema";
 
 
 

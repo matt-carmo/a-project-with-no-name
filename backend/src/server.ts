@@ -17,6 +17,7 @@ import fastifyMultipart from "@fastify/multipart";
 import { GroupsComplementsRoutes } from "./routes/groups-complements.route";
 import { ImageRoutes } from "./routes/image.route";
 import { OrdersRoutes } from "./routes/orders.route";
+import { GeocodeRoutes } from "./routes/geocode-route";
 
 export const server = fastify();
 export function buildServer() {
@@ -41,22 +42,17 @@ export function buildServer() {
         attachFieldsToBody: true,
     });
 
-    server.addHook("onRequest", async (request, reply) => {
+    server.addHook("preHandler", async (request, reply) => {
         const isPublic = request.routeOptions.config?.public;
 
+        return
+        // rota pública → não valida JWT
         if (isPublic) return;
 
-        await request.jwtVerify();
-        if (isPublic) {
-            return;
-        }
-
         try {
-
             const payload = await request.jwtVerify();
-            console.log(payload);
+
         } catch (err) {
-            console.log(err);
             return reply.status(401).send({ message: "Unauthorized" });
         }
     });
@@ -90,5 +86,6 @@ export function buildServer() {
     server.register(GroupsComplementsRoutes);
     server.register(ImageRoutes);
     server.register(OrdersRoutes);
+    server.register(GeocodeRoutes);
     return server;
 }

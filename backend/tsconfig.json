@@ -1,21 +1,23 @@
 {
-    "compilerOptions": {
-        "target": "ES2022",
-        "module": "CommonJS",
-        "moduleResolution": "Bundler",
-        "lib": [
-            "ES2024",
-            "ESNext.AsyncIterable",
-            "ESNext.Array",
-            "ESNext.Collection"
-        ],
-        "strict": true,
-        "esModuleInterop": true,
-        "skipLibCheck": true,
-        "allowSyntheticDefaultImports": true,
-        "outDir": "./dist"
-    },
-    "include": [
-        "src"
-    ]
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+
+    "lib": [
+      "ES2024",
+      "ESNext.AsyncIterable",
+      "ESNext.Array",
+      "ESNext.Collection"
+    ],
+
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+
+    "outDir": "./dist"
+  },
+  "include": ["src"]
 }

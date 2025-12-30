@@ -1,8 +1,9 @@
 
 import { FastifyRequest } from "fastify";
 import { FastifyReply } from "fastify";
-import { CreateOrderDTO, UpdateOrderStatusDTO } from "../dtos/orders.dto";
+import { CreateOrderDTO } from "../dtos/orders.dto";
 import { OrdersService } from "../services/orders.service";
+import { OrderStatus } from "@prisma/client";
 
 export class OrdersController {
   constructor(private ordersService: OrdersService) {}
@@ -17,12 +18,14 @@ export class OrdersController {
     try {
       const { storeId } = req.params;
       const { items } = req.body;
-
+      
       const result = await this.ordersService.createOrder({
         storeId,
         items,
         customerName: req.body.customerName,
         customerPhone: req.body.customerPhone,
+        address: req.body.address,
+        
       });
 
       return reply.status(201).send(result);
@@ -51,7 +54,8 @@ export class OrdersController {
   async updateOrderStatus(
     req: FastifyRequest<{
       Params: { orderId: string };
-      Body: Pick<UpdateOrderStatusDTO, "status">;
+      Body: { status: OrderStatus };
+      // Body: Pick<UpdateOrderStatusDTO, "status">;
     }>,
     reply: FastifyReply
   ) {

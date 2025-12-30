@@ -16,10 +16,13 @@ export class OrdersService {
         private complementsRepository: ComplementsRepository
     ) { }
 
-    async createOrder({ storeId, items, customerName,
-        customerPhone
+    async createOrder({
+        storeId,
+        items,
+        customerName,
+        customerPhone,
+        address,
     }: CreateOrderDTO) {
-
         let total = 0;
 
         const itemsWithPrice: Array<{
@@ -39,19 +42,13 @@ export class OrdersService {
         for (const item of items) {
             const product = await this.productsRepository.getById(item.productId);
 
-
             if (!product || !product.isAvailable) {
                 throw new Error("Produto indisponível");
             }
 
             let itemTotal = product.price * item.quantity;
 
-            const complementsData: {
-                id: string;
-                name: string;
-                price: number;
-                quantity: number;
-            }[] = [];
+            const complementsData = [];
 
             for (const c of item.complements) {
                 const complement = await this.complementsRepository.getById(
@@ -84,44 +81,57 @@ export class OrdersService {
             });
         }
 
+  const order = await this.ordersRepository.createOrder({
+  data: {
+    store: { connect: { id: storeId } },
 
-        const order = await this.ordersRepository.createOrder({
-            data: {
-                store: { connect: { id: storeId } },
-                items: {
-                    create: itemsWithPrice.map(item => ({
-                        name: item.name,
-                        productId: item.productId,
+    customerName,
+    customerPhone,
+    notes: "",
+    status: "PENDING",
+    total,
 
-                        quantity: item.quantity,
-                        price: item.price,
-                        complements: {
-                            create: item.complements.map(c => ({
-                                complementId: c.id,
-                                name: c.name,
-                                quantity: c.quantity,
-                                price: c.price,
-                            }))
-                        }
-                    }))
-                },
-                customerName,
-                customerPhone,
-                notes: "",
-                status: "PENDING",
+    // 🔹 Itens
+    items: {
+      create: itemsWithPrice.map(item => ({
+        name: item.name,
+        productId: item.productId,
+        quantity: item.quantity,
+        price: item.price,
+        complements: {
+          create: item.complements.map(c => ({
+            complementId: c.id,
+            name: c.name,
+            quantity: c.quantity,
+            price: c.price,
+          })),
+        },
+      })),
+    },
 
-                total
-            }
-        });
-       
-        const res = await RealtimeService.orderStatusUpdated(order.storeId, {
+    // 🔹 Endereço (opcional)
+    street: address?.road,
+    number: address?.number,
+    district: address?.district,
+    city: address?.city,
+    state: address?.state,
+    zipCode: address?.zipCode,
+    complement: address?.complement,
+
+    // 🔹 Geolocalização
+    lat: address?.lat,
+    lon: address?.lon,
+  },
+});
+
+        await RealtimeService.orderStatusUpdated(order.storeId, {
             orderId: order.id,
             status: order.status,
         });
 
-        console.log("RealtimeService response:", res);
-        return order
+        return order;
     }
+
 
     async listOrdersByStore({ storeId }: { storeId: string }) {
         return this.ordersRepository.listOrdersByStore({ storeId });

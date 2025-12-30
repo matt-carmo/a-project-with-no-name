@@ -9,11 +9,12 @@ export type ProductComplementGroupDTO = {
 export type CreateProductDTO = {
   name: string;
   description?: string | null;
-  price: number ;
+  price: number | undefined;
   photoUrl?: string;
   isAvailable?: boolean;
   stock?: number;
   storeId: string;
+  imageBuffer?: Buffer<ArrayBufferLike> | null;
   categoryId?: string;
   productComplementGroups?: ProductComplementGroupDTO[];
   image:{
