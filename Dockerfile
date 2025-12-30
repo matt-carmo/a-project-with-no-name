@@ -5,6 +5,8 @@ WORKDIR /app
 COPY backend/package*.json ./
 RUN npm install
 
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
+
 COPY backend .
 RUN npx prisma generate
 RUN npm run build
