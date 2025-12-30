@@ -5,9 +5,11 @@ WORKDIR /app
 COPY backend/package*.json ./
 RUN npm install
 
-ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
-
 COPY backend .
+
+# For build: use dummy, for production Railway will inject the real one
+ENV DATABASE_URL=${DATABASE_URL:-"postgresql://dummy:dummy@localhost:5432/dummy"}
+
 RUN npx prisma generate
 RUN npm run build
 
@@ -15,7 +17,12 @@ RUN npm run build
 FROM node:22-alpine AS runner
 WORKDIR /app
 
-COPY --from=builder /app ./
+# Copy built artifacts
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/prisma ./prisma
 
+# Railway will inject DATABASE_URL at runtime
 EXPOSE 8080
 CMD ["npm", "run", "start"]
