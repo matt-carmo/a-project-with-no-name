@@ -6,6 +6,7 @@ COPY backend/package*.json ./
 RUN npm install
 
 COPY backend .
+COPY .env ./
 
 # For build: use dummy, for production Railway will inject the real one
 ENV DATABASE_URL=${DATABASE_URL:-"postgresql://dummy:dummy@localhost:5432/dummy"}
