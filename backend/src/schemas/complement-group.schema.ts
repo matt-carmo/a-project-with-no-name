@@ -1,47 +1,27 @@
 import z from "zod";
 
 /**
- * Schema representando o objeto completo (ex.: vindo do banco)
+ * Base schema (SEM refine)
+ * Usado como base para create e update
  */
-export const complementGroupSchema = z.object({
-  id: z.cuid(),
-  name: z.string().min(1, "Nome da categoria é obrigatório").max(100, "Nome muito longo"),
-  description: z.string().max(1000).optional().nullable(),
-  minSelected: z.number().int().nonnegative().default(0),
-  maxSelected: z.number().int().positive().optional().nullable(),
-  isAvailable: z.boolean().default(true),
-  storeId: z.cuid(),
-
-//   complements: z.array(z.any()).optional(),
-//   products: z.array(z.any()).optional(),    
-}).superRefine((obj, ctx) => {
-  if (obj.maxSelected != null) {
-    if (obj.maxSelected < obj.minSelected) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "maxSelected deve ser maior ou igual a minSelected",
-        path: ["maxSelected"],
-      });
-    }
-  }
-});
-
-
-export const createComplementGroupSchema = z.object({
+const complementGroupBaseSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório").max(100, "Nome muito longo"),
   description: z.string().max(1000).optional().nullable(),
   minSelected: z.number().int().nonnegative().optional().default(0),
   maxSelected: z.number().int().positive().optional().nullable(),
   isAvailable: z.boolean().optional().default(true),
-
   storeId: z.cuid(),
-  // Se quiser aceitar relações já criadas no payload, descomente / substitua:
-  // complements: z.array(complementCreateSchema).optional(),
-  // products: z.array(productComplementGroupCreateSchema).optional(),
+});
+
+/**
+ * Schema completo (ex.: vindo do banco)
+ */
+export const complementGroupSchema = complementGroupBaseSchema.extend({
+  id: z.cuid(),
 }).superRefine((obj, ctx) => {
   if (obj.maxSelected != null && obj.maxSelected < obj.minSelected) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: "custom",
       message: "maxSelected deve ser maior ou igual a minSelected",
       path: ["maxSelected"],
     });
@@ -49,9 +29,26 @@ export const createComplementGroupSchema = z.object({
 });
 
 /**
- * Schema para atualização parcial.
+ * Create (payload de criação)
+ * Aqui a validação cruzada faz sentido
  */
-export const updateComplementGroupSchema = createComplementGroupSchema.partial();
+export const createComplementGroupSchema =
+  complementGroupBaseSchema.superRefine((obj, ctx) => {
+    if (obj.maxSelected != null && obj.maxSelected < obj.minSelected) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "maxSelected deve ser maior ou igual a minSelected",
+        path: ["maxSelected"],
+      });
+    }
+  });
+
+/**
+ * Update (PATCH)
+ * ❗ SEM refine
+ */
+export const updateComplementGroupSchema =
+  complementGroupBaseSchema.partial();
 
 /**
  * Types
