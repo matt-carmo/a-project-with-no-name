@@ -17,7 +17,10 @@ async function fetchGeocodeData(q: string) {
     `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
       `${q} Presidente Prudente SP`
     )}&format=json&limit=5&addressdetails=1`
-  ).then(res => res).catch((err) => console.error('Error fetching geocode data:', err));
+  ).catch((err) => {
+    console.error('Error fetching geocode data:', err);
+    throw err;
+  });
 
   const data = (await response.json()) as NominatimResult[];
 
