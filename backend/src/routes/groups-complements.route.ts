@@ -5,7 +5,7 @@ import { GroupsComplementsController } from "../controllers/groups-complements.c
 import { GroupsComplementsRepository } from "../repositorires/groups-complements.repository";
 import { categorySchema } from "../schemas/category.schema";
 import z from "zod";
-import { createComplementGroupSchema } from "../schemas/complement-group.schema";
+import { complementGroupBaseSchema, createComplementGroupSchema } from "../schemas/complement-group.schema";
 
 export function GroupsComplementsRoutes(server: FastifyInstance) {
     const repo = new GroupsComplementsRepository(server.prisma);
@@ -41,7 +41,9 @@ export function GroupsComplementsRoutes(server: FastifyInstance) {
                     storeId: z.string(),
                     productId: z.string(),
                 }),
-                body: z.array(createComplementGroupSchema.omit({ storeId: true })),
+                body: z.array(
+                    complementGroupBaseSchema.omit({ storeId: true })
+                ),
             },
         },
         controller.createWithConnectProduct.bind(controller)
@@ -71,7 +73,7 @@ export function GroupsComplementsRoutes(server: FastifyInstance) {
         },
         async (req: FastifyRequest<{ Params: { storeId: string; groupId: string; productId: string; } }>, reply: FastifyReply) => {
             const { storeId, groupId, productId } = req.params;
-            
+
 
             console.log('Deleting group complement', { storeId, groupId, productId });
             const res = await server.prisma.productComplementGroup.delete({
@@ -83,7 +85,7 @@ export function GroupsComplementsRoutes(server: FastifyInstance) {
                 }
             });
             console.log('res', res);
-            if (res){
+            if (res) {
                 return reply.status(204).send();
             }
             return reply.status(404).send();

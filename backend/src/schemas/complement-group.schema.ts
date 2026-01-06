@@ -4,14 +4,27 @@ import z from "zod";
  * Base schema (SEM refine)
  * Usado como base para create e update
  */
-const complementGroupBaseSchema = z.object({
-  name: z.string().min(1, "Nome é obrigatório").max(100, "Nome muito longo"),
+export const complementGroupBaseSchema = z.object({
+  name: z.string().min(1).max(100),
   description: z.string().max(1000).optional().nullable(),
   minSelected: z.number().int().nonnegative().optional().default(0),
   maxSelected: z.number().int().positive().optional().nullable(),
   isAvailable: z.boolean().optional().default(true),
   storeId: z.cuid(),
 });
+const ComplementGroupBaseSchema = z.object({
+  min: z.number(),
+  max: z.number(),
+});
+
+export const CreateComplementGroupSchema =
+  ComplementGroupBaseSchema.refine(
+    (data) => data.min <= data.max,
+    { message: "min must be less than max" }
+  );
+
+export const UpdateComplementGroupSchema =
+  ComplementGroupBaseSchema.partial(); // ✅ OK
 
 /**
  * Schema completo (ex.: vindo do banco)
