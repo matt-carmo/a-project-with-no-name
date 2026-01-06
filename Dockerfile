@@ -3,7 +3,7 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 COPY backend/package*.json ./
-RUN npm install
+RUN npm install --omit=dev
 
 COPY backend .
 COPY .env ./
