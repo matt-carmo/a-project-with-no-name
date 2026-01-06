@@ -29,6 +29,8 @@ type AuthForm = {
 export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [showPassword, setShowPassword] = useState(false);
+
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const {
     register,
@@ -47,11 +49,12 @@ export default function AuthPage() {
   });
 
   const onSubmit = async (data: AuthForm) => {
-    const res = await axios.post(`http://localhost:8080/auth/${mode}`, data);
+    setLoading(true);
+    const res = await axios.post( `${import.meta.env.VITE_API_URL}/auth/${mode}`, data);
     if (res.status === 200) {
       const data = res.data;
 
-      // salvar no zustand
+      
       useAuthStore.getState().setAuth({
         user: data.user,
         token: data.token,
@@ -61,6 +64,7 @@ export default function AuthPage() {
         navigate(`/store/${data.user.stores[0].id}`);
       }
     }
+    setLoading(false);
     reset();
   };
 
@@ -70,7 +74,6 @@ export default function AuthPage() {
     <div className='min-h-screen flex items-center justify-center bg-background p-6'>
       <Card className='w-full max-w-md border-primary-foreground/20'>
         <CardHeader>
-          {window.location.href}
           <div className='flex items-center justify-between'>
             <div>
               <CardTitle className='text-lg'>
@@ -186,20 +189,6 @@ export default function AuthPage() {
             </div>
           </form>
 
-          {/* <div className='mt-4'>
-            <Separator />
-            <div className='text-center text-sm text-muted-foreground mt-3'>
-              ou entre com
-            </div>
-            <div className='flex gap-2 mt-3'>
-              <Button variant='outline' className='flex-1'>
-                Google
-              </Button>
-              <Button variant='outline' className='flex-1'>
-                GitHub
-              </Button>
-            </div>
-          </div> */}
         </CardContent>
 
         <CardFooter>

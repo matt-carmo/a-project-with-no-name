@@ -1,4 +1,5 @@
 import api from "@/api/axios";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -58,94 +59,122 @@ export function OrderList({
   orders: Order[];
   loading: boolean;
 }) {
-  const [selectedOrderId, setSelectedOrderId] = useState<string>();
+  const [selectedOrderId, setSelectedOrderId] =
+    useState<string>();
   const { setSelectedOrder } = useOrderStore();
 
   const handleSelectOrder = (order: Order) => {
     setSelectedOrderId(order.id);
-
     setSelectedOrder(order);
   };
-  // useEffect(() => {
-  //   setSelectedOrderId(orders[0]?.id);
-  //   setSelectedOrder(orders[0]);
-  // }, []);
 
   useEffect(() => {
     getOrders();
   }, []);
-  const handleAcceptOrder = useCallback(async (order: Order) => {
-    const response = await api.patch(`/orders/${order.id}/status`, {
-      status: OrderStatus.CONFIRMED,
-    });
-    if (response.status === 200) {
-      getOrders();
-      setSelectedOrder({
-        ...order,
-        status: OrderStatus.CONFIRMED,
-      } as Order);
-    }
-  }, []);
+
+  const handleAcceptOrder = useCallback(
+    async (order: Order) => {
+      const response = await api.patch(
+        `/orders/${order.id}/status`,
+        {
+          status: OrderStatus.CONFIRMED,
+        }
+      );
+
+      if (response.status === 200) {
+        getOrders();
+        setSelectedOrder({
+          ...order,
+          status: OrderStatus.CONFIRMED,
+        } as Order);
+      }
+    },
+    []
+  );
+
   return (
-    <ScrollArea className={'absolute'}>
-      <ul className="space-y-2">
+    <ScrollArea className="h-full">
+      <ul className="space-y-2 p-2">
         {orders?.map((order) => {
-          const statusConfig = ORDER_STATUS_CONFIG[order.status as OrderStatus];
+          const statusConfig =
+            ORDER_STATUS_CONFIG[
+              order.status as OrderStatus
+            ];
+
+          const isSelected =
+            selectedOrderId === order.id;
 
           return (
             <li key={order.id}>
-              <button
-                onClick={() => handleSelectOrder(order)}
-                className="w-full p-0 text-sm overflow-hidden"
-              >
-                <Card
-                  className={`
-                  flex flex-col gap-2 py-4 hover:bg-accent/50 bg-muted/10 border-accent
-                  text-start
-                  ${selectedOrderId === order.id && "border-primary"}
+              <Card
+                onClick={() =>
+                  handleSelectOrder(order)
+                }
+                className={`
+                  cursor-pointer transition
+                  hover:bg-accent/50
+                  ${
+                    isSelected
+                      ? "border-primary bg-primary/5"
+                      : "bg-muted/10"
+                  }
                 `}
-                >
-                  <CardHeader className="flex flex-row items-center justify-between py-0">
-                    <div>
-                      <p className="text-accent-foreground/50">#{order.id}</p>
-                      <p className="flex items-center">
-                        <User size={20} />
-                        {order.customerName}
-                      </p>
-                    </div>
+              >
+                <CardHeader className="flex flex-row items-center justify-between py-3">
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">
+                      Pedido #{order.id}
+                    </p>
 
-                    <span
-                      className={`text-xs px-2 py-1 rounded-md ${
-                        selectedOrderId === order.id
-                          ? "bg-primary/10 text-primary"
-                          : statusConfig.className
-                      }`}
+                    <p className="flex items-center gap-2 font-medium">
+                      <User size={18} />
+                      {order.customerName ||
+                        "Cliente não informado"}
+                    </p>
+                  </div>
+
+                  <Badge
+                    className={
+                      isSelected
+                        ? "bg-primary/10 text-primary"
+                        : statusConfig.className
+                    }
+                  >
+                    {statusConfig.label}
+                  </Badge>
+                </CardHeader>
+
+                <CardContent className="py-0 text-xs text-muted-foreground">
+                  {new Date(
+                    order.createdAt
+                  ).toLocaleString()}
+                </CardContent>
+
+                {order.status ===
+                  OrderStatus.PENDING && (
+                  <CardFooter className="pt-3">
+                    <Button
+                      size="sm"
+                      className="w-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAcceptOrder(order);
+                      }}
                     >
-                      {statusConfig.label}
-                    </span>
-                  </CardHeader>
-
-                  <CardContent className="py-0 text-muted-foreground">
-                    {order.createdAt}
-                  </CardContent>
-
-                  <CardFooter className="py-0 text-xs text-muted-foreground">
-                    {order.status === OrderStatus.PENDING && (
-                      <Button
-                        variant="default"
-                        size="lg"
-                        className="flex-1 border-0"
-                        onClick={() => handleAcceptOrder(order)}
-                      >
-                        Aceitar
-                      </Button>
-                    )}
+                      Aceitar pedido
+                    </Button>
                   </CardFooter>
-                </Card>
-              </button>
+                )}
+              </Card>
             </li>
           );
         })}
+
+        {!loading && orders?.length === 0 && (
+          <li className="py-10 text-center text-sm text-muted-foreground">
+            Nenhum pedido encontrado
+          </li>
+        )}
       </ul>
     </ScrollArea>
   );

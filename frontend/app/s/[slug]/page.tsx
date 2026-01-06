@@ -1,4 +1,5 @@
 "use client";
+import { fetcher } from "@/api/axios";
 import { Cart } from "@/components/Cart";
 import { Menu } from "@/components/Menu";
 import { useAuthStore } from "@/store/auth-store";
@@ -58,12 +59,12 @@ export interface StoreSettings {
   openHours: string; // ex: "08:00-23:00"
 }
 
-const fetcher = (url: string) => axios.get(url).then((res) => res.data);
+
 export default function Home() {
 
   const {setSelectedStore} = useAuthStore();
   const { data, error, isLoading } = useSWR(
-    "http://localhost:8080/stores/slug/lanchonete-central",
+    "/stores/slug/lanchonete-central",
     fetcher
   );
 
@@ -82,16 +83,16 @@ export default function Home() {
             <span className="relative flex h-2 w-2">
               <span
                 className={`absolute inline-flex h-full w-full rounded-full ${
-                  data.settings.isOpen ? "bg-green-500" : "bg-red-500"
+                  data.settings?.isOpen ? "bg-green-500" : "bg-red-500"
                 } opacity-75 animate-ping`}
               />
               <span
                 className={`relative inline-flex h-2 w-2 rounded-full ${
-                  data.settings.isOpen ? "bg-green-500" : "bg-red-500"
+                  data.settings?.isOpen ? "bg-green-500" : "bg-red-500"
                 }`}
               />
             </span>
-            {data.settings.isOpen ? "Loja aberta" : "Loja fechada"}
+            {data.settings?.isOpen ? "Loja aberta" : "Loja fechada"}
           </div>
         </div>
 

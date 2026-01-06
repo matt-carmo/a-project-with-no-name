@@ -5,13 +5,16 @@ meta {
 }
 
 get {
-  url: 127.0.0.1:8080/geocode?q="Rua Antônio rota"
+  url: https://nominatim.openstreetmap.org/search?q=Rua Antônio Rota&format=json&limit=5&addressdetails=1
   body: none
   auth: inherit
 }
 
 params:query {
-  q: "Rua Antônio rota"
+  q: Rua Antônio Rota
+  format: json
+  limit: 5
+  addressdetails: 1
 }
 
 settings {

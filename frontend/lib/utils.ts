@@ -1,3 +1,4 @@
+import api from '@/api/axios';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -15,3 +16,5 @@ export function cn(...inputs: ClassValue[]) {
   }).format(price / 100);
 }
 export { formatPrice };
+
+export const fetcher = (url: string) => api.get(url).then((res) => res.data);

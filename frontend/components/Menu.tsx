@@ -10,8 +10,8 @@ import axios from "axios";
 import { useProductStore } from "@/store/useProductStore";
 import { MenuProps } from "@/app/types/menu";
 import { formatPrice } from "@/lib/utils";
+import { fetcher } from "@/api/axios";
 
-const fetcher = (url: string) => axios.get(url).then((res) => res.data);
 
 
 
@@ -20,7 +20,7 @@ const fetcher = (url: string) => axios.get(url).then((res) => res.data);
 export function Menu({ storeId }: { storeId: string }) {
   const { slug } = useParams();
   
-  const {data, error, isLoading} = useSWR<MenuProps>(`http://localhost:8080/stores/${storeId}/customer-menu`, fetcher);
+  const {data, error, isLoading} = useSWR<MenuProps>(`/stores/${storeId}/customer-menu`, fetcher);
 
  const setProduct = useProductStore(state => state.setProduct);
   return (
