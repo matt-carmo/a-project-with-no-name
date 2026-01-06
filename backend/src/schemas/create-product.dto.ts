@@ -14,7 +14,7 @@ export type CreateProductDTO = {
   isAvailable?: boolean;
   stock?: number;
   storeId: string;
-  imageBuffer?: Buffer<ArrayBufferLike> | null;
+  // imageBuffer?: Buffer<ArrayBufferLike> | null;
   categoryId?: string;
   productComplementGroups?: ProductComplementGroupDTO[];
   image:{

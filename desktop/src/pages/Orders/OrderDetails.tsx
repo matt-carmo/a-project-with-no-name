@@ -11,8 +11,6 @@ import { getOrders } from "@/services/orders/getOrders";
 import { Button } from "@/components/ui/button";
 import { Order } from "@/interfaces/order/order-response";
 
-
-
 export function OrderDetails() {
   const { selectedOrder, setSelectedOrder } = useOrderStore();
 
@@ -25,36 +23,37 @@ export function OrderDetails() {
       </Card>
     );
   }
-  const statusConfig = ORDER_STATUS_CONFIG[selectedOrder.status as OrderStatus];
-  const handleSetOrder = async (id: string, status: OrderStatus) => {
-    // otimista
 
+  const statusConfig = ORDER_STATUS_CONFIG[selectedOrder.status as OrderStatus];
+
+  const handleSetOrder = async (id: string, status: OrderStatus) => {
     try {
       const res = await api.patch(`/orders/${id}/status`, { status });
-      await getOrders(); // opcional, se quiser garantir s
 
-      console.log("Resposta da atualização de status:", status);
-      const reswpp = await window.order.sendStatus({
-        phone: res.data.customerPhone, // deve ser string tipo "5511999999999"
-        status // ex: "CONFIRMED"
+      await getOrders();
+
+      await window.order.sendStatus({
+        phone: res.data.customerPhone,
+        status,
       });
-      console.log("Resposta do envio de status:", reswpp);
+
       setSelectedOrder({
         ...selectedOrder,
         status: res.data.status,
       } as Order);
     } catch (error) {
       console.error("Erro ao atualizar status do pedido", error);
-
-      // rollback opcional
       await getOrders();
     }
   };
 
+  const hasAddress =
+    selectedOrder.street || selectedOrder.city || selectedOrder.district;
+
   return (
     <Card className="w-full border-none">
       <CardHeader>
-        <CardTitle className="flex  justify-between">
+        <CardTitle className="flex justify-between items-center">
           Pedido #{selectedOrder.id}
           <Badge className={statusConfig?.className}>
             {statusConfig?.label}
@@ -62,8 +61,10 @@ export function OrderDetails() {
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="space-y-4 ">
-        {/* Informações do pedido */}
+      <CardContent className="space-y-4">
+        {/* =======================
+            INFORMAÇÕES
+        ======================= */}
         <div className="text-sm space-y-1">
           <div>
             <span className="font-medium">Data:</span>{" "}
@@ -92,13 +93,53 @@ export function OrderDetails() {
           )}
         </div>
 
+        {/* =======================
+            ENDEREÇO
+        ======================= */}
+        {hasAddress && (
+          <>
+            <Separator />
+            <div className="text-sm space-y-1">
+              <h3 className="font-semibold">Endereço de entrega</h3>
+
+              <div>
+                {selectedOrder.street}
+                {selectedOrder.number ? `, ${selectedOrder.number}` : ""}
+              </div>
+
+              {selectedOrder.district && <div>{selectedOrder.district}</div>}
+
+              <div>
+                {selectedOrder.city} - {selectedOrder.state}
+              </div>
+
+              {selectedOrder.zipCode && <div>CEP: {selectedOrder.zipCode}</div>}
+
+              {selectedOrder.complement && (
+                <div className="text-muted-foreground">
+                  Obs: {selectedOrder.complement}
+                </div>
+              )}
+
+              {/* 🔹 Opcional: coordenadas */}
+              {selectedOrder.lat && selectedOrder.lon && (
+                <div className="text-xs text-muted-foreground">
+                  Lat: {selectedOrder.lat} | Lon: {selectedOrder.lon}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
         <Separator />
 
-        {/* Itens */}
+        {/* =======================
+            ITENS
+        ======================= */}
         <div className="space-y-3">
           <h3 className="font-semibold">Itens</h3>
 
-          {selectedOrder?.items?.map((item) => (
+          {selectedOrder.items.map((item) => (
             <div
               key={item.id}
               className="rounded-md border border-accent-foreground/10 p-3 space-y-2"
@@ -132,60 +173,82 @@ export function OrderDetails() {
 
         <Separator />
 
-        {/* Total */}
+        {/* =======================
+            TOTAL
+        ======================= */}
         <div className="flex justify-between text-lg font-semibold">
           <span>Total</span>
           <span>{convertBRL(selectedOrder.total)}</span>
         </div>
-        {(selectedOrder.status as OrderStatus) === OrderStatus.PENDING && (
-          <Button
-            variant="default"
-            size="lg"
-            className="w-full"
-            onClick={() =>
-              handleSetOrder(selectedOrder.id, OrderStatus.CONFIRMED)
-            }
-          >
-            Aceitar Pedido
-          </Button>
-        )}
-        {(selectedOrder.status as OrderStatus) === OrderStatus.CONFIRMED && (
-          <Button
-            variant="default"
-            size="lg"
-            className="w-full"
-            onClick={() =>
-              handleSetOrder(selectedOrder.id, OrderStatus.IN_PREPARATION)
-            }
-          >
-            Iniciar Preparo
-          </Button>
-        )}
-        {(selectedOrder.status as OrderStatus) ===
-          OrderStatus.IN_PREPARATION && (
-          <Button
-            variant="default"
-            size="lg"
-            className="w-full"
-            onClick={() =>
-              handleSetOrder(selectedOrder.id, OrderStatus.IN_DELIVERY)
-            }
-          >
-            Despachar
-          </Button>
-        )}
-        {(selectedOrder.status as OrderStatus) === OrderStatus.IN_DELIVERY && (
-          <Button
-            variant="default"
-            size="lg"
-            className="w-full"
-            onClick={() =>
-              handleSetOrder(selectedOrder.id, OrderStatus.COMPLETED)
-            }
-          >
-            Marcar como Entregue
-          </Button>
-        )}
+        <div className="flex gap-x-2">
+          {![OrderStatus.CANCELLED, OrderStatus.COMPLETED].includes(
+            selectedOrder.status as OrderStatus
+          ) && (
+            <Button
+              variant="destructive-outline"
+              size="lg"
+            
+              onClick={() =>
+                handleSetOrder(selectedOrder.id, OrderStatus.CANCELLED)
+              }
+            >
+              Cancelar Pedido
+            </Button>
+          )}
+
+          {/* =======================
+            AÇÕES
+        ======================= */}
+          {(selectedOrder.status as OrderStatus) === OrderStatus.PENDING && (
+            <Button
+              size="lg"
+              className="flex-1"
+              onClick={() =>
+                handleSetOrder(selectedOrder.id, OrderStatus.CONFIRMED)
+              }
+            >
+              Aceitar Pedido
+            </Button>
+          )}
+
+          {(selectedOrder.status as OrderStatus) === OrderStatus.CONFIRMED && (
+            <Button
+              size="lg"
+              className="flex-1"
+              onClick={() =>
+                handleSetOrder(selectedOrder.id, OrderStatus.IN_PREPARATION)
+              }
+            >
+              Iniciar Preparo
+            </Button>
+          )}
+
+          {(selectedOrder.status as OrderStatus) ===
+            OrderStatus.IN_PREPARATION && (
+            <Button
+              size="lg"
+              className="flex-1"
+              onClick={() =>
+                handleSetOrder(selectedOrder.id, OrderStatus.IN_DELIVERY)
+              }
+            >
+              Despachar
+            </Button>
+          )}
+
+          {(selectedOrder.status as OrderStatus) ===
+            OrderStatus.IN_DELIVERY && (
+            <Button
+              size="lg"
+              className="flex-1"
+              onClick={() =>
+                handleSetOrder(selectedOrder.id, OrderStatus.COMPLETED)
+              }
+            >
+              Marcar como Entregue
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

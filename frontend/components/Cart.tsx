@@ -7,11 +7,16 @@ import { useState } from "react";
 import Image from "next/image";
 import { ScrollArea } from "./ui/scroll-area";
 import { Badge } from "./ui/badge";
+import { useParams, useRouter } from "next/navigation";
 
 export function Cart() {
   const { items, total, quantity, decrease, increase, remove, add } = useCart();
 
   const [open, setOpen] = useState(false);
+  const navigation = useRouter();
+  const { slug } = useParams();
+
+
   return (
     items.length > 0 && (
       <footer>
@@ -79,7 +84,7 @@ export function Cart() {
                 </div>
                 <div>
                 <Button
-                  variant="secondary"
+                  variant="outline"
                   size="icon"
                   onClick={() => remove(item.id)}
                 >
@@ -113,7 +118,7 @@ export function Cart() {
              )}
              {open && (
                 <Button
-                onClick={() => setOpen(true)}
+                onClick={() => navigation.push(`${slug}/checkout`)}
                 className="bg-white text-primary font-semibold text-sm px-4 py-2 rounded-xl"
               >
                 Continuar

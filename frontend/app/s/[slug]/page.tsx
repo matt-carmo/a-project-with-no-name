@@ -1,9 +1,11 @@
 "use client";
 import { Cart } from "@/components/Cart";
 import { Menu } from "@/components/Menu";
+import { useAuthStore } from "@/store/auth-store";
 import axios from "axios";
 
 import Image from "next/image";
+import { useEffect } from "react";
 import useSWR from "swr";
 export interface Store {
   id: string;
@@ -58,12 +60,18 @@ export interface StoreSettings {
 
 const fetcher = (url: string) => axios.get(url).then((res) => res.data);
 export default function Home() {
+
+  const {setSelectedStore} = useAuthStore();
   const { data, error, isLoading } = useSWR(
     "http://localhost:8080/stores/slug/lanchonete-central",
     fetcher
   );
 
-
+  useEffect(() => {
+    if (data) {
+      setSelectedStore({ store: data });
+    }
+  }, [data, setSelectedStore]);
   if (isLoading) return <p>Loading...</p>;
   if (error) return <p>Failed to load store data</p>;
   return (

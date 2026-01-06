@@ -7,36 +7,42 @@ import {
 import path from "path";
 import fs from "fs/promises";
 import { app } from "electron";
-import { sendStatus } from "./status";
 import { Boom } from "@hapi/boom";
+import { sendStatus } from "./status";
 
-export let sock: ReturnType<typeof makeWASocket> | null = null;
+let sockInstance: ReturnType<typeof makeWASocket> | null = null;
 let isStarting = false;
 let reconnecting = false;
-
+const answered = new Set<string>();
 const sessionPath = path.join(app.getPath("userData"), "auth-info");
 
+// ===============================
+// 🔌 Getter do socket (IMPORTANTE)
+// ===============================
+export function getSock() {
+  return sockInstance;
+}
 
 // ===============================
-// 🧹 Limpa a sessão do WhatsApp
+// 🧹 Limpa a sessão
 // ===============================
 export async function clearWhatsappSession() {
   try {
-    await fs.rm(sessionPath, {
-      recursive: true,
-      force: true,
-    });
-
-    console.log("🧹 Sessão do WhatsApp removida com sucesso");
-  } catch (error) {
-    console.error("Erro ao remover sessão:", error);
+    await fs.rm(sessionPath, { recursive: true, force: true });
+    console.log("🧹 Sessão removida");
+  } catch (err) {
+    console.error("Erro ao limpar sessão:", err);
   }
 }
 
-
+// ===============================
+// ▶️ Inicia o socket
+// ===============================
 export async function startSock() {
-  if (isStarting || sock) {
-    console.log("⚠️ Socket já iniciado ou em inicialização");
+
+
+  if (isStarting || sockInstance) {
+    console.log("⚠️ Socket já iniciado");
     return;
   }
 
@@ -45,17 +51,32 @@ export async function startSock() {
 
   const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
 
-  sock = makeWASocket({
+  sockInstance = makeWASocket({
     auth: state,
     browser: Browsers.ubuntu("Desktop"),
     printQRInTerminal: false,
-    syncFullHistory: false,
     markOnlineOnConnect: true,
   });
 
-  sock.ev.on("creds.update", saveCreds);
+  sockInstance.ev.on("creds.update", saveCreds);
+  sockInstance.ev.on("messages.upsert", async ({ messages, type }) => {
+    if(!sockInstance) return;
+    if (type !== "notify") return;
 
-  sock.ev.on("connection.update", async (update) => {
+    const msg = messages[0];
+    if (!msg.message || msg.key.fromMe || msg.key.remoteJid?.endsWith("@g.us")) return;
+
+    const jid = msg.key.remoteJid!;
+    if (answered.has(jid)) return;
+
+    answered.add(jid);
+
+    await sockInstance.sendMessage(jid, {
+      text: "Olá! 👋 Veja nosso cardápio:\nhttps://seusite.com/cardapio",
+    });
+  });
+
+  sockInstance.ev.on("connection.update", async (update) => {
     const { connection, lastDisconnect, qr } = update;
 
     if (qr) sendStatus({ status: "qr", data: qr });
@@ -65,27 +86,38 @@ export async function startSock() {
     }
 
     if (connection === "open") {
+      console.log("✅ WhatsApp conectado");
       sendStatus({ status: "connected" });
-      sock?.sendMessage("5518991276817@s.whatsapp.net", { text: "✅ Conectado ao WhatsApp Web!" });
+
+      await sockInstance?.sendMessage(
+        "5518991276817@s.whatsapp.net",
+        { text: "✅ WhatsApp conectado com sucesso!" }
+      );
+
       isStarting = false;
       reconnecting = false;
     }
 
     if (connection === "close") {
-      sendStatus({ status: "disconnected" });
 
-      sock = null;
+      if (DisconnectReason.loggedOut === (lastDisconnect?.error as Boom)?.output?.statusCode) {
+        await clearWhatsappSession();
+      }
+      console.log("❌ WhatsApp desconectado");
+      // sendStatus({ status: "" });
+
+      sockInstance = null;
       isStarting = false;
 
-      const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode;
+      await startSock();
+      // const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode;
 
-      if (statusCode !== DisconnectReason.loggedOut) {
-        reconnectSock();
-      }
+      // if (statusCode !== DisconnectReason.loggedOut) {
+      //   reconnectSock();
+      // }
     }
   });
 }
-
 
 // ===============================
 // 🔁 Reconexão automática
@@ -101,27 +133,30 @@ async function reconnectSock() {
   }, 5000);
 }
 
-
-
 // ===============================
-// ♻️ Reset completo (nova conta)
+// ♻️ Reset completo
 // ===============================
 export async function resetWhatsappConnection() {
-  sendStatus({ status: "resetting" });
+  console.log("♻️ Resetando conexão do WhatsApp...");
+  sendStatus({ status: "qr" });
 
   try {
-    if (sock) {
+    if (sockInstance) {
       try {
-        await sock.logout();
-      } catch {}
+        await sockInstance.logout()
+        sockInstance = null;
+        await clearWhatsappSession();
+        startSock();
+      } catch { }
 
-      sock.end(undefined);
-      sock = null;
+      // sockInstance.end(undefined);
+      // sockInstance = null;
     }
 
-    await clearWhatsappSession();
-    await startSock();
-  } catch (error) {
-    console.error("Erro ao resetar conexão:", error);
+
+    ;
+
+  } catch (err) {
+    console.error("Erro ao resetar:", err);
   }
 }

@@ -21,7 +21,7 @@ export default function MenuPage() {
       console.log("Menu fetched:", response.data);
       setData(response.data);
     } catch (err) {
-      alert(JSON.stringify(err));
+    
       console.error("Erro ao buscar menu:", err);
     }
   };

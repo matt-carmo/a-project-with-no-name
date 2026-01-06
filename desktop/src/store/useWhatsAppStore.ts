@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from "zustand";
 
-interface WhatsAppState {
+export interface WhatsAppState {
   status: "idle" | "connecting" | "qr" | "connected" | "disconnected";
   qr?: string | null;
   error?: number | null;

@@ -9,7 +9,7 @@ COPY backend .
 COPY .env ./
 
 # For build: use dummy, for production Railway will inject the real one
-ENV DATABASE_URL=${DATABASE_URL:-"postgresql://dummy:dummy@localhost:5432/dummy"}
+# ENV DATABASE_URL=${DATABASE_URL:-"postgresql://dummy:dummy@localhost:5432/dummy"}
 
 RUN npx prisma generate
 RUN npm run build

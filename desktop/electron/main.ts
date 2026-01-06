@@ -39,9 +39,31 @@ app.on("activate", () => {
 
 ipcMain.handle(
   "order:send-status",
-  async (_event, { phone, status }) => {
-    if (!phone || !status) {
-      throw new Error("Dados inválidos");
+  async (_event, payload) => {
+    console.log("IPC received:", payload);
+
+    if (
+      !payload ||
+      typeof payload.phone !== "string" ||
+      typeof payload.status !== "string"
+    ) {
+      throw new Error("Dados inválidos (payload malformado)");
+    }
+
+    const { phone, status } = payload;
+
+    const allowedStatus = [
+      "PENDING",
+      "CONFIRMED",
+      "IN_PREPARATION",
+      "READY",
+      "IN_DELIVERY",
+      "COMPLETED",
+      "CANCELLED",
+    ];
+
+    if (!allowedStatus.includes(status)) {
+      throw new Error(`Status inválido: ${status}`);
     }
 
     await sendOrderStatus(phone, status);

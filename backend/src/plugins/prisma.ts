@@ -7,6 +7,7 @@ import { PrismaPg } from '@prisma/adapter-pg'
 
 const PrismaPlugin = fp(async (fastify) => {
   const pool = new Pool({
+    // connectionString: 'postgresql://postgres:jSyKTKBbtMKNjMfQdggFKHTSmLCMmXvT@shuttle.proxy.rlwy.net:30141/railway',
     connectionString: process.env.DATABASE_URL,
   })
 

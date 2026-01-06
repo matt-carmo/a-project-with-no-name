@@ -99,8 +99,7 @@ export function ComplementStep({
         Adicionar complemento
       </Button>
 
-      {/* Lista de complementos */}
-      {JSON.stringify(items)}
+
       {items.length > 0 && (
         <div className="relative h-full border">
           <ScrollArea className="h-full absolute">

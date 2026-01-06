@@ -1,7 +1,7 @@
 import { Prisma, PrismaClient, OrderStatus } from "@prisma/client";
 
 export class OrdersRepository {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: PrismaClient) { }
 
   async createOrder({
     data,
@@ -20,8 +20,8 @@ export class OrdersRepository {
   }) {
     return this.prisma.order.findUnique({
       where: { id },
-      include:{
-        items:true
+      include: {
+        items: true
       }
     });
   }
@@ -31,14 +31,35 @@ export class OrdersRepository {
   }: {
     storeId: string;
   }) {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
     return this.prisma.order.findMany({
-      where: { storeId },
+      where: {
+        storeId,
+        OR: [
+          // pedidos ainda abertos (qualquer data)
+          {
+            status: {
+              in: ["PENDING", "CONFIRMED", "IN_PREPARATION", "READY", "IN_DELIVERY", "CANCELLED"],
+            },
+          },
+
+          // pedidos finalizados hoje
+          {
+            status: "COMPLETED",
+            createdAt: {
+              gte: startOfToday,
+            },
+          },
+        ],
+      },
+
       orderBy: { createdAt: "desc" },
       include: {
         items: {
-            include:{
-                complements:true
-            }
+          include: {
+            complements: true
+          }
         },
 
       }

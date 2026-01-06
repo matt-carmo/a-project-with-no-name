@@ -30,7 +30,7 @@ export async function parseMultipartProduct(
     stock: form.stock ? Number(form.stock) : undefined,
     categoryId: form.categoryId || undefined,
     storeId,
-    imageBuffer,
+    // imageBuffer,
     image: {
       url: form.imageUrl,
       id: form.imageId,

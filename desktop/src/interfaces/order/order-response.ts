@@ -4,17 +4,33 @@ export type OrderStatus =
   | "PREPARING"
   | "READY"
   | "DELIVERED"
-  | "CANCELED";
+  | "CANCELLED";
 
 export interface Order {
   id: string;
   storeId: string;
+
   customerName?: string;
   customerPhone?: string;
+
   status: OrderStatus;
   total: number;
   notes?: string;
   createdAt: string;
+
+  // 🔹 Endereço
+  street?: string;
+  number?: string;
+  district?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  complement?: string;
+
+  // 🔹 Geolocalização
+  lat?: number;
+  lon?: number;
+
   items: OrderItem[];
 }
 

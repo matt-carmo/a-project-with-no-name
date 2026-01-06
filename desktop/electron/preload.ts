@@ -39,13 +39,19 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
 // contextBridge.exposeInMainWorld("api", WINDOW_API);
 
 contextBridge.exposeInMainWorld("api", {
-    checkConnection: () => ipcRenderer.invoke("check-connection"),
+  checkConnection: () => ipcRenderer.invoke("check-connection"),
 })
 contextBridge.exposeInMainWorld("whatsapp", {
   onQR: (callback: (data: string) => void) => ipcRenderer.on("qr", (_, data) => callback(data)),
   onStatus: (callback: (data: string) => void) =>
     ipcRenderer.on("wa-status", (_, data) => callback(data)),
   startSock: () => ipcRenderer.invoke("start-sock"),
+  reset: () => ipcRenderer.invoke("whatsapp:reset"),
+  start: () => ipcRenderer.invoke("whatsapp:start"),
+
+  // onStatus: (callback: (status: any) => void) => {
+  //   ipcRenderer.on("whatsapp:status", (_, data) => callback(data));
+  // },
 });
 contextBridge.exposeInMainWorld("env", {
   BASE_URL: process.env.BASE_URL || "http://localhost:8080",
@@ -57,14 +63,6 @@ contextBridge.exposeInMainWorld("order", {
     ipcRenderer.invoke("order:send-status", data),
 });
 
-contextBridge.exposeInMainWorld("whatsapp", {
-  start: () => ipcRenderer.invoke("whatsapp:start"),
-  reset: () => ipcRenderer.invoke("whatsapp:reset"),
-
-  onStatus: (callback: (status: any) => void) => {
-    ipcRenderer.on("whatsapp:status", (_, data) => callback(data));
-  },
-});
 
 
 // --------- Expose some API to the Renderer process ---------

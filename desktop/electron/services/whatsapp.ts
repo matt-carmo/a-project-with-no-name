@@ -1,4 +1,5 @@
-import { sock } from "../whatsapp/socket";
+import { getSock } from "../whatsapp/socket";
+
 
 type OrderStatus =
   | "PENDING"
@@ -7,12 +8,14 @@ type OrderStatus =
   | "READY"
   | "IN_DELIVERY"
   | "COMPLETED"
-  | "CANCELED";
+  | "CANCELLED";
 
 export async function sendOrderStatus(
   phone: string,
   status: OrderStatus
 ) {
+  const sock = getSock(); // ✅ AQUI DENTRO
+
   if (!sock) {
     console.warn("⚠️ WhatsApp não conectado");
     return;
@@ -23,18 +26,20 @@ export async function sendOrderStatus(
     CONFIRMED: "✅ Pedido confirmado",
     IN_PREPARATION: "👨‍🍳 Pedido em preparo",
     READY: "📦 Pedido pronto",
-    IN_DELIVERY: "🚚 Pedido em entrega" ,
+    IN_DELIVERY: "🚚 Pedido em entrega",
     COMPLETED: "🎉 Pedido entregue com sucesso",
-    CANCELED: "❌ Pedido cancelado",
+    CANCELLED: "❌ Pedido cancelado",
   };
 
-  console.log("Enviando status para", phone, ":", status);
+  console.log("📤 Enviando status para", phone, ":", status);
+
   const message =
-    messageMap[status] ??
-    "📢 Seu pedido teve uma atualização";
+    messageMap[status] ?? "📢 Seu pedido teve uma atualização";
 
-  const jid = `${phone}@s.whatsapp.net`;
+  const cleanPhone = phone.replace(/\D/g, "");
+  const jid = `55${cleanPhone}@s.whatsapp.net`;
 
-  await sock.sendMessage(jid, { text: message })
+  await sock.sendMessage(jid, { text: message });
 
+  console.log("✅ Mensagem enviada");
 }

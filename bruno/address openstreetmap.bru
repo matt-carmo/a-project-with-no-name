@@ -1,0 +1,20 @@
+meta {
+  name: address openstreetmap
+  type: http
+  seq: 8
+}
+
+get {
+  url: 127.0.0.1:8080/geocode?q="Rua Antônio rota"
+  body: none
+  auth: inherit
+}
+
+params:query {
+  q: "Rua Antônio rota"
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

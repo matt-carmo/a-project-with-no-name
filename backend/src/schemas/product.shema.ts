@@ -6,6 +6,7 @@ export const productSchema = z.object({
     photoUrl: z.string().nullable().optional(),
     name: z.string(),
     description: z.string().nullable().optional(),
+    imageBuffer: z.instanceof(Buffer).nullable().optional(),
     price: z.number().optional(),
     image: z.object({
         url: z.string(),

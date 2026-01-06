@@ -72,7 +72,7 @@ export function CreateGroupComplementSheet({
         group: {
           id: "",
           name: "",
-          minSelected: 1,
+          minSelected: 0,
           maxSelected: 1,
         },
         complements: {
@@ -165,7 +165,7 @@ export function CreateGroupComplementSheet({
                     nameBase="group"
                     props={{
                       name: "",
-                      minSelected: 1,
+                      minSelected: 0,
                       maxSelected: 1,
                       complements: [],
                       description: "",

@@ -580,8 +580,7 @@ export default function ProductPage() {
 
           {/* Debug */}
           <pre className="mt-4 bg-muted p-4 rounded text-xs overflow-auto">
-            {JSON.stringify(product, null, 2)}
-            {JSON.stringify(groupedComplements, null, 2)}
+          
           </pre>
         </div>
 
