@@ -16,11 +16,19 @@ async function fetchGeocodeData(q: string) {
   const response = await fetch(
     `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
       `${q} Presidente Prudente SP`
-    )}&format=json&limit=5&addressdetails=1`
-  ).catch((err) => {
-    console.error('Error fetching geocode data:', err);
-    throw err;
-  });
+    )}&format=json&limit=5&addressdetails=1`,
+    {
+      headers: {
+        "User-Agent": "a-project-with-no-name/1.0 (matheus2018i@gmail.com)"
+      }
+    }
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    console.error("Nominatim error:", response.status, text);
+    throw new Error("Erro ao consultar geocode");
+  }
 
   const data = (await response.json()) as NominatimResult[];
 
@@ -30,12 +38,13 @@ async function fetchGeocodeData(q: string) {
     lon: Number(item.lon),
 
     road: item.address?.road ?? '',
-    district: item.address?.suburb ?? '', // bairro
+    district: item.address?.suburb ?? '',
     city: item.address?.city ?? '',
     state: item.address?.state ?? '',
     zipCode: item.address?.postcode ?? '',
   }));
 }
+
 
 export async function GeocodeRoutes(server: FastifyInstance) {
   server.get('/geocode', {
@@ -49,6 +58,7 @@ export async function GeocodeRoutes(server: FastifyInstance) {
 
       return reply.send(results);
     },
+    
   });
 }
 
