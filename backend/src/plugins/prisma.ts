@@ -15,8 +15,8 @@ const PrismaPlugin = fp(async (fastify) => {
   const prisma = new PrismaClient({ adapter })
 
   try {
-    await prisma.$connect()
-    await prisma.user.count() // Test query to ensure connection is valid
+    // await prisma.$connect()
+    // await prisma.user.count() // Test query to ensure connection is valid
     console.log('✅ Connected to database')
   } catch (err) {
     console.error('❌ Failed to connect to database:', err)

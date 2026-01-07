@@ -1,19 +1,11 @@
-// schema.prisma
-
 datasource db {
-    provider = "postgresql"
-
-    // url      = env("DATABASE_URL"),
+  provider = "postgresql"
 }
-
-// generator erd {
-//     provider = "prisma-erd-generator"
-// }
 
 generator client {
-    provider        = "prisma-client-js"
-    // previewFeatures = ["clientExtensions", "driverAdapters"]
+  provider = "prisma-client-js"
 }
+
 
 //
 // ------------------------------
