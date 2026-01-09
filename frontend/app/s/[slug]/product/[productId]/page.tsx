@@ -180,11 +180,7 @@ export default function ProductPage() {
       <ul>
         {product.productComplementGroups.map(({ group }) => {
           const totalSelected = getGroupTotal(group.id);
-          const groupValid = isGroupValid(
-            group.id,
-            group.minSelected,
-            group.maxSelected
-          );
+         
 
           return (
             <li key={group.id} className="border-t p-4">

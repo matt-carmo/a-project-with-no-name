@@ -15,7 +15,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller } from "react-hook-form";
-import { ChevronDown, ChevronRight, MapPin } from "lucide-react";
+import { ChevronRight, MapPin } from "lucide-react";
 
 /* =======================
    TIPOS
@@ -226,7 +226,7 @@ export default function CheckoutPage() {
             {results.length > 0 && (
               <div className="absolute z-10 mt-1 w-full bg-background border rounded-md shadow">
                 {results.map((item, index) => (
-                  <div className="flex items-center border-b last-of-type:border-0 p-1">
+                  <div key={index} className="flex items-center border-b last-of-type:border-0 p-1">
                     <MapPin />
                     <button
                       key={index}

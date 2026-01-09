@@ -3,8 +3,6 @@ import { fetcher } from "@/api/axios";
 import { Cart } from "@/components/Cart";
 import { Menu } from "@/components/Menu";
 import { useAuthStore } from "@/store/auth-store";
-import axios from "axios";
-
 import Image from "next/image";
 import { useEffect } from "react";
 import useSWR from "swr";

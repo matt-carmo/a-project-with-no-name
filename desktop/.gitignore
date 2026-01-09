@@ -1,3 +1,4 @@
+*.env
 # Logs
 logs
 *.log
@@ -14,7 +15,6 @@ dist
 release
 dist-ssr
 *.local
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

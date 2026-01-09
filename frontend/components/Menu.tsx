@@ -1,12 +1,9 @@
 "use client";
 import Image from "next/image";
-import { Plus } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
-
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import useSWR from "swr";
-import axios from "axios";
 import { useProductStore } from "@/store/useProductStore";
 import { MenuProps } from "@/app/types/menu";
 import { formatPrice } from "@/lib/utils";

@@ -47,18 +47,28 @@ async function fetchGeocodeData(q: string) {
 
 
 export async function GeocodeRoutes(server: FastifyInstance) {
-  server.get('/geocode', {
+  server.get("/geocode", {
+  config: { public: true },
 
-    config: { public: true },
-    
-    handler: async (request, reply) => {
-      const { q } = request.query as { q: string };
+  handler: async (request, reply) => {
+    try {
+      const { q } = request.query as { q?: string };
+
+      if (!q) {
+        return reply.status(400).send({ message: "Query q é obrigatória" });
+      }
 
       const results = await fetchGeocodeData(q);
-
       return reply.send(results);
-    },
-    
-  });
+
+    } catch (err) {
+      console.error("GEOCODE ERROR:", err);
+      return reply.status(500).send({
+        message: "Erro interno no geocode"
+      });
+    }
+  },
+});
+
 }
 

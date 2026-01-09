@@ -1,16 +1,15 @@
 'use client";';
 import { useCart } from "@/store/useCart";
-import { ArrowUp, ChevronDown, ShoppingBag, Trash } from "lucide-react";
+import { ChevronDown, ShoppingBag, Trash } from "lucide-react";
 import { Button } from "./ui/button";
 import { formatPrice } from "@/lib/utils";
 import { useState } from "react";
 import Image from "next/image";
 import { ScrollArea } from "./ui/scroll-area";
-import { Badge } from "./ui/badge";
 import { useParams, useRouter } from "next/navigation";
 
 export function Cart() {
-  const { items, total, quantity, decrease, increase, remove, add } = useCart();
+  const { items, total, quantity, remove } = useCart();
 
   const [open, setOpen] = useState(false);
   const navigation = useRouter();
