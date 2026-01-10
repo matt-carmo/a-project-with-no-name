@@ -1,5 +1,6 @@
+import { Product } from "@/app/types/menu";
 import { create } from "zustand";
-import { Product } from "@/app/s/[slug]/page";
+
 
 /* =====================
    TIPOS

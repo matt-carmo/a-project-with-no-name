@@ -106,7 +106,13 @@ export default function ProductPage() {
   };
 
   const buildComplements = () => {
-    const complements = [];
+    const complements: Array<{
+      groupId: string;
+      complementId: string;
+      name: string;
+      price: number;
+      quantity: number;
+    }> = [];
 
     product.productComplementGroups.forEach(({ group }) => {
       group.complements.forEach((complement) => {
@@ -136,6 +142,7 @@ export default function ProductPage() {
     add({
       id: generateCartItemId(complements),
       product,
+
       complements,
       quantity: 1,
       totalPrice: unitTotalPrice,
