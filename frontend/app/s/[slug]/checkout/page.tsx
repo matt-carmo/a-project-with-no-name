@@ -11,10 +11,9 @@ import api from "@/api/axios";
 import { useAuthStore } from "@/store/auth-store";
 import { withMask } from "use-mask-input";
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller } from "react-hook-form";
 import { ChevronRight, MapPin } from "lucide-react";
 
 /* =======================
@@ -60,6 +59,18 @@ export default function CheckoutPage() {
   const { selectedStore } = useAuthStore();
 
   /* =======================
+     STATES
+  ======================= */
+  const [search, setSearch] = useState("");
+  const [results, setResults] = useState<GeocodeResult[]>([]);
+  const [loadingAddress, setLoadingAddress] = useState(false);
+  const [addressSelected, setAddressSelected] = useState(false);
+  const [paymentMethod, setPaymentMethod] =
+    useState<PaymentMethod>("pix");
+
+  const [submitting, setSubmitting] = useState(false);
+
+  /* =======================
      FORM
   ======================= */
   const {
@@ -84,19 +95,6 @@ export default function CheckoutPage() {
   });
 
   /* =======================
-     ENDEREÇO
-  ======================= */
-  const [search, setSearch] = useState("");
-  const [results, setResults] = useState<GeocodeResult[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [addressSelected, setAddressSelected] = useState(false);
-
-  /* =======================
-     PAGAMENTO
-  ======================= */
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("pix");
-
-  /* =======================
      DEBOUNCE GEOCODE
   ======================= */
   useEffect(() => {
@@ -107,7 +105,7 @@ export default function CheckoutPage() {
 
     const timeout = setTimeout(async () => {
       try {
-        setLoading(true);
+        setLoadingAddress(true);
         const response = await api.get("/geocode", {
           params: { q: search },
         });
@@ -115,7 +113,7 @@ export default function CheckoutPage() {
       } catch (error) {
         console.error("Erro ao buscar endereço", error);
       } finally {
-        setLoading(false);
+        setLoadingAddress(false);
       }
     }, 500);
 
@@ -137,215 +135,261 @@ export default function CheckoutPage() {
      FINALIZAR PEDIDO
   ======================= */
   async function onSubmit(data: CheckoutFormData) {
-    const _items = items.map((item) => ({
-      productId: item.product.id,
-      quantity: item.quantity,
-      complements:
-        item.complements.map((c) => ({
-          complementId: c.complementId,
-          quantity: c.quantity,
-        })) || [],
-    }));
+    if (submitting) return;
 
-    const order = {
-      slug,
-      customerName: data.name,
-      customerPhone: data.phone,
+    try {
+      setSubmitting(true);
 
-      items: _items,
+      const _items = items.map((item) => ({
+        productId: item.product.id,
+        quantity: item.quantity,
+        complements:
+          item.complements.map((c) => ({
+            complementId: c.complementId,
+            quantity: c.quantity,
+          })) || [],
+      }));
 
-      address: {
-        road: data.address.displayName,
-        number: data.address.number,
-        city: data.address.city,
-        lat: data.address.latitude,
-        lon: data.address.longitude,
-      },
+      const order = {
+        slug,
+        customerName: data.name,
+        customerPhone: data.phone,
+        items: _items,
+        address: {
+          road: data.address.displayName,
+          number: data.address.number,
+          city: data.address.city,
+          lat: data.address.latitude,
+          lon: data.address.longitude,
+        },
+        paymentMethod,
+        total: total(),
+      };
 
-      paymentMethod,
-      total: total(),
-    };
+      await api.post(
+        `/stores/${selectedStore?.store.id}/orders`,
+        order
+      );
 
-    await api.post(`/stores/${selectedStore?.store.id}/orders`, order);
-
-    clear();
-    router.push("success");
+      clear();
+      router.push("success");
+    } catch (error) {
+      console.error("Erro ao finalizar pedido", error);
+      alert("Não foi possível finalizar o pedido. Tente novamente.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
-    <div className="max-w-xl mx-auto w-full px-4 py-6 space-y-6">
-      <h1 className="text-xl font-semibold">Checkout</h1>
+    <>
+      <div className="max-w-xl mx-auto w-full px-4 py-6 space-y-6">
+        <h1 className="text-xl font-semibold">Checkout</h1>
 
-      {/* =======================
-          CLIENTE
-      ======================= */}
-      <section className="space-y-3">
-        <h2 className="font-medium">Seus dados</h2>
+        {/* CLIENTE */}
+        <section className="space-y-3">
+          <h2 className="font-medium">Seus dados</h2>
 
-        <Input placeholder="Nome" {...register("name")} />
-        {errors.name && (
-          <p className="text-xs text-red-500">{errors.name.message}</p>
-        )}
-        <Controller
-          name="phone"
-          control={control}
-          render={({ field }) => (
-            <Input
-              {...field}
-              placeholder="Telefone / WhatsApp"
-              type="tel"
-              ref={withMask("(99) 99999-9999")}
-            />
+          <Input
+            placeholder="Nome"
+            disabled={submitting}
+            {...register("name")}
+          />
+          {errors.name && (
+            <p className="text-xs text-red-500">
+              {errors.name.message}
+            </p>
           )}
-        />
-        {errors.phone && (
-          <p className="text-xs text-red-500">{errors.phone.message}</p>
-        )}
-      </section>
 
-      {/* =======================
-          ENDEREÇO
-      ======================= */}
-      <section className="space-y-3">
-        <h2 className="font-medium">Selecione seu endereço</h2>
-
-        {!addressSelected && (
-          <div className="relative">
-            <Input
-              placeholder="Pesquisar endereço"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-
-            {loading && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Buscando endereço...
-              </p>
+          <Controller
+            name="phone"
+            control={control}
+            render={({ field }) => (
+              <Input
+                {...field}
+                disabled={submitting}
+                placeholder="Telefone / WhatsApp"
+                type="tel"
+                ref={withMask("(99) 99999-9999")}
+              />
             )}
+          />
+          {errors.phone && (
+            <p className="text-xs text-red-500">
+              {errors.phone.message}
+            </p>
+          )}
+        </section>
 
-            {results.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full bg-background border rounded-md shadow">
-                {results.map((item, index) => (
-                  <div key={index} className="flex items-center border-b last-of-type:border-0 p-1">
-                    <MapPin />
+        {/* ENDEREÇO */}
+        <section className="space-y-3">
+          <h2 className="font-medium">Selecione seu endereço</h2>
+
+          {!addressSelected && (
+            <div className="relative">
+              <Input
+                placeholder="Pesquisar endereço"
+                value={search}
+                disabled={submitting}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+
+              {loadingAddress && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Buscando endereço...
+                </p>
+              )}
+
+              {results.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full bg-background border rounded-md shadow">
+                  {results.map((item, index) => (
                     <button
                       key={index}
                       type="button"
-                      className="w-full text-left px-3 py-2 text-sm"
-                      onClick={() => handleSelectAddress(item)}
+                      disabled={submitting}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm border-b last:border-0"
+                      onClick={() =>
+                        handleSelectAddress(item)
+                      }
                     >
-                      {item.displayName}
+                      <MapPin size={16} />
+                      <span className="flex-1 text-left">
+                        {item.displayName}
+                      </span>
+                      <ChevronRight size={16} />
                     </button>
-                    <ChevronRight className="ml-auto mr-1" />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {errors.address?.displayName && (
-          <p className="text-xs text-red-500">
-            {errors.address.displayName.message}
-          </p>
-        )}
-
-        {addressSelected && (
-          <div className="rounded-xl border p-4 space-y-2 bg-muted/40">
-            <p className="text-sm font-medium">Endereço selecionado</p>
-
-            <p className="text-sm">{search}</p>
-
-            <Input placeholder="Número" {...register("address.number")} />
-            {errors.address?.number && (
-              <p className="text-xs text-red-500">
-                {errors.address.number.message}
-              </p>
-            )}
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setAddressSelected(false);
-                setSearch("");
-              }}
-            >
-              Editar endereço
-            </Button>
-          </div>
-        )}
-      </section>
-
-      {/* =======================
-          PAGAMENTO
-      ======================= */}
-      <section className="space-y-3">
-        <h2 className="font-medium">Forma de pagamento</h2>
-        <p>Na entrega</p>
-
-        <div className="flex gap-2 flex-wrap">
-          {[
-            { label: "PIX", value: "pix" },
-            { label: "Crédito", value: "credit" },
-            { label: "Débito", value: "debit" },
-            { label: "Dinheiro", value: "cash" },
-          ].map((method) => (
-            <Button
-              key={method.value}
-              variant={paymentMethod === method.value ? "default" : "outline"}
-              onClick={() => setPaymentMethod(method.value as PaymentMethod)}
-            >
-              {method.label}
-            </Button>
-          ))}
-        </div>
-      </section>
-
-      {/* =======================
-          RESUMO
-      ======================= */}
-      <section className="space-y-3">
-        <h2 className="font-medium">Resumo do pedido</h2>
-
-        {items.map((item) => (
-          <div key={item.id} className="flex gap-3 items-start border-b pb-2">
-            <div className="h-12 w-12 rounded-lg overflow-hidden bg-zinc-100">
-              {item.product.photoUrl && (
-                <Image
-                  src={item.product.photoUrl}
-                  alt={item.product.name}
-                  width={48}
-                  height={48}
-                  className="object-cover w-full h-full"
-                />
+                  ))}
+                </div>
               )}
             </div>
+          )}
 
-            <div className="flex-1">
-              <p className="font-medium text-sm">
-                {item.quantity}x {item.product.name}
+          {addressSelected && (
+            <div className="rounded-xl border p-4 space-y-2 bg-muted/40">
+              <p className="text-sm font-medium">
+                Endereço selecionado
               </p>
+              <p className="text-sm">{search}</p>
+
+              <Input
+                placeholder="Número"
+                disabled={submitting}
+                {...register("address.number")}
+              />
+
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={submitting}
+                onClick={() => {
+                  setAddressSelected(false);
+                  setSearch("");
+                }}
+              >
+                Editar endereço
+              </Button>
             </div>
+          )}
+        </section>
 
-            <span className="text-sm font-semibold">
-              {formatPrice(item.totalPrice * item.quantity)}
-            </span>
+        {/* PAGAMENTO */}
+        <section className="space-y-3">
+          <h2 className="font-medium">Forma de pagamento</h2>
+          <p>Na entrega</p>
+
+          <div className="flex gap-2 flex-wrap">
+            {[
+              { label: "PIX", value: "pix" },
+              { label: "Crédito", value: "credit" },
+              { label: "Débito", value: "debit" },
+              { label: "Dinheiro", value: "cash" },
+            ].map((method) => (
+              <Button
+                key={method.value}
+                disabled={submitting}
+                variant={
+                  paymentMethod === method.value
+                    ? "default"
+                    : "outline"
+                }
+                onClick={() =>
+                  setPaymentMethod(
+                    method.value as PaymentMethod
+                  )
+                }
+              >
+                {method.label}
+              </Button>
+            ))}
           </div>
-        ))}
+        </section>
 
-        <div className="flex justify-between font-semibold pt-2">
-          <span>Total ({quantity()} itens)</span>
-          <span>{formatPrice(total())}</span>
+        {/* RESUMO */}
+        <section className="space-y-3">
+          <h2 className="font-medium">Resumo do pedido</h2>
+
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className="flex gap-3 items-start border-b pb-2"
+            >
+              <div className="h-12 w-12 rounded-lg overflow-hidden bg-zinc-100">
+                {item.product.photoUrl && (
+                  <Image
+                    src={item.product.photoUrl}
+                    alt={item.product.name}
+                    width={48}
+                    height={48}
+                    className="object-cover w-full h-full"
+                  />
+                )}
+              </div>
+
+              <div className="flex-1">
+                <p className="font-medium text-sm">
+                  {item.quantity}x {item.product.name}
+                </p>
+              </div>
+
+              <span className="text-sm font-semibold">
+                {formatPrice(
+                  item.totalPrice * item.quantity
+                )}
+              </span>
+            </div>
+          ))}
+
+          <div className="flex justify-between font-semibold pt-2">
+            <span>Total ({quantity()} itens)</span>
+            <span>{formatPrice(total())}</span>
+          </div>
+        </section>
+
+        <Button
+          className="w-full h-12 text-base font-semibold"
+          disabled={submitting}
+          onClick={handleSubmit(onSubmit)}
+        >
+          {submitting
+            ? "Enviando pedido..."
+            : "Finalizar pedido"}
+        </Button>
+      </div>
+
+      {/* OVERLAY LOADING */}
+      {submitting && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+          <div className="bg-white rounded-xl p-6 text-center space-y-3">
+            <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto" />
+            <p className="font-medium">
+              Enviando seu pedido
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Aguarde alguns segundos...
+            </p>
+          </div>
         </div>
-      </section>
-
-      <Button
-        className="w-full h-12 text-base font-semibold"
-        onClick={handleSubmit(onSubmit)}
-      >
-        Finalizar pedido
-      </Button>
-    </div>
+      )}
+    </>
   );
 }

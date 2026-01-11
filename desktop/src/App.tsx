@@ -10,25 +10,29 @@ import "./globals.css";
 import ProductPage from "./pages/Product";
 import OrdersPage from "./pages/Orders";
 import Pusher from "pusher-js";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect } from "react";
 
 import { getOrders } from "./services/orders/getOrders";
 
 function App() {
   const { selectedStore } = useAuthStore();
+
   const storeId = selectedStore?.store.id;
   document.body.classList.add("dark");
-const pusher = new Pusher("edce887501b56a510763", {
-  cluster: "sa1",
-});
-const channel = pusher.subscribe("store-" + storeId);
-channel.bind("order-status-updated", () => {
-  getOrders();
-});
-
+  const pusher = new Pusher("edce887501b56a510763", {
+    cluster: "sa1",
+  });
+  const channel = pusher.subscribe("store-" + storeId);
+  channel.bind("order-status-updated", () => {
+    getOrders();
+  });
 
   useEffect(() => {
     getOrders();
+    
+    if (selectedStore) {
+      window.electron.store.set("selectedStore", selectedStore);
+    }
   }, []);
 
   return (

@@ -5,13 +5,23 @@ meta {
 }
 
 get {
-  url: http://127.0.0.1:8080/geocode?q=Rua antonio rota
+  url: https://places.googleapis.com/v1/places:autocomplete
   body: none
-  auth: inherit
+  auth: apikey
 }
 
-params:query {
-  q: Rua antonio rota
+headers {
+  X-Goog-Api-KeyX-Goog-Api-Key: AIzaSyDncFAI9Zt66HpC16azLnmaeaoIfFAJx7I
+  x-goog-gmp-client-signals: CAIqDDMuNjMuOWQtYmV0YVoOEgwI3ZWLywYQgPbpvAE
+  x-goog-maps-session-id: AB504F18-288C-4C04-AF40-D44CE65A66E0
+  x-goog-maps-api-salt: op-places-js
+  : 
+}
+
+auth:apikey {
+  key: 
+  value: 
+  placement: header
 }
 
 settings {

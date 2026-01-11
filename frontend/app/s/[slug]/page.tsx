@@ -2,6 +2,8 @@
 import { fetcher } from "@/api/axios";
 import { Cart } from "@/components/Cart";
 import { Menu } from "@/components/Menu";
+import MenuSkeleton from "@/components/skeletons/menu-skeleton";
+import StoreHeaderSkeleton from "@/components/skeletons/store-header-skeleton";
 import { useAuthStore } from "@/store/auth-store";
 import Image from "next/image";
 import { useEffect } from "react";
@@ -57,10 +59,8 @@ export interface StoreSettings {
   openHours: string; // ex: "08:00-23:00"
 }
 
-
 export default function Home() {
-
-  const {setSelectedStore} = useAuthStore();
+  const { setSelectedStore } = useAuthStore();
   const { data, error, isLoading } = useSWR(
     "/stores/slug/lanchonete-central",
     fetcher
@@ -71,8 +71,41 @@ export default function Home() {
       setSelectedStore({ store: data });
     }
   }, [data, setSelectedStore]);
-  if (isLoading) return <p>Loading...</p>;
-  if (error) return <p>Failed to load store data</p>;
+  if (isLoading) {
+    return (
+      <>
+        <StoreHeaderSkeleton />
+        <MenuSkeleton />
+      </>
+    );
+  }
+
+  if (error) {
+  return (
+    <div className="flex flex-col items-center justify-center h-screen px-4 text-center">
+      <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+        <span className="text-red-500 text-2xl">!</span>
+      </div>
+
+      <h2 className="mt-4 text-lg font-semibold text-zinc-900">
+        Loja indisponível
+      </h2>
+
+      <p className="text-sm text-zinc-500 mt-1 max-w-xs">
+        Não conseguimos carregar os dados da loja.
+        Verifique sua conexão ou tente novamente.
+      </p>
+
+      <button
+        onClick={() => window.location.reload()}
+        className="mt-5 px-5 py-2.5 rounded-lg bg-primary text-white text-sm font-medium"
+      >
+        Recarregar página
+      </button>
+    </div>
+  );
+}
+
   return (
     <>
       <header className="bg-primary ">
@@ -116,9 +149,8 @@ export default function Home() {
         </div>
       </header>
 
-      <Menu  storeId={data.id} />
+      <Menu storeId={data.id} />
       <Cart />
-     
     </>
   );
 }

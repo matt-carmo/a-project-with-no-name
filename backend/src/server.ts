@@ -19,7 +19,6 @@ import { ImageRoutes } from "./routes/image.route";
 import { OrdersRoutes } from "./routes/orders.route";
 import { GeocodeRoutes } from "./routes/geocode-route";
 
-
 export const server = fastify();
 export function buildServer() {
     server.register(prismaPlugin);
@@ -46,7 +45,7 @@ export function buildServer() {
     server.addHook("preHandler", async (request, reply) => {
         const isPublic = request.routeOptions.config?.public;
 
-        
+        return
         // rota pública → não valida JWT
         if (isPublic) return;
 

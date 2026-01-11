@@ -5,6 +5,8 @@ import { resetWhatsappConnection, startSock } from "./whatsapp/socket";
 import { checkConnection } from "./network/connection";
 import { fileURLToPath } from "url";
 import { sendOrderStatus } from "./services/whatsapp";
+import { electronStore } from './store';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const RENDERER_DIST = path.join(__dirname, "../dist");
@@ -71,3 +73,16 @@ ipcMain.handle(
     return { success: true };
   }
 );
+
+
+ipcMain.handle('store:get', (_, key) => {
+  return electronStore.get(key);
+});
+
+ipcMain.handle('store:set', (_, key, value) => {
+  electronStore.set(key, value);
+});
+
+ipcMain.handle('store:delete', (_, key) => {
+  electronStore.delete(key);
+});

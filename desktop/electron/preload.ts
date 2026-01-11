@@ -65,6 +65,12 @@ contextBridge.exposeInMainWorld("order", {
 
 
 
-// --------- Expose some API to the Renderer process ---------
-
-// contextBridge.exposeInMainWorld('whats', WINDOW_API)
+contextBridge.exposeInMainWorld('electron', {
+  store: {
+    get: (key: string) => ipcRenderer.invoke('store:get', key),
+    set: (key: string, value: any) =>
+      ipcRenderer.invoke('store:set', key, value),
+    delete: (key: string) =>
+      ipcRenderer.invoke('store:delete', key),
+  },
+});

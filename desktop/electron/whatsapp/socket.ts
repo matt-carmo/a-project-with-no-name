@@ -9,6 +9,8 @@ import fs from "fs/promises";
 import { app } from "electron";
 import { Boom } from "@hapi/boom";
 import { sendStatus } from "./status";
+import { electronStore } from "../store";
+
 
 let sockInstance: ReturnType<typeof makeWASocket> | null = null;
 let isStarting = false;
@@ -16,12 +18,14 @@ let reconnecting = false;
 const answered = new Set<string>();
 const sessionPath = path.join(app.getPath("userData"), "auth-info");
 
-// ===============================
+
+const selectedStore = electronStore.get("selectedStore");
 // 🔌 Getter do socket (IMPORTANTE)
 // ===============================
 export function getSock() {
   return sockInstance;
 }
+
 
 // ===============================
 // 🧹 Limpa a sessão
@@ -61,9 +65,11 @@ export async function startSock() {
   sockInstance.ev.on("creds.update", saveCreds);
   sockInstance.ev.on("messages.upsert", async ({ messages, type }) => {
     if(!sockInstance) return;
+
     if (type !== "notify") return;
 
     const msg = messages[0];
+    console.log("📩 Nova mensagem recebida:", msg.key.remoteJid, msg.message);
     if (!msg.message || msg.key.fromMe || msg.key.remoteJid?.endsWith("@g.us")) return;
 
     const jid = msg.key.remoteJid!;
@@ -71,8 +77,9 @@ export async function startSock() {
 
     answered.add(jid);
 
+
     await sockInstance.sendMessage(jid, {
-      text: "Olá! 👋 Veja nosso cardápio:\nhttps://seusite.com/cardapio",
+      text: `Olá! 👋 Veja nosso cardápio:\nhttps://${process.env.VITE_FRONTEND_URL}/s/${selectedStore?.store.slug}.com`,
     });
   });
 
@@ -91,7 +98,8 @@ export async function startSock() {
 
       await sockInstance?.sendMessage(
         "5518991276817@s.whatsapp.net",
-        { text: "✅ WhatsApp conectado com sucesso!" }
+        {       text: `Olá! 👋 Veja nosso cardápio:\nhttps://${process.env.VITE_FRONTEND_URL}/s/${selectedStore?.store.slug}.com`,
+ }
       );
 
       isStarting = false;
@@ -119,21 +127,7 @@ export async function startSock() {
   });
 }
 
-// ===============================
-// 🔁 Reconexão automática
-// ===============================
-async function reconnectSock() {
-  if (reconnecting) return;
 
-  reconnecting = true;
-
-  setTimeout(async () => {
-    reconnecting = false;
-    await startSock();
-  }, 5000);
-}
-
-// ===============================
 // ♻️ Reset completo
 // ===============================
 export async function resetWhatsappConnection() {
