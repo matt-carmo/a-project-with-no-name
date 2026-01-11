@@ -19,7 +19,7 @@ function App() {
 
   const storeId = selectedStore?.store.id;
   document.body.classList.add("dark");
-  const pusher = new Pusher("edce887501b56a510763", {
+  const pusher = new Pusher("a2f3f61a2c146a73ea0c", {
     cluster: "sa1",
   });
   const channel = pusher.subscribe("store-" + storeId);

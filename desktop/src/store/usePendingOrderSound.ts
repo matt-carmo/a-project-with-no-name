@@ -6,7 +6,7 @@ export function usePendingOrderSound(hasPending: boolean) {
   
   useEffect(() => {
     if (!audioRef.current) {
-      audioRef.current = new Audio("/impact-metal.mp3");
+      audioRef.current = new Audio("/order-sound.mp3");
       audioRef.current.loop = true;
     }
 

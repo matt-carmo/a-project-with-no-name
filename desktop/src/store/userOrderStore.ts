@@ -25,7 +25,7 @@ const useOrderStore = create<OrderState>((set, get) => ({
     // 🔊 Start sound
     if (!hadPending && hasPending) {
       if (!audio) {
-        audio = new Audio("/impact-metal.mp3");
+        audio = new Audio("/order-sound.mp3");
         audio.loop = true;
       }
       audio.play();

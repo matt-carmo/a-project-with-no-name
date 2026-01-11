@@ -263,6 +263,13 @@ export function OrderDetails() {
             selectedOrder.status as OrderStatus
           ) && (
             <Button
+              onClick={() =>
+                handleSetOrder(
+                  selectedOrder.id,
+                  OrderStatus.CANCELLED
+                )
+              }
+    
               variant="destructive-outline"
               size="lg"
             >

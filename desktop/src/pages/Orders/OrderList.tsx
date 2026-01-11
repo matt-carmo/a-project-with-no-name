@@ -93,7 +93,7 @@ export function OrderList({
   );
 
   return (
-    <ScrollArea className="h-full">
+    <ScrollArea className="absolute inset-0">
       <ul className="space-y-2 p-2">
         {orders?.map((order) => {
           const statusConfig =
