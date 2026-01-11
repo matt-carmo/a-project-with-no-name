@@ -38,8 +38,15 @@ export async function sendOrderStatus(
 
   const cleanPhone = phone.replace(/\D/g, "");
   const jid = `55${cleanPhone}@s.whatsapp.net`;
+  const [result] = await sock.onWhatsApp(jid);
+  
+if (!result?.exists) {
+  throw new Error('Número não existe no WhatsApp');
+}
 
-  await sock.sendMessage(jid, { text: message });
+  await sock.sendMessage(result.jid, {
+  text: message
+  });
 
   console.log("✅ Mensagem enviada");
 }
