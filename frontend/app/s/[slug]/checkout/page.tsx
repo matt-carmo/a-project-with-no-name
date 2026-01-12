@@ -15,11 +15,15 @@ import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronRight, MapPin } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import BRLInput from "@/components/BRLCurrencyInput";
 
 /* =======================
    TIPOS
 ======================= */
-type PaymentMethod = "pix" | "credit" | "debit" | "cash";
+type PaymentMethod = "PIX" | "CREDIT_CARD" | "DEBIT_CARD" | "CASH";
+
+type PaymentTiming = "ONLINE" | "ON_DELIVERY";
 
 type GeocodeResult = {
   displayName: string;
@@ -65,10 +69,16 @@ export default function CheckoutPage() {
   const [results, setResults] = useState<GeocodeResult[]>([]);
   const [loadingAddress, setLoadingAddress] = useState(false);
   const [addressSelected, setAddressSelected] = useState(false);
-  const [paymentMethod, setPaymentMethod] =
-    useState<PaymentMethod>("pix");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("PIX");
 
   const [submitting, setSubmitting] = useState(false);
+
+  const [paymentTiming, setPaymentTiming] =
+    useState<PaymentTiming>("ON_DELIVERY");
+
+  const [paidAmount, setPaidAmount] = useState<number | "">("");
+
+  const [notes, setNotes] = useState("");
 
   /* =======================
      FORM
@@ -163,13 +173,13 @@ export default function CheckoutPage() {
           lon: data.address.longitude,
         },
         paymentMethod,
+        paidAmount: paymentMethod === "CASH" && typeof paidAmount === "number" ? paidAmount : undefined,
+        paymentTiming,
+        notes: notes.trim() ? notes.trim() : undefined,
         total: total(),
       };
 
-      await api.post(
-        `/stores/${selectedStore?.store.id}/orders`,
-        order
-      );
+      await api.post(`/stores/${selectedStore?.store.id}/orders`, order);
 
       clear();
       router.push("success");
@@ -196,9 +206,7 @@ export default function CheckoutPage() {
             {...register("name")}
           />
           {errors.name && (
-            <p className="text-xs text-red-500">
-              {errors.name.message}
-            </p>
+            <p className="text-xs text-red-500">{errors.name.message}</p>
           )}
 
           <Controller
@@ -215,9 +223,7 @@ export default function CheckoutPage() {
             )}
           />
           {errors.phone && (
-            <p className="text-xs text-red-500">
-              {errors.phone.message}
-            </p>
+            <p className="text-xs text-red-500">{errors.phone.message}</p>
           )}
         </section>
 
@@ -248,9 +254,7 @@ export default function CheckoutPage() {
                       type="button"
                       disabled={submitting}
                       className="w-full flex items-center gap-2 px-3 py-2 text-sm border-b last:border-0"
-                      onClick={() =>
-                        handleSelectAddress(item)
-                      }
+                      onClick={() => handleSelectAddress(item)}
                     >
                       <MapPin size={16} />
                       <span className="flex-1 text-left">
@@ -266,9 +270,7 @@ export default function CheckoutPage() {
 
           {addressSelected && (
             <div className="rounded-xl border p-4 space-y-2 bg-muted/40">
-              <p className="text-sm font-medium">
-                Endereço selecionado
-              </p>
+              <p className="text-sm font-medium">Endereço selecionado</p>
               <p className="text-sm">{search}</p>
 
               <Input
@@ -292,6 +294,17 @@ export default function CheckoutPage() {
           )}
         </section>
 
+        <section className="space-y-2">
+          <h2 className="font-medium">Observações</h2>
+
+          <Textarea
+            placeholder="Ex: sem cebola, tocar campainha..."
+            value={notes}
+            disabled={submitting}
+            onChange={(e) => setNotes(e.target.value)}
+          />
+        </section>
+
         {/* PAGAMENTO */}
         <section className="space-y-3">
           <h2 className="font-medium">Forma de pagamento</h2>
@@ -299,29 +312,34 @@ export default function CheckoutPage() {
 
           <div className="flex gap-2 flex-wrap">
             {[
-              { label: "PIX", value: "pix" },
-              { label: "Crédito", value: "credit" },
-              { label: "Débito", value: "debit" },
-              { label: "Dinheiro", value: "cash" },
+              { label: "PIX", value: "PIX" },
+              { label: "Crédito", value: "CREDIT_CARD" },
+              { label: "Débito", value: "DEBIT_CARD" },
+              { label: "Dinheiro", value: "CASH" },
             ].map((method) => (
               <Button
                 key={method.value}
                 disabled={submitting}
-                variant={
-                  paymentMethod === method.value
-                    ? "default"
-                    : "outline"
-                }
-                onClick={() =>
-                  setPaymentMethod(
-                    method.value as PaymentMethod
-                  )
-                }
+                variant={paymentMethod === method.value ? "default" : "outline"}
+                onClick={() => setPaymentMethod(method.value as PaymentMethod)}
               >
                 {method.label}
               </Button>
             ))}
           </div>
+          {paymentMethod === "CASH" && (
+            <>
+              <div className="space-y-2">
+                <p className="text-sm mt-2">Troco para quanto?</p>
+                <BRLInput
+                  value={paidAmount === "" ? 0 : paidAmount}
+                  disabled={submitting}
+                  onChange={(value) => setPaidAmount(value)}
+                  placeholder="R$ 0,00"
+                />
+              </div>
+            </>
+          )}
         </section>
 
         {/* RESUMO */}
@@ -329,10 +347,7 @@ export default function CheckoutPage() {
           <h2 className="font-medium">Resumo do pedido</h2>
 
           {items.map((item) => (
-            <div
-              key={item.id}
-              className="flex gap-3 items-start border-b pb-2"
-            >
+            <div key={item.id} className="flex gap-3 items-start border-b pb-2">
               <div className="h-12 w-12 rounded-lg overflow-hidden bg-zinc-100">
                 {item.product.photoUrl && (
                   <Image
@@ -352,9 +367,7 @@ export default function CheckoutPage() {
               </div>
 
               <span className="text-sm font-semibold">
-                {formatPrice(
-                  item.totalPrice * item.quantity
-                )}
+                {formatPrice(item.totalPrice * item.quantity)}
               </span>
             </div>
           ))}
@@ -370,9 +383,7 @@ export default function CheckoutPage() {
           disabled={submitting}
           onClick={handleSubmit(onSubmit)}
         >
-          {submitting
-            ? "Enviando pedido..."
-            : "Finalizar pedido"}
+          {submitting ? "Enviando pedido..." : "Finalizar pedido"}
         </Button>
       </div>
 
@@ -381,9 +392,7 @@ export default function CheckoutPage() {
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
           <div className="bg-white rounded-xl p-6 text-center space-y-3">
             <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto" />
-            <p className="font-medium">
-              Enviando seu pedido
-            </p>
+            <p className="font-medium">Enviando seu pedido</p>
             <p className="text-sm text-muted-foreground">
               Aguarde alguns segundos...
             </p>

@@ -1,24 +1,39 @@
-export type OrderStatus =
-  | "PENDING"
-  | "CONFIRMED"
-  | "PREPARING"
-  | "READY"
-  | "DELIVERED"
-  | "CANCELLED";
+
+
+import { OrderStatus } from "@/interfaces/order/order-status";
+import {
+  PaymentMethod,
+  PaymentTiming,
+  PaymentStatus,
+} from "@/interfaces/order/payment";
+
 
 export interface Order {
   id: string;
   storeId: string;
 
+  // Cliente
   customerName?: string;
   customerPhone?: string;
 
+  // Status
   status: OrderStatus;
-  total: number;
-  notes?: string;
   createdAt: string;
 
-  // 🔹 Endereço
+  // Totais
+  total: number;
+  notes?: string;
+
+  // 🔹 PAGAMENTO
+  paymentMethod: PaymentMethod;
+  paymentTiming: PaymentTiming;
+  paymentStatus: PaymentStatus;
+
+  // 🔹 SOMENTE CASH
+  paidAmount?: number | null;
+  changeAmount?: number | null;
+
+  // 🔹 ENDEREÇO
   street?: string;
   number?: string;
   district?: string;
@@ -27,13 +42,13 @@ export interface Order {
   zipCode?: string;
   complement?: string;
 
-  // 🔹 Geolocalização
-  lat?: number;
-  lon?: number;
+  // 🔹 GEOLOCALIZAÇÃO
+  lat?: number | null;
+  lon?: number | null;
 
+  // Itens
   items: OrderItem[];
 }
-
 export interface OrderItem {
   id: string;
   orderId: string;

@@ -1,11 +1,10 @@
 datasource db {
-  provider = "postgresql"
+    provider = "postgresql"
 }
 
 generator client {
-  provider = "prisma-client-js"
+    provider = "prisma-client-js"
 }
-
 
 //
 // ------------------------------
@@ -165,54 +164,88 @@ model Image {
 }
 
 model Order {
-    id      String @id @default(cuid())
-    storeId String
-    store   Store  @relation(fields: [storeId], references: [id])
+  id      String @id @default(cuid())
+  storeId String
+  store   Store  @relation(fields: [storeId], references: [id])
 
-    customerName  String?
-    customerPhone String?
+  customerName  String?
+  customerPhone String?
 
-    status OrderStatus @default(PENDING)
+  status OrderStatus @default(PENDING)
 
-    items OrderItem[]
+  // 🔹 PAGAMENTO
+  paymentMethod PaymentMethod
+  paymentTiming PaymentTiming
+  paymentStatus PaymentStatus @default(PENDING)
 
-    total      Int // valor final fechado
-    notes      String?
-    // Endereço
-    street     String?
-    number     String?
-    lat        Float?
-    lon        Float?
-    district   String?
-    city       String?
-    state      String?
-    zipCode    String?
-    complement String?
+  // 🔹 DINHEIRO
+  paidAmount   Int? // somente CASH
+  changeAmount Int? // somente CASH
 
-    createdAt DateTime @default(now())
+  items OrderItem[]
+
+  total Int
+  notes String?
+
+  // Endereço
+  street     String?
+  number     String?
+  lat        Float?
+  lon        Float?
+  district   String?
+  city       String?
+  state      String?
+  zipCode    String?
+  complement String?
+
+  createdAt DateTime @default(now())
 }
+
+enum PaymentMethod {
+  CASH
+  PIX
+  CREDIT_CARD
+  DEBIT_CARD
+}
+
+enum PaymentTiming {
+  ONLINE
+  ON_DELIVERY
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+
 
 model OrderItem {
-    id        String  @id @default(cuid())
-    orderId   String
-    order     Order   @relation(fields: [orderId], references: [id])
-    productId String?
-    name      String
-    quantity  Int
-    price     Int
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
 
-    complements OrderItemComplement[]
+  productId String?
+  name      String
+  quantity  Int
+  price     Int
+
+  complements OrderItemComplement[]
 }
+
 
 model OrderItemComplement {
-    id           String    @id @default(cuid())
-    orderItemId  String
-    orderItem    OrderItem @relation(fields: [orderItemId], references: [id])
-    complementId String?
-    name         String
-    price        Int
-    quantity     Int
+  id           String    @id @default(cuid())
+  orderItemId  String
+  orderItem    OrderItem @relation(fields: [orderItemId], references: [id])
+
+  complementId String?
+  name         String
+  price        Int
+  quantity     Int
 }
+
 
 enum OrderStatus {
     PENDING

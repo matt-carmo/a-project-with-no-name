@@ -16,16 +16,10 @@ export class OrdersController {
     reply: FastifyReply
   ) {
     try {
-      const { storeId } = req.params;
-      const { items } = req.body;
-      
+      const { storeId } = req.params;      
       const result = await this.ordersService.createOrder({
+        ...req.body,
         storeId,
-        items,
-        customerName: req.body.customerName,
-        customerPhone: req.body.customerPhone,
-        address: req.body.address,
-        
       });
 
       return reply.status(201).send(result);
