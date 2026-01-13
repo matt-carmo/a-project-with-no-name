@@ -158,7 +158,7 @@ export default function ProductPage() {
   };
 
   return (
-    <div className="pb-20">
+    <div className="pb-20 mx-auto relative">
       {/* VOLTAR */}
       <button
         className="fixed top-2 left-2 bg-primary-foreground p-1 rounded-full z-10"

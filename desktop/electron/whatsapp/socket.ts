@@ -10,11 +10,11 @@ import { app } from "electron";
 import { Boom } from "@hapi/boom";
 import { sendStatus } from "./status";
 import { electronStore } from "../store";
+import 'dotenv/config';
 
 
 let sockInstance: ReturnType<typeof makeWASocket> | null = null;
 let isStarting = false;
-let reconnecting = false;
 const answered = new Set<string>();
 const sessionPath = path.join(app.getPath("userData"), "auth-info");
 
@@ -51,7 +51,6 @@ export async function startSock() {
   }
 
   isStarting = true;
-  reconnecting = false;
 
   const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
 
@@ -79,7 +78,7 @@ export async function startSock() {
 
 
     await sockInstance.sendMessage(jid, {
-      text: `Olá! 👋 Veja nosso cardápio:\nhttps://${process.env.VITE_FRONTEND_URL}/s/${selectedStore?.store.slug}.com`,
+      text: `Olá! 👋 Veja nosso cardápio:\n${process.env.VITE_FRONTEND_URL}/s/${selectedStore?.store.slug}.com`,
     });
   });
 
@@ -96,14 +95,14 @@ export async function startSock() {
       console.log("✅ WhatsApp conectado");
       sendStatus({ status: "connected" });
 
-      await sockInstance?.sendMessage(
-        "5518991276817@s.whatsapp.net",
-        {       text: `Olá! 👋 Veja nosso cardápio:\nhttps://${process.env.VITE_FRONTEND_URL}/s/${selectedStore?.store.slug}.com`,
- }
-      );
+//       await sockInstance?.sendMessage(
+//         "5518991276817@s.whatsapp.net",
+//         {       text: `Olá! 👋 Veja nosso cardápio:\n${process.env.VITE_FRONTEND_URL}/s/${selectedStore?.store.slug}.com`,
+//  }
+//       );
 
       isStarting = false;
-      reconnecting = false;
+      return;
     }
 
     if (connection === "close") {

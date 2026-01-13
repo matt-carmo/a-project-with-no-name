@@ -5,9 +5,10 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import ComplementAction from "@/components/complement-action";
+import { iComplementGroup } from "@/store/complement-store";
 
 interface Props {
-  complements: any[];
+  complements: iComplementGroup[];
   control: any;
   setValue: any;
   watch: any;

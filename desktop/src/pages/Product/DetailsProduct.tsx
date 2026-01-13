@@ -19,7 +19,6 @@ export function DetailsProduct({ item, onChange }: { item: any, onChange: (data:
     control,
     watch,
 
-    formState: { errors, isSubmitting },
   } = useForm({
     // resolver: zodResolver(productSchemaWithoutStoreId),
     defaultValues: {

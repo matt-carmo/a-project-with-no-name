@@ -91,7 +91,7 @@ export function SheetUpdateComplementX({
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  const { register, control, getValues, setValue, reset, watch } =
+  const { register, control, getValues, reset } =
     useForm<FormValues>({
       defaultValues: {
         group: {

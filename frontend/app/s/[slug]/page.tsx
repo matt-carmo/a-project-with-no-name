@@ -6,6 +6,7 @@ import MenuSkeleton from "@/components/skeletons/menu-skeleton";
 import StoreHeaderSkeleton from "@/components/skeletons/store-header-skeleton";
 import { useAuthStore } from "@/store/auth-store";
 import Image from "next/image";
+import { useParams } from "next/navigation";
 import { useEffect } from "react";
 import useSWR from "swr";
 export interface Store {
@@ -61,8 +62,10 @@ export interface StoreSettings {
 
 export default function Home() {
   const { setSelectedStore } = useAuthStore();
+  const { slug } = useParams();
+
   const { data, error, isLoading } = useSWR(
-    "/stores/slug/lanchonete-central",
+    `/stores/slug/${slug}`,
     fetcher
   );
 

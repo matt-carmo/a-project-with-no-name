@@ -21,14 +21,13 @@ interface ComplementStepProps {
 
   items: Complement[];
   onAdd: () => void;
-  getValues: () => any;
+  getValues: (key: string) => any;
   onRemove: (name: string) => void;
 }
 
 export function ComplementStep({
   register,
   control,
-  imagePreview,
   getValues,
   setImagePreview,
   items,

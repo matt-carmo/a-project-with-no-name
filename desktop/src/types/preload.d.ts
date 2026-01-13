@@ -6,6 +6,19 @@ declare global {
     hello: {
       greet: () => string;
     };
+    order: {
+      sendStatus: (data: {
+        phone: string;
+        status: string;
+      }) => Promise<void>;
+    };
+    electron: {
+      store: {
+        get: (key: string) => any;
+        set: (key: string, value: any) => void;
+        delete: (key: string) => void;
+      };
+    }
     whatsapp: {
       reset(): void;
       startSock(): unknown;

@@ -183,7 +183,7 @@ export default function AuthPage() {
             )}
 
             <div>
-              <Button type='submit' className='w-full' disabled={isSubmitting}>
+              <Button type='submit' className='w-full' disabled={isSubmitting || loading}>
                 {mode === "login" ? "Entrar" : "Criar conta"}
               </Button>
             </div>
