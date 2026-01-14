@@ -5,7 +5,7 @@ import { Menu } from "@/components/Menu";
 import MenuSkeleton from "@/components/skeletons/menu-skeleton";
 import StoreHeaderSkeleton from "@/components/skeletons/store-header-skeleton";
 import { useAuthStore } from "@/store/auth-store";
-import Image from "next/image";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useParams } from "next/navigation";
 import { useEffect } from "react";
 import useSWR from "swr";
@@ -131,15 +131,21 @@ export default function Home() {
         </div>
 
         <div className="flex items-center gap-3 px-4 py-3">
-          <div className="w-12 h-12 rounded-full border border-primary/80 flex items-center justify-center bg-white overflow-hidden">
-            <Image
+          <Avatar className="w-12 h-12 border border-primary/80 bg-white">
+            <AvatarImage
               src={data?.logoUrl}
               alt="Logo"
-              width={40}
-              height={40}
-              className="object-cover aspect-square flex-1"
+              className="object-cover"
             />
-          </div>
+            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+              {data?.name?.toString()
+                ?.split(" ")
+                .map((n: string[]) => n[0])
+                .join("")
+                .toUpperCase()
+                .slice(0, 2) || "N/A"}
+            </AvatarFallback>
+          </Avatar>
 
           <div className="flex flex-col">
             <h1 className="text-white font-semibold text-lg leading-tight">

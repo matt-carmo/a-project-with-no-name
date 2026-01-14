@@ -15,83 +15,81 @@ export function Cart() {
   const navigation = useRouter();
   const { slug } = useParams();
 
-
   return (
     items.length > 0 && (
       <footer>
         <div className="px-3 pb-3">
           <div className="w-full bg-primary text-white rounded-2xl px-4 py-3 shadow-lg flex flex-col gap-2">
-            <ScrollArea className={`max-h-1/2 ${!open && 'h-0'}`}>
-             <Button variant={'ghost'} onClick={() => setOpen(!open)} >
-               <ChevronDown className="mx-auto" />
-             </Button>
+            <ScrollArea className={`max-h-1/2 ${!open && "h-0"}`}>
+              <Button variant={"ghost"} onClick={() => setOpen(!open)}>
+                <ChevronDown className="mx-auto" />
+              </Button>
               {items.map((item) => (
-              <div
-                key={item.id}
-                className="flex gap-3 py-2.5 border-y border-black/5"
-              >
-                {/* IMAGEM */}
-                <div className="h-14 w-14 rounded-lg overflow-hidden bg-zinc-100 shrink-0">
-                {item.product.photoUrl ? (
-                  <Image
-                  src={item.product.photoUrl}
-                  alt={item.product.name}
-                  width={80}
-                  height={80}
-                  className="object-cover w-full h-full"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-xs">
-                  Sem foto
-                  </div>
-                )}
-                </div>
-
-                {/* INFO */}
-                <div className="flex-1 space-y-1">
-                <h3 className="font-medium flex items-center gap-1 leading-tight">
-                  <div className="bg-primary-foreground/10 w-4.5 flex justify-center items-center  aspect-square rounded-full text-xs">
-                  {item.quantity}
-                  </div>{" "}
-                  {item.product.name}
-                </h3>
-
-                {/* COMPLEMENTOS */}
-                {item.complements.length > 0 && (
-                  <ul className="text-sm space-y-1">
-                  {item.complements.map((c) => (
-                    <li
-                    className="flex items-center gap-1"
-                    key={c.complementId}
-                    >
-                    <div className="bg-primary-foreground/10 w-4.5 flex justify-center items-center  aspect-square rounded-full text-xs">
-                      {c.quantity}
-                    </div>{" "}
-                    {c.name}
-                    {c.price > 0 && ` (+${formatPrice(c.price)})`}
-                    </li>
-                  ))}
-                  </ul>
-                )}
-
-                {/* PREÇO E QUANTIDADE */}
-                <div className="flex items-center justify-between pt-1">
-                  <span className="font-semibold text-sm ">
-                  {formatPrice(item.totalPrice * item.quantity)}
-                  </span>
-                </div>
-                </div>
-                <div>
-                <Button
-                  
-                  size="icon"
-                  className="hover:text-foreground/70 bg-white hover:bg-white border-white/30"
-                  onClick={() => remove(item.id)}
+                <div
+                  key={item.id}
+                  className="flex gap-3 py-2.5 border-y border-black/5"
                 >
-                  <Trash className="text-foreground " />
-                </Button>
+                  {/* IMAGEM */}
+                  <div className="h-14 w-14 rounded-lg overflow-hidden bg-zinc-100 shrink-0">
+                    {item.product.photoUrl ? (
+                      <Image
+                        src={item.product.photoUrl}
+                        alt={item.product.name}
+                        width={80}
+                        height={80}
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-xs">
+                        Sem foto
+                      </div>
+                    )}
+                  </div>
+
+                  {/* INFO */}
+                  <div className="flex-1 space-y-1">
+                    <h3 className="font-medium flex items-center gap-1 leading-tight">
+                      <div className="bg-primary-foreground/10 w-4.5 flex justify-center items-center  aspect-square rounded-full text-xs">
+                        {item.quantity}
+                      </div>{" "}
+                      {item.product.name}
+                    </h3>
+
+                    {/* COMPLEMENTOS */}
+                    {item.complements.length > 0 && (
+                      <ul className="text-sm space-y-1">
+                        {item.complements.map((c) => (
+                          <li
+                            className="flex items-center gap-1"
+                            key={c.complementId}
+                          >
+                            <div className="bg-primary-foreground/10 w-4.5 flex justify-center items-center  aspect-square rounded-full text-xs">
+                              {c.quantity}
+                            </div>{" "}
+                            {c.name}
+                            {c.price > 0 && ` (+${formatPrice(c.price)})`}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    {/* PREÇO E QUANTIDADE */}
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="font-semibold text-sm ">
+                        {formatPrice(item.totalPrice * item.quantity)}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <Button
+                      size="icon"
+                      className="hover:text-foreground/70 bg-white hover:bg-white border-white/30"
+                      onClick={() => remove(item.id)}
+                    >
+                      <Trash className="text-foreground " />
+                    </Button>
+                  </div>
                 </div>
-              </div>
               ))}
             </ScrollArea>
 
@@ -108,22 +106,24 @@ export function Cart() {
                 </div>
               </div>
 
-             {!open && (
+              {!open && (
                 <Button
-                onClick={() => setOpen(true)}
-                className="bg-white text-primary font-semibold text-sm px-4 py-2 rounded-xl"
-              >
-                Ver carrinho
-              </Button>
-             )}
-             {open && (
+                  
+                  onClick={() => setOpen(true)}
+                  className=" text-primary bg-white font-semibold text-sm px-4 py-2 rounded-xl hover:bg-white hover:text-primary"
+                >
+                  Ver carrinho
+                </Button>
+              )}
+              {open && (
                 <Button
-                onClick={() => navigation.push(`${slug}/checkout`)}
-                className="bg-white text-primary font-semibold text-sm px-4 py-2 rounded-xl"
-              >
-                Continuar
-              </Button>
-             )}
+                  onClick={() => navigation.push(`${slug}/checkout`)}
+                  variant="default"
+                  className=" text-primary bg-white font-semibold text-sm px-4 py-2 rounded-xl hover:bg-white"
+                >
+                  Continuar
+                </Button>
+              )}
             </div>
           </div>
         </div>
