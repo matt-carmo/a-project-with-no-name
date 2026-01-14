@@ -9,7 +9,6 @@ import fs from "fs/promises";
 import { app } from "electron";
 import { Boom } from "@hapi/boom";
 import { sendStatus } from "./status";
-import { electronStore } from "../store";
 import 'dotenv/config';
 
 
@@ -18,8 +17,6 @@ let isStarting = false;
 const answered = new Set<string>();
 const sessionPath = path.join(app.getPath("userData"), "auth-info");
 
-
-const selectedStore = electronStore.get("selectedStore");
 // 🔌 Getter do socket (IMPORTANTE)
 // ===============================
 export function getSock() {
