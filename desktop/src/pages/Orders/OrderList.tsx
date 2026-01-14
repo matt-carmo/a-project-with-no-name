@@ -12,6 +12,7 @@ import { Order } from "@/interfaces/order/order-response";
 import { OrderStatus } from "@/interfaces/order/order-status";
 import { getOrders } from "@/services/orders/getOrders";
 import useOrderStore from "@/store/userOrderStore";
+import { convertBRL } from "@/utils/convertBRL";
 import { User } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -52,6 +53,68 @@ export const ORDER_STATUS_CONFIG: Record<
   },
 };
 
+const paymentMethodLabel = (method?: string) => {
+  switch (method) {
+    case "CASH":
+      return "Dinheiro";
+    case "PIX":
+      return "PIX";
+    case "CREDIT_CARD":
+      return "Cartão de Crédito";
+    case "DEBIT_CARD":
+      return "Cartão de Débito";
+    default:
+      return "-";
+  }
+};
+
+const paymentTimingLabel = (timing?: string) =>
+  timing === "ONLINE" ? "Online" : "Na entrega";
+
+const buildOrderSummaryMessage = (order: Order) => {
+  const createdAt = new Date(order.createdAt);
+  const formattedDate = createdAt.toLocaleString("pt-BR");
+
+  const itemsLines = order.items
+    .map((item) => {
+      const baseLine = `- ${item.quantity}x ${item.name} (${convertBRL(
+        item.price * item.quantity
+      )})`;
+
+      const complementsLines =
+        item.complements?.length > 0
+          ? item.complements
+              .map(
+                (complement) =>
+                  `   + ${complement.quantity}x ${complement.name} (${convertBRL(
+                    complement.price * complement.quantity
+                  )})`
+              )
+              .join("\n")
+          : "";
+
+      return complementsLines ? `${baseLine}\n${complementsLines}` : baseLine;
+    })
+    .join("\n");
+
+  const paymentMethod = paymentMethodLabel(order.paymentMethod);
+  const paymentTiming = paymentTimingLabel(order.paymentTiming);
+
+  return [
+    `✅ Seu pedido #${order.id} foi confirmado!`,
+    "",
+    `📅 Data: ${formattedDate}`,
+    "",
+    "🧾 Itens do pedido:",
+    itemsLines,
+    "",
+    `💰 Total: ${convertBRL(order.total)}`,
+    `💳 Pagamento: ${paymentMethod} (${paymentTiming})`,
+    "",
+    "Obrigado pelo seu pedido! 🙌",
+  ].join("\n");
+};
+
 export function OrderList({
   orders,
   loading,
@@ -74,22 +137,38 @@ export function OrderList({
 
   const handleAcceptOrder = useCallback(
     async (order: Order) => {
-      const response = await api.patch(
-        `/orders/${order.id}/status`,
-        {
-          status: OrderStatus.CONFIRMED,
-        }
-      );
+      try {
+        const response = await api.patch(
+          `/orders/${order.id}/status`,
+          {
+            status: OrderStatus.CONFIRMED,
+          }
+        );
 
-      if (response.status === 200) {
-        getOrders();
-        setSelectedOrder({
-          ...order,
-          status: OrderStatus.CONFIRMED,
-        } as Order);
+        if (response.status === 200) {
+          await getOrders();
+          
+          const updatedOrder: Order = {
+            ...order,
+            status: OrderStatus.CONFIRMED,
+          } as Order;
+
+          const payload: { phone: string; status: OrderStatus; summary: string } = {
+            phone: response.data.customerPhone,
+            status: updatedOrder.status,
+            summary: buildOrderSummaryMessage(updatedOrder),
+          };
+
+          await window.order.sendStatus(payload);
+
+          setSelectedOrder(updatedOrder);
+        }
+      } catch (error) {
+        console.error("Erro ao aceitar pedido", error);
+        await getOrders();
       }
     },
-    []
+    [setSelectedOrder]
   );
 
   return (

@@ -11,8 +11,7 @@ type OrderStatus =
   | "CANCELLED";
 
 export async function sendOrderStatus(
-  phone: string,
-  status: OrderStatus
+ { phone, status, summary }: { phone: string; status: OrderStatus; summary?: string }
 ) {
   const sock = getSock(); // ✅ AQUI DENTRO
 
@@ -23,8 +22,8 @@ export async function sendOrderStatus(
 
   const messageMap: Record<OrderStatus, string> = {
     PENDING: "🕐 Seu pedido foi recebido",
-    CONFIRMED: "✅ Pedido confirmado",
-    IN_PREPARATION: "👨‍🍳 Pedido em preparo",
+    CONFIRMED: `${summary ? summary : '✅ Pedido confirmado'}`,
+    IN_PREPARATION: `👨‍🍳 Pedido em preparo`,        
     READY: "📦 Pedido pronto",
     IN_DELIVERY: "🚚 Pedido em entrega",
     COMPLETED: "🎉 Pedido entregue com sucesso",
@@ -33,20 +32,19 @@ export async function sendOrderStatus(
 
   console.log("📤 Enviando status para", phone, ":", status);
 
-  const message =
-    messageMap[status] ?? "📢 Seu pedido teve uma atualização";
+  const message = messageMap[status] ?? "📢 Seu pedido teve uma atualização";
 
   const cleanPhone = phone.replace(/\D/g, "");
   const jid = `55${cleanPhone}@s.whatsapp.net`;
   const results = await sock.onWhatsApp(jid);
   const result = results?.[0];
-  
-if (!result?.exists) {
-  throw new Error('Número não existe no WhatsApp');
-}
+
+  if (!result?.exists) {
+    throw new Error("Número não existe no WhatsApp");
+  }
 
   await sock.sendMessage(result.jid, {
-  text: message
+    text: message,
   });
 
   console.log("✅ Mensagem enviada");

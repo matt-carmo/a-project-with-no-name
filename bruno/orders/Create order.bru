@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: http://localhost:8080/stores/cmjq6tkvk00006h6ogemwbpbn/orders
+  url: https://a-project-with-no-name.duckdns.org/stores/cmkbrzfbf00030iojtvm9h7n6/orders
   body: json
   auth: inherit
 }
@@ -17,23 +17,30 @@ headers {
 body:json {
   {
       "slug": "lanchonete-central",
+      "customerName": "JOão pidão",
+      "customerPhone": "18991276817",
       "items": [
           {
-              "productId": "cmjq73cf10003fz6owyuesblk",
+              "productId": "cmkbs8b5m000g0ioj34a4cpn1",
               "quantity": 1,
-              "complements":[]
+              "complements": []
+          },
+          {
+              "productId": "cmkbs96ze000i0iojwuwmnr0p",
+              "quantity": 1,
+              "complements": []
           }
       ],
       "address": {
-          "displayName": "Rua Antônio Rota, Jardim Vale do Sol ",
+          "road": "Rua Antônio Rota, Jardim Itaipú",
           "number": "554",
           "city": "Presidente Prudente",
-          "notes": "",
-          "lat": -22.1223071,
-          "lon": -51.4411622
+          "lat": -22.1252544,
+          "lon": -51.4408784
       },
-      "paymentMethod": "pix",
-      "total": 5150
+      "paymentMethod": "PIX",
+      "paymentTiming": "ON_DELIVERY",
+      "total": 2560
   }
 }
 

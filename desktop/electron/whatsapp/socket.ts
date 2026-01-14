@@ -76,10 +76,10 @@ export async function startSock() {
 
     answered.add(jid);
 
-
-    await sockInstance.sendMessage(jid, {
-      text: `Olá! 👋 Veja nosso cardápio:\n${process.env.VITE_FRONTEND_URL}/s/${selectedStore?.store.slug}.com`,
-    });
+    return;
+    // await sockInstance.sendMessage(jid, {
+    //   text: `Olá! 👋 Veja nosso cardápio:\n${process.env.VITE_FRONTEND_URL}/s/${selectedStore?.store.slug}`,
+    // });
   });
 
   sockInstance.ev.on("connection.update", async (update) => {

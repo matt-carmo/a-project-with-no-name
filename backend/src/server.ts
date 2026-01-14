@@ -18,6 +18,7 @@ import { GroupsComplementsRoutes } from "./routes/groups-complements.route";
 import { ImageRoutes } from "./routes/image.route";
 import { OrdersRoutes } from "./routes/orders.route";
 import { GeocodeRoutes } from "./routes/geocode-route";
+import { storeSettingsRoutes } from "./routes/store-settings.route";
 
 export const server = fastify();
 export function buildServer() {
@@ -45,7 +46,6 @@ export function buildServer() {
     server.addHook("preHandler", async (request, reply) => {
         const isPublic = request.routeOptions.config?.public;
 
-        return
         // rota pública → não valida JWT
         if (isPublic) return;
 
@@ -87,5 +87,6 @@ export function buildServer() {
     server.register(ImageRoutes);
     server.register(OrdersRoutes);
     server.register(GeocodeRoutes);
+    server.register(storeSettingsRoutes);
     return server;
 }

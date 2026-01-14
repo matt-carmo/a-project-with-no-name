@@ -52,7 +52,9 @@ ipcMain.handle(
       throw new Error("Dados inválidos (payload malformado)");
     }
 
-    const { phone, status } = payload;
+    const { phone, status, summary } = payload;
+
+    console.log({phone, status, summary})
 
     const allowedStatus = [
       "PENDING",
@@ -68,7 +70,7 @@ ipcMain.handle(
       throw new Error(`Status inválido: ${status}`);
     }
 
-    await sendOrderStatus(phone, status);
+    await sendOrderStatus({ phone, status, summary });
 
     return { success: true };
   }

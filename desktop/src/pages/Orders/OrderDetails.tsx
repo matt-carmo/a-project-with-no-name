@@ -11,6 +11,7 @@ import { Order } from "@/interfaces/order/order-response";
 
 import api from "@/api/axios";
 import { getOrders } from "@/services/orders/getOrders";
+
 const paymentMethodLabel = (method?: string) => {
   switch (method) {
     case "CASH":
@@ -29,15 +30,48 @@ const paymentMethodLabel = (method?: string) => {
 const paymentTimingLabel = (timing?: string) =>
   timing === "ONLINE" ? "Online" : "Na entrega";
 
-const paymentStatusLabel = (status?: string) => {
-  switch (status) {
-    case "PAID":
-      return "Pago";
-    case "FAILED":
-      return "Falhou";
-    default:
-      return "Pendente";
-  }
+const buildOrderSummaryMessage = (order: Order) => {
+  const createdAt = new Date(order.createdAt);
+  const formattedDate = createdAt.toLocaleString("pt-BR");
+
+  const itemsLines = order.items
+    .map((item) => {
+      const baseLine = `- ${item.quantity}x ${item.name} (${convertBRL(
+        item.price * item.quantity
+      )})`;
+
+      const complementsLines =
+        item.complements?.length > 0
+          ? item.complements
+              .map(
+                (complement) =>
+                  `   + ${complement.quantity}x ${complement.name} (${convertBRL(
+                    complement.price * complement.quantity
+                  )})`
+              )
+              .join("\n")
+          : "";
+
+      return complementsLines ? `${baseLine}\n${complementsLines}` : baseLine;
+    })
+    .join("\n");
+
+  const paymentMethod = paymentMethodLabel(order.paymentMethod);
+  const paymentTiming = paymentTimingLabel(order.paymentTiming);
+
+  return [
+    `✅ Seu pedido #${order.id} foi confirmado!`,
+    "",
+    `📅 Data: ${formattedDate}`,
+    "",
+    "🧾 Itens do pedido:",
+    itemsLines,
+    "",
+    `💰 Total: ${convertBRL(order.total)}`,
+    `💳 Pagamento: ${paymentMethod} (${paymentTiming})`,
+    "",
+    "Obrigado pelo seu pedido! 🙌",
+  ].join("\n");
 };
 
 export function OrderDetails() {
@@ -75,20 +109,11 @@ export function OrderDetails() {
       if (
         status === OrderStatus.COMPLETED &&
         selectedOrder.paymentTiming === "ON_DELIVERY"
-      ) {
-        await api.patch(`/orders/${id}/payment`, {
-          paymentStatus: "PAID",
-        });
-      }
+      ) 
 
       await getOrders();
-
-      await window.order.sendStatus({
-        phone: res.data.customerPhone,
-        status,
-      });
-
-      setSelectedOrder({
+      console.log('Chegadno aqui')
+      const updatedOrder: Order = {
         ...selectedOrder,
         status: res.data.status,
         paymentStatus:
@@ -96,7 +121,20 @@ export function OrderDetails() {
           selectedOrder.paymentTiming === "ON_DELIVERY"
             ? "PAID"
             : selectedOrder.paymentStatus,
-      } as Order);
+      } as Order;
+      console.log('Chegadno aqui')
+
+      const payload: { phone: string; status: OrderStatus; summary: string } = {
+        phone: res.data.customerPhone,
+        status: updatedOrder.status,
+        summary: buildOrderSummaryMessage(updatedOrder),
+      };
+      console.log('Chegadno aqui')
+      
+
+      await window.order.sendStatus(payload);
+
+      setSelectedOrder(updatedOrder);
     } catch (error) {
       console.error("Erro ao atualizar pedido", error);
       await getOrders();
@@ -204,12 +242,7 @@ export function OrderDetails() {
               {paymentTimingLabel(selectedOrder.paymentTiming)}
             </div>
 
-            <div>
-              <span className="font-medium">Status:</span>{" "}
-              <Badge variant="outline">
-                {paymentStatusLabel(selectedOrder.paymentStatus)}
-              </Badge>
-            </div>
+          
 
             {selectedOrder.paymentMethod === "CASH" && (
               <>

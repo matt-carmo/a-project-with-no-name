@@ -59,7 +59,7 @@ contextBridge.exposeInMainWorld("env", {
 console.log("🔥 PRELOAD CARREGADO");
 
 contextBridge.exposeInMainWorld("order", {
-  sendStatus: (data: { phone: string; status: string }) =>
+  sendStatus: (data: { phone: string; status: string; summary?: string }) =>
     ipcRenderer.invoke("order:send-status", data),
 });
 

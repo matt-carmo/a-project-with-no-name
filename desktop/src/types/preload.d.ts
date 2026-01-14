@@ -10,6 +10,7 @@ declare global {
       sendStatus: (data: {
         phone: string;
         status: string;
+        summary: string;
       }) => Promise<void>;
     };
     electron: {
