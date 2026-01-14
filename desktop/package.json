@@ -1,7 +1,13 @@
 {
-  "name": "desktop",
+  "name": "a-project-with-no-name",
   "private": true,
   "version": "0.0.0",
+  "description": "Desktop app",
+  "author": "Seu Nome",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/matt-carmo/a-project-with-no-name"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
