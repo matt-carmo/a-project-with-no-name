@@ -7,6 +7,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { ScrollArea } from "./ui/scroll-area";
 import { useParams, useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/auth-store";
 
 export function Cart() {
   const { items, total, quantity, remove } = useCart();
@@ -14,6 +15,8 @@ export function Cart() {
   const [open, setOpen] = useState(false);
   const navigation = useRouter();
   const { slug } = useParams();
+  const { selectedStore } = useAuthStore();
+  const isStoreOpen = selectedStore?.store?.settings?.isOpen ?? true;
 
   return (
     items.length > 0 && (
@@ -119,9 +122,10 @@ export function Cart() {
                 <Button
                   onClick={() => navigation.push(`${slug}/checkout`)}
                   variant="default"
+                  disabled={!isStoreOpen}
                   className=" text-primary bg-white font-semibold text-sm px-4 py-2 rounded-xl hover:bg-white"
                 >
-                  Continuar
+                  {isStoreOpen ? "Continuar" : "Loja Fechada"}
                 </Button>
               )}
             </div>

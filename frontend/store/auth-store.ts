@@ -6,6 +6,9 @@ interface Store {
   name: string;
   slug: string;
   phoneNumber: string;
+  settings?: {
+    isOpen: boolean;
+  };
 }
 
 interface SelectedStore {
@@ -27,7 +30,7 @@ interface AuthState {
   user: User | null;
   token: string | null;
   selectedStore: SelectedStore | null;
-    
+
   setSelectedStore: (store: SelectedStore | null) => void;
   setAuth: (data: { user: User; token: string }) => void;
   logout: () => void;
@@ -38,10 +41,10 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       selectedStore: null,
-        setSelectedStore: (storeData: SelectedStore | null) =>
+      setSelectedStore: (storeData: SelectedStore | null) =>
         set(() => ({
           selectedStore: storeData,
-        })),   
+        })),
 
       setAuth: ({ user, token }) =>
         set(() => ({

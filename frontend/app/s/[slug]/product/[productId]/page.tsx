@@ -12,6 +12,7 @@ import {
 import { formatPrice } from "@/lib/utils";
 import { useCart } from "@/store/useCart";
 import { useProductStore } from "@/store/useProductStore";
+import { useAuthStore } from "@/store/auth-store";
 import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -33,6 +34,7 @@ type SelectedComplements = {
 
 export default function ProductPage() {
   const { product } = useProductStore((state) => state);
+  const { selectedStore } = useAuthStore();
   const router = useRouter();
   const { add } = useCart();
 
@@ -265,11 +267,11 @@ export default function ProductPage() {
       {/* BOTÃO FINAL */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t flex">
         <button
-          onClick={handleAddToCart}
-          disabled={!validateAllGroups()}
+        onClick={handleAddToCart}
+        disabled={!validateAllGroups() || !selectedStore?.store?.settings?.isOpen}
           className="flex-2 h-12 rounded-md bg-primary text-primary-foreground disabled:opacity-50"
         >
-          Adicionar
+          {selectedStore?.store?.settings?.isOpen ? "Adicionar" : "Loja Fechada"}
         </button>
 
         <div className="flex items-center justify-center font-semibold flex-1 text-nowrap">
