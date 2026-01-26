@@ -1,8 +1,9 @@
-import { CircleAlertIcon, Home, Settings } from "lucide-react";
+import { LogOut, CircleAlertIcon, Home, Settings } from "lucide-react";
 import { BiFoodMenu } from "react-icons/bi";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -11,7 +12,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useOnlineStatus } from "@/hooks/use-online-status";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import { Card } from "./ui/card";
@@ -21,13 +22,18 @@ import useOrderStore from "@/store/userOrderStore";
 import { cn } from "@/lib/utils";
 
 export function AppSidebar() {
-  const { selectedStore } = useAuthStore();
+  const { selectedStore, logout, user } = useAuthStore();
+  const { orders } = useOrderStore();
+  const navigate = useNavigate();
 
   const base = `/store/${selectedStore?.store.id}`;
   const { open } = useSidebar();
   const { isReachable } = useOnlineStatus();
-  const { user } = useAuthStore();
-  const { orders } = useOrderStore();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/auth");
+  };
 
   const notificationCount =
     orders?.filter((order) => order.status === "PENDING").length || 0;
@@ -39,18 +45,18 @@ export function AppSidebar() {
       icon: (
         <div className={`relative`}>
           {notificationCount > 0 && (
-          <Badge
-            variant="destructive"
-            className={cn(
-              "absolute rounded-full aspect-square",
-              open
-                ? "top-0 right-0 translate-x-1/2 -translate-y-1/2"
-                : "-top-1 left-1/2 -translate-x-1/2"
-            )}
-          >
-            {notificationCount}
-          </Badge>
-        )}
+            <Badge
+              variant="destructive"
+              className={cn(
+                "absolute rounded-full aspect-square",
+                open
+                  ? "top-0 right-0 translate-x-1/2 -translate-y-1/2"
+                  : "-top-1 left-1/2 -translate-x-1/2"
+              )}
+            >
+              {notificationCount}
+            </Badge>
+          )}
           <Home />
         </div>
       ),
@@ -62,7 +68,7 @@ export function AppSidebar() {
     },
     { title: "Settings", url: `${base}/settings`, icon: <Settings /> },
   ];
-  const { store, role } = user?.stores?.[0] ?? {};
+  const { store, role } = selectedStore || {};
 
   return (
     <Sidebar collapsible="icon">
@@ -119,6 +125,16 @@ export function AppSidebar() {
           </div>
         )}
       </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={handleLogout}>
+              <LogOut />
+              <span>Sair</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }

@@ -29,7 +29,7 @@ function App() {
 
   useEffect(() => {
     getOrders();
-    
+
     if (selectedStore) {
       window.electron.store.set("selectedStore", selectedStore);
     }
@@ -47,7 +47,7 @@ function AppRoutes() {
 
   return (
     <Routes>
-      {!token ? (
+      {!token || !selectedStore ? (
         <>
           <Route path="/auth" element={<AuthPage />} />
           <Route path="*" element={<Navigate to="/auth" replace />} />

@@ -4,14 +4,18 @@ meta {
   seq: 1
 }
 
-post {
+get {
   url: {{prod}}/stores
   body: json
-  auth: none
+  auth: bearer
 }
 
 headers {
   ~: 
+}
+
+auth:bearer {
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjbWtveHR6N2EwMDAwMGlzeXdiajcwNnh0IiwiZW1haWwiOiJtYXRoZXVzMjAxOGlAZ21haWwuY29tIiwiaWF0IjoxNzY5MDU1OTEzfQ.U4ATSOMI9MfoD4HaE7pcum5qBVrByC56K82gE1Pl538
 }
 
 body:json {
