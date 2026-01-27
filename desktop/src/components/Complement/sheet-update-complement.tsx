@@ -14,7 +14,7 @@ import { Button } from "../ui/button";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 
-import { Complement } from "@/interfaces/menu.interface";
+import { Complement, ComplementGroup } from "@/interfaces/menu.interface";
 
 import { useComplementStore } from "@/store/complement-store";
 import { ComplementStep } from "./ComplementStep";
@@ -22,9 +22,10 @@ import { ComplementState } from "../sheet-create-product";
 import { Card, CardContent, CardDescription, CardTitle } from "../ui/card";
 import api from "@/api/axios";
 import { useParams } from "react-router";
-import { ComplementGroup } from "@/schemas/complement-group.schema";
+
 import { ScrollArea } from "../ui/scroll-area";
-import { useToggleTableList } from "@/hooks/use-toggle-table-list";
+import { convertBRL } from "@/utils/convertBRL";
+
 
 const complementSchema = z.object({
   complements: z.object({
@@ -51,26 +52,39 @@ export function SheetUpdateComplementX({
     useState<ComplementState>("none-complement");
 
   const {
-    complements,
     setComplements,
-    selectedComplements,
     setSelectedComplements,
   } = useComplementStore();
-  const { toggle: toggleComplement, isSelected: isComplementSelected } =
-    useToggleTableList({
-      selected: selectedComplements,
-      setSelected: setSelectedComplements,
-    });
+
+  const [availableComplements, setAvailableComplements] = useState<Complement[]>(
+    []
+  );
+
 
   const { id: storeId } = useParams();
 
   const getComplements = async function (): Promise<ComplementGroup[]> {
     const res = await api.get(`${storeId}/groups-complements`);
 
-    console.log("RES COMPLEMENTS GROUPS:", complements);
+    console.log("RES COMPLEMENTS GROUPS:", res.data);
     setComplements(res.data);
+
+    const allComplements: Complement[] = [];
+    const seenIds = new Set<string>();
+
+    (res.data as ComplementGroup[]).forEach((group: ComplementGroup) => {
+      group.complements?.forEach((comp: Complement) => {
+        if (comp.id && !seenIds.has(comp.id)) {
+          allComplements.push(comp);
+          seenIds.add(comp.id);
+        }
+      });
+    });
+    setAvailableComplements(allComplements);
+
     return res.data;
   };
+
   useEffect(() => {
     getComplements();
   }, []);
@@ -118,12 +132,7 @@ export function SheetUpdateComplementX({
         description: c.description,
         price: c.price,
         photoUrl:
-          c.image &&
-            typeof c.image === "object" &&
-            "url" in (c.image as Record<string, unknown>)
-            ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (c.image as Record<string, any>).url
-            : null,
+          c.photoUrl || (c.image && typeof c.image === "object" && "url" in c.image ? c.image.url : null),
       })),
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -141,8 +150,6 @@ export function SheetUpdateComplementX({
       onSubmitGroup(data);
     }
     onOpenChange();
-
-    // }
   };
 
   const onSubmitComplement = () => {
@@ -230,9 +237,11 @@ export function SheetUpdateComplementX({
                       )}
                     </button>
                   </div>
-                  <CardContent>
-                    <CardTitle>Criar complemento</CardTitle>
-                    <CardDescription>[...]</CardDescription>
+                  <CardContent className="space-y-1">
+                    <CardTitle>Criar Novo</CardTitle>
+                    <CardDescription>
+                      Crie um complemento novo para o seu produto.
+                    </CardDescription>
                   </CardContent>
                 </Card>
                 <Card
@@ -246,9 +255,11 @@ export function SheetUpdateComplementX({
                       )}
                     </button>
                   </div>
-                  <CardContent>
-                    <CardTitle>Vincular complemento existente</CardTitle>
-                    <CardDescription>...</CardDescription>
+                  <CardContent className="space-y-1">
+                    <CardTitle>Vincular existente</CardTitle>
+                    <CardDescription>
+                      Selecione um complemento existente para vincular ao seu produto.
+                    </CardDescription>
                   </CardContent>
                 </Card>
               </div>
@@ -275,50 +286,68 @@ export function SheetUpdateComplementX({
             {step === 2 && complement === "existing-complement" && (
               <div>
                 <h2 className="text-2xl mb-4">Complementos existentes</h2>
-                <ScrollArea className="">
-                  {complements.map((complement) => (
-                    <Card
-                      onClick={() => toggleComplement(complement)}
-                      key={complement.id}
-                      className="mb-4 py-3 px-0"
-                    >
-                      <div className="flex justify-end absolute top-2 right-2">
-                        <button className="aspect-square w-5 h-5 bg-secondary  rounded-full flex items-center justify-center">
-                          <span
-                            className={`block w-2.5 h-2.5 ${isComplementSelected(complement.id)
-                              ? "bg-white"
-                              : "bg-transparent"
-                              } rounded-full`}
-                          />
-                        </button>
-                      </div>
-                      <CardContent className="px-3">
-                        <CardTitle>{complement.name}</CardTitle>
-                        {complement?.products?.length > 0 && (
-                          <CardDescription className="line-clamp-1">
-                            {" "}
-                            Disponível em{" "}
-                            {complement.products
-                              .map((product) => product.product.name)
-                              .join(", ")}
-                          </CardDescription>
-                        )}
-                        {complement?.products?.length === 0 && (
-                          <CardDescription>
-                            Nenhum produto vinculado
-                          </CardDescription>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
+                <ScrollArea className="h-[400px]">
+                  <div className="grid grid-cols-1 gap-4">
+                    {availableComplements.map((item) => {
+                      const isSelected = itemsComplements.some(
+                        (c) => c.id === item.id
+                      );
+                      return (
+                        <Card
+                          onClick={() => {
+                            if (isSelected) {
+                              setItemsComplements((prev) =>
+                                prev.filter((c) => c.id !== item.id)
+                              );
+                            } else {
+                              setItemsComplements((prev) => [...prev, item]);
+                            }
+                          }}
+                          key={item.id}
+                          className={`relative py-3 px-4 cursor-pointer transition-colors ${isSelected ? "border-primary bg-primary/5" : "hover:bg-accent"
+                            }`}
+                        >
+                          <div className="flex justify-end absolute top-2 right-2">
+                            <div className={`aspect-square w-5 h-5 border-2 rounded-full flex items-center justify-center ${isSelected ? "bg-primary border-primary" : "border-muted-foreground"
+                              }`}>
+                              {isSelected && (
+                                <span className="block w-2.5 h-2.5 bg-white rounded-full"></span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4">
+                            {(item.photoUrl || (item.image && typeof item.image === 'object' && 'url' in item.image)) && (
+                              <img
+                                src={item.photoUrl || (item.image as any)?.url}
+                                alt={item.name}
+                                className="w-16 h-16 object-cover rounded-md"
+                              />
+                            )}
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-lg">{item.name}</span>
+                              {item.description && (
+                                <span className="text-sm text-muted-foreground line-clamp-1">
+                                  {item.description}
+                                </span>
+                              )}
+                              <span className="font-medium mt-1">
+                                {convertBRL(item.price)}
+                              </span>
+                            </div>
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
                 </ScrollArea>
               </div>
             )}
+
           </SheetPanel>
 
           <SheetFooter className="flex justify-between">
-            <Button>
-              {step === 2 && (
+            {step === 2 && (
+              <Button>
                 <span
                   onClick={() => {
                     setStep(1);
@@ -326,19 +355,12 @@ export function SheetUpdateComplementX({
                 >
                   Voltar
                 </span>
-              )}
-            </Button>
+              </Button>
+            )}
             <div>
               <SheetClose>
                 <Button variant="secondary">Cancelar</Button>
               </SheetClose>
-
-              {/* <Button
-              disabled={complement === 'none-complement'}
-              onClick={onCaptureGroup}
-            >
-              Adicionar grupo
-            </Button> */}
               <Button>
                 {step === 1 ? (
                   <span
