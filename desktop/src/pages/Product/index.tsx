@@ -295,7 +295,6 @@ export default function ProductPage() {
           })),
         }))
       );
-
       // UPDATE grupos
       await Promise.all(
         updateGroups.map((g) =>
@@ -503,34 +502,33 @@ export default function ProductPage() {
                             <ComplementActionLocal
                               maxSelected={group.maxSelected}
                               minSelected={group.minSelected}
-                              onMinChange={(min) => {
+                              onMinChange={(val) => {
                                 setGroupedComplements((prev) =>
                                   prev.map((g) =>
                                     g.id === group.id
                                       ? {
                                         ...g,
                                         action: markUpdate(g.action),
-                                        minSelected: min,
+                                        minSelected: val,
                                       }
                                       : g
                                   )
                                 );
                               }}
-                              onMaxChange={() => {
+                              onMaxChange={(val) => {
                                 setGroupedComplements((prev) =>
                                   prev.map((g) =>
                                     g.id === group.id
                                       ? {
                                         ...g,
                                         action: markUpdate(g.action),
-                                        maxSelected: group.complements.filter(
-                                          (c) => c.action !== "delete"
-                                        ).length,
+                                        maxSelected: val,
                                       }
                                       : g
                                   )
                                 );
                               }}
+
                             />
 
                             {group.complements
