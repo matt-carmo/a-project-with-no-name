@@ -49,5 +49,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-installer
-          path: desktop/release/*/a-project-with-no-name-setup.exe
+          path: desktop/release/*/*Setup.exe
           retention-days: 30
