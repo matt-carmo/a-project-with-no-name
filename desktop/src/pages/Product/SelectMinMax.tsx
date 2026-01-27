@@ -73,7 +73,7 @@ export default function SelectMinMax({
   const handleRequiredChange = (value: "Obrigatorio" | "Opcional") => {
     const newIsRequired = value === "Obrigatorio";
     setIsRequired(newIsRequired);
-    
+
     if (newIsRequired && minSelected < 1) {
       setMinSelected(1);
       if (maxSelected < 1) {
@@ -85,13 +85,13 @@ export default function SelectMinMax({
 
   const handleMinSelectedChange = (value: number) => {
     const newValue = Math.max(0, value);
-    
+
     if (newValue > 0 && newValue < 1) {
       setMinSelected(1);
     } else {
       setMinSelected(newValue);
     }
-    
+
     setIsRequired(newValue > 0);
   };
 
@@ -103,13 +103,13 @@ export default function SelectMinMax({
   return (
     <div className='border-border gap-3'>
       {/* Campo hidden para ID */}
-      <input 
-        type='hidden' 
+      <input
+        type='hidden'
         value={id}
         onChange={(e) => setId(e.target.value)}
       />
 
-      <div className='flex gap-2'>
+      <div className='flex gap-2 text-white'>
         {/* SELECT OBRIGATÓRIO/OPCIONAL */}
         <Select
           value={isRequired ? "Obrigatorio" : "Opcional"}

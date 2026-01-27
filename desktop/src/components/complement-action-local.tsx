@@ -50,6 +50,7 @@ export default function ComplementActionLocal({
       <div className="flex gap-2 items-center">
         {/* Obrigatório / Opcional */}
         <Select
+
           value={isRequired ? "Obrigatorio" : "Opcional"}
           onValueChange={(v) => {
             const newMin = v === "Obrigatorio" ? 1 : 0;
@@ -60,7 +61,7 @@ export default function ComplementActionLocal({
           <SelectTrigger size="sm">
             <SelectValue />
           </SelectTrigger>
-          <SelectPopup>
+          <SelectPopup className="text-white">
             <SelectItem value="Opcional">Opcional</SelectItem>
             <SelectItem value="Obrigatorio">Obrigatório</SelectItem>
           </SelectPopup>
