@@ -42,7 +42,7 @@ import {
 } from "@/interfaces/menu.interface";
 import ComplementActionLocal from "@/components/complement-action-local";
 
-type ActionType = "create" | "update" | "delete" | undefined;
+type ActionType = "create" | "update" | "delete" | "connect" | undefined;
 
 interface ComplementLocal extends Complement {
   action?: ActionType;
@@ -61,15 +61,17 @@ function splitGroupsByAction(groups: ComplementGroupLocal[]) {
   const create: ComplementGroupLocal[] = [];
   const update: ComplementGroupLocal[] = [];
   const remove: ComplementGroupLocal[] = [];
+  const connect: ComplementGroupLocal[] = [];
 
   for (const group of groups) {
     if (!group.action) continue;
     if (group.action === "create") create.push(group);
     if (group.action === "update") update.push(group);
     if (group.action === "delete") remove.push(group);
+    if (group.action === "connect") connect.push(group);
   }
 
-  return { create, update, remove };
+  return { create, update, remove, connect };
 }
 
 function splitComplementsByAction(groups: ComplementGroupLocal[]) {
@@ -183,14 +185,14 @@ export default function ProductPage() {
         group.id !== groupId
           ? group
           : {
-              ...group,
-              action: markUpdate(group.action),
-              complements: group.complements.map((c) =>
-                c.id !== complementId
-                  ? c
-                  : { ...c, ...changes, action: markUpdate(c.action) }
-              ),
-            }
+            ...group,
+            action: markUpdate(group.action),
+            complements: group.complements.map((c) =>
+              c.id !== complementId
+                ? c
+                : { ...c, ...changes, action: markUpdate(c.action) }
+            ),
+          }
       )
     );
   }
@@ -198,18 +200,18 @@ export default function ProductPage() {
   /* =========================
      HANDLERS: DELETE (LÓGICO)
   ========================== */
-  function removeComplementLocal(action:ActionType,  groupId?: string, complementId?: string) {
+  function removeComplementLocal(action: ActionType, groupId?: string, complementId?: string) {
     if (!groupId || !complementId) return;
 
-    if( action === "create"){
+    if (action === "create") {
       setGroupedComplements((prev) =>
-      prev.map((group) =>
-        group.id !== groupId
-          ? group
-          : {
+        prev.map((group) =>
+          group.id !== groupId
+            ? group
+            : {
               ...group,
               complements: group.complements.filter((c) => c.id !== complementId),
-        })
+            })
       );
       return;
     }
@@ -218,11 +220,11 @@ export default function ProductPage() {
         group.id !== groupId
           ? group
           : {
-              ...group,
-              complements: group.complements.map((c) =>
-                c.id !== complementId ? c : { ...c, action: "delete" }
-              ),
-            }
+            ...group,
+            complements: group.complements.map((c) =>
+              c.id !== complementId ? c : { ...c, action: "delete" }
+            ),
+          }
       )
     );
   }
@@ -257,6 +259,7 @@ export default function ProductPage() {
         create: createGroups,
         update: updateGroups,
         remove: removeGroups,
+        connect: connectGroups,
       } = splitGroupsByAction(groupedComplements);
 
       // UPDATE complementos
@@ -283,7 +286,13 @@ export default function ProductPage() {
           isAvailable: g.isAvailable,
           minSelected: g.minSelected,
           maxSelected: g.maxSelected,
-          complements: g.complements,
+          complements: g.complements.map((c) => ({
+            name: c.name,
+            price: c.price,
+            isAvailable: c.isAvailable,
+            description: c.description,
+            photoUrl: c.photoUrl || c.image?.url,
+          })),
         }))
       );
 
@@ -340,6 +349,15 @@ export default function ProductPage() {
         )
       );
 
+      // CONNECT grupos
+      await Promise.all(
+        connectGroups.map((g) =>
+          api.post(
+            `${item.storeId}/products/${item.id}/groups-complements/${g.id}/connect`
+          )
+        )
+      );
+
       // DELETE complementos
       await Promise.all(
         removeComplements.map((c) => api.delete(`complements/${c.id}`))
@@ -378,14 +396,14 @@ export default function ProductPage() {
           setGroupedComplements((prev) => [
             ...prev,
             {
-              id: crypto.randomUUID(),
+              id: data.id ?? crypto.randomUUID(),
               products: [],
               name: data.group.name,
               description: data.group.description,
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
               complements: data.complements,
-              action: "create",
+              action: data.id ? "connect" : "create",
               isAvailable: true,
               minSelected: data.group.minSelected,
               maxSelected: data.group.maxSelected,
@@ -456,10 +474,10 @@ export default function ProductPage() {
                                   prev.map((g) =>
                                     g.id === group.id
                                       ? {
-                                          ...g,
-                                          action: markUpdate(g.action),
-                                          name,
-                                        }
+                                        ...g,
+                                        action: markUpdate(g.action),
+                                        name,
+                                      }
                                       : g
                                   )
                                 )
@@ -490,10 +508,10 @@ export default function ProductPage() {
                                   prev.map((g) =>
                                     g.id === group.id
                                       ? {
-                                          ...g,
-                                          action: markUpdate(g.action),
-                                          minSelected: min,
-                                        }
+                                        ...g,
+                                        action: markUpdate(g.action),
+                                        minSelected: min,
+                                      }
                                       : g
                                   )
                                 );
@@ -503,12 +521,12 @@ export default function ProductPage() {
                                   prev.map((g) =>
                                     g.id === group.id
                                       ? {
-                                          ...g,
-                                          action: markUpdate(g.action),
-                                          maxSelected: group.complements.filter(
-                                            (c) => c.action !== "delete"
-                                          ).length,
-                                        }
+                                        ...g,
+                                        action: markUpdate(g.action),
+                                        maxSelected: group.complements.filter(
+                                          (c) => c.action !== "delete"
+                                        ).length,
+                                      }
                                       : g
                                   )
                                 );
@@ -580,7 +598,7 @@ export default function ProductPage() {
 
           {/* Debug */}
           <pre className="mt-4 bg-muted p-4 rounded text-xs overflow-auto">
-          
+
           </pre>
         </div>
 

@@ -44,4 +44,11 @@ export default class GroupsComplementsService {
         });
     }
 
+    async deleteProductConnection({ groupId, productId }: { groupId: string, productId: string }) {
+        return this.repository.deleteProductConnection({ groupId, productId });
+    }
+
+    async connectProduct({ groupId, productId }: { groupId: string, productId: string }) {
+        return this.repository.connectProduct({ groupId, productId });
+    }
 }

@@ -119,10 +119,10 @@ export function SheetUpdateComplementX({
         price: c.price,
         photoUrl:
           c.image &&
-          typeof c.image === "object" &&
-          "url" in (c.image as Record<string, unknown>)
+            typeof c.image === "object" &&
+            "url" in (c.image as Record<string, unknown>)
             ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (c.image as Record<string, any>).url
+            (c.image as Record<string, any>).url
             : null,
       })),
     };
@@ -255,7 +255,7 @@ export function SheetUpdateComplementX({
             </div>
             {step === 2 && complement === "new-complement" && (
               <ComplementStep
-                getValues={() => {}}
+                getValues={() => { }}
                 register={register}
                 control={control}
                 imagePreview={imagePreview}
@@ -267,6 +267,9 @@ export function SheetUpdateComplementX({
                     prev.filter((c) => c.name !== name)
                   )
                 }
+                onAddExisting={(complement) => {
+                  setItemsComplements((prev) => [...prev, complement]);
+                }}
               />
             )}
             {step === 2 && complement === "existing-complement" && (
@@ -282,11 +285,10 @@ export function SheetUpdateComplementX({
                       <div className="flex justify-end absolute top-2 right-2">
                         <button className="aspect-square w-5 h-5 bg-secondary  rounded-full flex items-center justify-center">
                           <span
-                            className={`block w-2.5 h-2.5 ${
-                              isComplementSelected(complement.id)
-                                ? "bg-white"
-                                : "bg-transparent"
-                            } rounded-full`}
+                            className={`block w-2.5 h-2.5 ${isComplementSelected(complement.id)
+                              ? "bg-white"
+                              : "bg-transparent"
+                              } rounded-full`}
                           />
                         </button>
                       </div>

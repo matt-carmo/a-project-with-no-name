@@ -71,25 +71,21 @@ export function GroupsComplementsRoutes(server: FastifyInstance) {
                 }),
             },
         },
-        async (req: FastifyRequest<{ Params: { storeId: string; groupId: string; productId: string; } }>, reply: FastifyReply) => {
-            const { storeId, groupId, productId } = req.params;
+        controller.delete.bind(controller)
+    );
 
-
-            console.log('Deleting group complement', { storeId, groupId, productId });
-            const res = await server.prisma.productComplementGroup.delete({
-                where: {
-                    productId_groupId: {
-                        groupId,
-                        productId,
-                    }
-                }
-            });
-            console.log('res', res);
-            if (res) {
-                return reply.status(204).send();
-            }
-            return reply.status(404).send();
-        }
+    server.post(
+        "/:storeId/products/:productId/groups-complements/:groupId/connect",
+        {
+            schema: {
+                params: z.object({
+                    storeId: z.string(),
+                    groupId: z.string(),
+                    productId: z.string(),
+                }),
+            },
+        },
+        controller.connectProduct.bind(controller)
     );
 
 }

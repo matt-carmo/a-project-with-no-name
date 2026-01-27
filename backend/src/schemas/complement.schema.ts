@@ -13,7 +13,7 @@ export const ComplementSchema = z.object({
 
     stock: z.number().int().nonnegative().optional().nullable(),
 
-    photoUrl: z.url().optional().nullable(),
+    photoUrl: z.string().optional().nullable(),
 });
 export const ComplementCreateSchema = ComplementSchema.omit({
     id: true,

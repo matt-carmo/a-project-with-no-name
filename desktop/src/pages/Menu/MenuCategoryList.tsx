@@ -29,8 +29,9 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import api from "@/api/axios";
+import { menuService } from "@/services/menu.service";
 import { toastManager } from "@/components/ui/toast";
+import { DialogAddComplementGroup } from "@/components/dialog-add-complement-group";
 
 export function MenuCategoryList({
   data,
@@ -46,42 +47,36 @@ export function MenuCategoryList({
   async function handleToggleGroup(groupId: string, isAvailable: boolean) {
     if (!selectedStore?.store.id) return;
 
-    const response = await updateGroupComplementAvailability({
-      storeId: selectedStore.store.id,
-      groupId,
-      isAvailable,
-    });
+    try {
+      const response = await menuService.updateGroupAvailability(
+        selectedStore.store.id,
+        groupId,
+        isAvailable
+      );
 
-    if (response.status === 200) {
-      onMenuUpdated();
-      toastManager.add({
-        title: "Sucesso",
-        description: `Grupo foi ${
-          isAvailable ? "ativado" : "desativado"
-        } com sucesso.`,
-        type: "success",
-      });
-    }else {
+      if (response.status === 200) {
+        onMenuUpdated();
+        toastManager.add({
+          title: "Sucesso",
+          description: `Grupo foi ${isAvailable ? "ativado" : "desativado"
+            } com sucesso.`,
+          type: "success",
+        });
+      } else {
+        toastManager.add({
+          title: "Erro",
+          description: `Não foi possível atualizar o grupo.`,
+          type: "error",
+        });
+      }
+    } catch (error) {
+      console.error(error);
       toastManager.add({
         title: "Erro",
         description: `Não foi possível atualizar o grupo.`,
         type: "error",
       });
     }
-  }
-
-  async function updateGroupComplementAvailability({
-    storeId,
-    groupId,
-    isAvailable,
-  }: {
-    storeId: string;
-    groupId: string;
-    isAvailable: boolean;
-  }) {
-    return api.put(`/${storeId}/groups-complements/${groupId}`, {
-      isAvailable,
-    });
   }
 
   return (
@@ -130,9 +125,8 @@ export function MenuCategoryList({
           {category.products.map((item) => (
             <CardPanel
               key={item.id}
-              className={`mb-2 last:mb-0 mx-4 p-2 rounded-md ${
-                item.isAvailable && "bg-muted"
-              }`}
+              className={`mb-2 last:mb-0 mx-4 p-2 rounded-md ${item.isAvailable && "bg-muted"
+                }`}
             >
               <Collapsible>
                 <div className="grid grid-cols-[auto_1fr] gap-3">
@@ -166,6 +160,12 @@ export function MenuCategoryList({
                       </p>
                     </div>
 
+                    <DialogAddComplementGroup
+                      productId={item.id}
+                      existingGroupsIds={item.productComplementGroups?.map(g => g.groupId) || []}
+                      onSuccess={onMenuUpdated}
+                    />
+
                     <CollapsibleTrigger className={'data-panel-open:[&_svg]:rotate-180'}>
                       <Button variant="link" className="p-0 text-sm ">
                         <ChevronDownIcon className="size-5 " />
@@ -197,7 +197,7 @@ export function MenuCategoryList({
                               <p className="font-semibold">{group.name}</p>
 
                               <Button
-                              className="mr-8"
+                                className="mr-8"
                                 variant={"outline"}
                                 onClick={() =>
                                   handleToggleGroup(

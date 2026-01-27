@@ -34,14 +34,39 @@ export class GroupsComplementsController {
         return reply.status(200).send(result);
     }
     async createWithConnectProduct(req: FastifyRequest<{ Body: CreateGroupComplementInput[], Params: { storeId: string, productId: string } }>, reply: FastifyReply) {
-   
-    
+
+
         const data = req.body;
 
-        
-        
+
+
         const result = await this.service.createWithConnectProduct({ data, storeId: req.params.storeId, productId: req.params.productId });
 
         return reply.status(201).send(result);
+    }
+    async delete(req: FastifyRequest<{ Params: { storeId: string; groupId: string; productId: string; } }>, reply: FastifyReply) {
+        const { groupId, productId } = req.params;
+
+        console.log('Deleting group complement', { groupId, productId });
+
+        try {
+            await this.service.deleteProductConnection({ groupId, productId });
+            return reply.status(204).send();
+        } catch (error) {
+            console.error('Error deleting group complement', error);
+            return reply.status(404).send();
+        }
+    }
+
+    async connectProduct(req: FastifyRequest<{ Params: { storeId: string; groupId: string; productId: string; } }>, reply: FastifyReply) {
+        const { groupId, productId } = req.params;
+
+        try {
+            await this.service.connectProduct({ groupId, productId });
+            return reply.status(204).send();
+        } catch (error) {
+            console.error('Error connecting group complement', error);
+            return reply.status(500).send();
+        }
     }
 }

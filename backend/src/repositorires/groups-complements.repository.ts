@@ -39,7 +39,7 @@ export class GroupsComplementsRepository {
         });
     }
     async update(raw: UpdateComplementGroupInput & { storeId: string; groupId: string; }) {
-        const { storeId, groupId, ...group } = raw;
+        const { storeId, groupId, complements, ...group } = raw;
 
         return await this.prisma.complementGroup.update({
             where: {
@@ -99,6 +99,27 @@ export class GroupsComplementsRepository {
         return result;
     }
 
+
+
+    async deleteProductConnection({ groupId, productId }: { groupId: string, productId: string }) {
+        return this.prisma.productComplementGroup.delete({
+            where: {
+                productId_groupId: {
+                    groupId,
+                    productId,
+                }
+            }
+        });
+    }
+
+    async connectProduct({ groupId, productId }: { groupId: string, productId: string }) {
+        return this.prisma.productComplementGroup.create({
+            data: {
+                groupId,
+                productId,
+            },
+        });
+    }
 
 
 }

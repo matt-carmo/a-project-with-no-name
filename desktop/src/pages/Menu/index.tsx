@@ -1,4 +1,4 @@
-import api from "@/api/axios";
+import { menuService } from "@/services/menu.service";
 
 import { useAuthStore } from "@/store/auth-store";
 
@@ -13,20 +13,22 @@ import { MenuCategoryList } from "./MenuCategoryList";
 export default function MenuPage() {
   const { selectedStore } = useAuthStore();
   const [data, setData] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const getMenu = async () => {
+    if (!selectedStore?.store.id) return;
     try {
-      const response = await api.get(`stores/${selectedStore?.store.id}/menu`);
-
-      console.log("Menu fetched:", response.data);
-      setData(response.data);
+      setIsLoading(true);
+      const menuData = await menuService.getMenu(selectedStore.store.id);
+      setData(menuData);
     } catch (err) {
       console.error("Erro ao buscar menu:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    if (!selectedStore?.store?.id) return;
     getMenu();
     const unsubscribe = onRefetch(() => {
       getMenu();
@@ -42,7 +44,7 @@ export default function MenuPage() {
 
   async function handleDeleteCategory(id: string) {
     try {
-      const response = await api.delete(`categories/${id}`);
+      const response = await menuService.deleteCategory(id);
       if (response.status === 204) {
         getMenu();
       }
@@ -50,6 +52,16 @@ export default function MenuPage() {
       console.error("Erro ao deletar categoria:", error);
     }
   }
+
+  if (isLoading && data.length === 0) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-4xl font-semibold">Cardápio</h1>
+        <p>Carregando...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <h1 className="text-4xl font-semibold">Cardápio</h1>
@@ -57,7 +69,6 @@ export default function MenuPage() {
 
       <CategoryCreateForm onCreated={getMenu} />
       <MenuCategoryList
-        key={data.length}
         data={data}
         onDeleteCategory={handleDeleteCategory}
         onMenuUpdated={getMenu}

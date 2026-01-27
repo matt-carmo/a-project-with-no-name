@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { categorySchema } from "@/schemas/category.schema";
-import api from "@/api/axios";
+import { menuService } from "@/services/menu.service";
 import {
   Popover,
   PopoverTrigger,
@@ -30,10 +30,12 @@ export function CategoryCreateForm({ onCreated }: { onCreated?: () => void }) {
   });
 
   async function handleAddCategory(data: { name: string }) {
+    if (!selectedStore?.store.id) return;
+
     try {
-      const response = await api.post(
-        `${selectedStore?.store.id}/categories`,
-        { name: data.name }
+      const response = await menuService.createCategory(
+        selectedStore.store.id,
+        data.name
       );
 
       if (response.status === 201) {

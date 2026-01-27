@@ -10,7 +10,8 @@ export const complementGroupBaseSchema = z.object({
   minSelected: z.number().int().nonnegative().optional().default(0),
   maxSelected: z.number().int().positive().optional().nullable(),
   isAvailable: z.boolean().optional().default(true),
-  storeId: z.cuid(),
+  storeId: z.cuid().optional(),
+  complements: z.array(z.any()).optional(),
 });
 const ComplementGroupBaseSchema = z.object({
   min: z.number(),

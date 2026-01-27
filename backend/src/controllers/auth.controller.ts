@@ -2,7 +2,6 @@ import { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
 import { AuthService } from "../services/auth.service";
 import { Prisma } from "@prisma/client";
-import { error } from "node:console";
 
 export class AuthController {
   private authService: AuthService;

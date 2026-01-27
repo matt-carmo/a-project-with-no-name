@@ -11,6 +11,14 @@ import { Button } from "../ui/button";
 import { Plus, Trash } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
 import { ScrollArea } from "../ui/scroll-area";
+import { useState } from "react";
+import { ComplementSelectionStep } from "./ComplementSelectionStep";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog";
 
 interface ComplementStepProps {
   register: any;
@@ -23,6 +31,7 @@ interface ComplementStepProps {
   onAdd: () => void;
   getValues: (key: string) => any;
   onRemove: (name: string) => void;
+  onAddExisting: (complement: Complement) => void;
 }
 
 export function ComplementStep({
@@ -32,9 +41,10 @@ export function ComplementStep({
   setImagePreview,
   items,
   onAdd,
-
   onRemove,
+  onAddExisting,
 }: ComplementStepProps) {
+  const [showExistingSelection, setShowExistingSelection] = useState(false);
   return (
     <div className="space-y-4 flex flex-col h-full w-full">
       <div>{getValues("group.name")}</div>
@@ -89,14 +99,40 @@ export function ComplementStep({
       {/* Imagem */}
 
       {/* Adicionar complemento */}
-      <Button
-        type="button"
-        className="w-full py-2 font-semibold text-lg"
-        onClick={onAdd}
-      >
-        <Plus />
-        Adicionar complemento
-      </Button>
+      <div className="flex gap-2">
+        <Button
+          type="button"
+          className="flex-1 py-2 font-semibold text-lg"
+          onClick={onAdd}
+        >
+          <Plus />
+          Novo complemento
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="flex-1 py-2 font-semibold text-lg"
+          onClick={() => setShowExistingSelection(true)}
+        >
+          <Plus />
+          Complemento existente
+        </Button>
+      </div>
+
+      <Dialog open={showExistingSelection} onOpenChange={setShowExistingSelection}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Selecionar complemento existente</DialogTitle>
+          </DialogHeader>
+          <ComplementSelectionStep
+            onSelect={(c) => {
+              onAddExisting(c);
+              setShowExistingSelection(false);
+            }}
+            selectedIds={items.map((i) => i.id as string)}
+          />
+        </DialogContent>
+      </Dialog>
 
 
       {items.length > 0 && (
