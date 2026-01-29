@@ -152,7 +152,12 @@ export default function CheckoutPage() {
   async function nextStep() {
     if (currentStep === 1) {
       // Validate step 1 fields
-      const isValid = await trigger(["name", "phone", "address.displayName", "address.number"]);
+      const isValid = await trigger([
+        "name",
+        "phone",
+        "address.displayName",
+        "address.number",
+      ]);
       if (isValid) {
         setCurrentStep(2);
       }
@@ -202,7 +207,10 @@ export default function CheckoutPage() {
           lon: data.address.longitude,
         },
         paymentMethod,
-        paidAmount: paymentMethod === "CASH" && typeof paidAmount === "number" ? paidAmount : undefined,
+        paidAmount:
+          paymentMethod === "CASH" && typeof paidAmount === "number"
+            ? paidAmount
+            : undefined,
         paymentTiming,
         notes: notes.trim() ? notes.trim() : undefined,
         total: total(),
@@ -376,8 +384,12 @@ export default function CheckoutPage() {
                   <Button
                     key={method.value}
                     disabled={submitting}
-                    variant={paymentMethod === method.value ? "default" : "outline"}
-                    onClick={() => setPaymentMethod(method.value as PaymentMethod)}
+                    variant={
+                      paymentMethod === method.value ? "default" : "outline"
+                    }
+                    onClick={() =>
+                      setPaymentMethod(method.value as PaymentMethod)
+                    }
                   >
                     {method.label}
                   </Button>
@@ -406,28 +418,42 @@ export default function CheckoutPage() {
               <h2 className="font-medium">Resumo do pedido</h2>
 
               {items.map((item) => (
-                <div key={item.id} className="flex gap-3 items-start border-b pb-2">
-                  <div className="h-12 w-12 rounded-lg overflow-hidden bg-zinc-100">
-                    {item.product.photoUrl && (
-                      <Image
-                        src={item.product.photoUrl}
-                        alt={item.product.name}
-                        width={48}
-                        height={48}
-                        className="object-cover w-full h-full"
-                      />
-                    )}
-                  </div>
+                <div key={item.id}>
+                  <div className="flex gap-3 items-start border-b pb-2">
+                    <div className="h-12 w-12 rounded-lg overflow-hidden bg-zinc-100">
+                      {item.product.photoUrl && (
+                        <Image
+                          src={item.product.photoUrl}
+                          alt={item.product.name}
+                          width={48}
+                          height={48}
+                          className="object-cover w-full h-full"
+                        />
+                      )}
+                    </div>
 
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">
-                      {item.quantity}x {item.product.name}
-                    </p>
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">
+                        {item.quantity}x {item.product.name}
+                      </p>
+                      <span className="text-sm font-medium">
+                        {formatPrice(item.product.price * item.quantity)}
+                      </span>
+                      {item.complements.length > 0 && (
+                        <div className="space-y-0.5">
+                          {item.complements.map((comp) => (
+                            <p
+                              key={comp.complementId}
+                              className="text-sm text-muted-foreground"
+                            >
+                              + {comp.quantity}x {comp.name} (
+                              {formatPrice(comp.price * comp.quantity)})
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-
-                  <span className="text-sm font-semibold">
-                    {formatPrice(item.totalPrice * item.quantity)}
-                  </span>
                 </div>
               ))}
 
@@ -491,12 +517,18 @@ export default function CheckoutPage() {
                     {paymentMethod === "CASH" && "Dinheiro"}
                   </p>
                 </div>
-                {paymentMethod === "CASH" && typeof paidAmount === "number" && paidAmount > 0 && (
-                  <div>
-                    <p className="text-xs text-muted-foreground">Troco para</p>
-                    <p className="text-sm font-medium">{formatPrice(paidAmount * 100)}</p>
-                  </div>
-                )}
+                {paymentMethod === "CASH" &&
+                  typeof paidAmount === "number" &&
+                  paidAmount > 0 && (
+                    <div>
+                      <p className="text-xs text-muted-foreground">
+                        Troco para
+                      </p>
+                      <p className="text-sm font-medium">
+                        {formatPrice(paidAmount)}
+                      </p>
+                    </div>
+                  )}
               </div>
             </section>
           </div>
@@ -516,11 +548,7 @@ export default function CheckoutPage() {
             </Button>
           )}
           {currentStep < 3 ? (
-            <Button
-              className="flex-1"
-              disabled={submitting}
-              onClick={nextStep}
-            >
+            <Button className="flex-1" disabled={submitting} onClick={nextStep}>
               Próximo
               <ChevronRight size={16} className="ml-2" />
             </Button>
